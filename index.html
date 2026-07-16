@@ -27,10 +27,7 @@
     aspect-ratio:1 / 1;
     /* grid items default to min-width:auto (sized to fit content) — without
        this, some mobile browsers let the card refuse to shrink to its 1fr
-       track and spill past the screen edge instead of wrapping its title.
-       No overflow:hidden here on purpose: an emoji icon doesn't shrink like
-       a masked image does, and clipping would hide the title underneath it
-       on narrow cards instead of just letting it spill visibly. */
+       track and spill past the screen edge */
     min-width:0;
     padding:16px 12px;
     border-radius:18px;
@@ -88,9 +85,7 @@
   .mode-card.disabled{cursor:default;}
   .mode-card.disabled:active{transform:none;}
   .mode-card.disabled.theme-rose:active{background:rgba(255,255,255,0.05);}
-  .mode-card.disabled .mode-icon-badge,
-  .mode-card.disabled .mode-icon-emoji,
-  .mode-card.disabled .mode-title{opacity:0.55;}
+  .mode-card.disabled .mode-icon-badge{opacity:0.55;}
   .coming-soon-badge{
     display:inline-block;
     margin-top:6px;
@@ -117,27 +112,11 @@
     -webkit-mask-size:contain;
     filter:drop-shadow(0 4px 10px rgba(0,0,0,0.3));
   }
-  /* newer modes use a plain emoji glyph instead of a custom silhouette icon.
-     Unlike the masked-image icons, a glyph has a fixed em-box that won't
-     shrink to fit whatever space flex-grow leaves it — so this stays small
-     enough to always leave room for a 2-line title underneath, even on the
-     narrowest supported card width. */
-  .mode-icon-emoji{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex:1;
-    min-height:0;
-    max-height:2.6rem;
-    font-size:2.4rem;
-    line-height:1;
-    filter:drop-shadow(0 4px 10px rgba(0,0,0,0.3));
-  }
   .mode-card-link{
     display:flex;
     flex-direction:column;
     align-items:center;
-    justify-content:space-between;
+    justify-content:center;
     gap:6px;
     width:100%;
     height:100%;
@@ -146,30 +125,6 @@
     text-decoration:none;
     text-align:center;
   }
-  .mode-title{
-    flex-shrink:0;
-    width:100%;
-    min-width:0;
-    overflow-wrap:break-word;
-    font-family:var(--font-display);
-    font-weight:700;
-    font-size:1rem;
-    line-height:1.2;
-    text-transform:uppercase;
-    letter-spacing:0.4px;
-  }
-  .theme-blue .mode-title{color:#9dc9ff;}
-  .theme-red .mode-title{color:#e8929c;}
-  .theme-violet .mode-title{color:#c3b1f0;}
-  .theme-amber .mode-title{color:#f0c896;}
-  .theme-teal .mode-title{color:#9ee0da;}
-  .theme-rose .mode-title{color:#eeaed0;}
-  .theme-green .mode-title{color:#8fd9ac;}
-  .theme-purple .mode-title{color:#a970e0;}
-  .theme-yellow .mode-title{color:#e8d66b;}
-  .theme-cyan .mode-title{color:#5fc2d6;}
-  .theme-indigo .mode-title{color:#8f9ffa;}
-  .theme-lime .mode-title{color:#a8d96a;}
   .theme-blue .mode-icon-badge{background-color:#9dc9ff;}
   .theme-red .mode-icon-badge{background-color:#e8929c;}
   .theme-violet .mode-icon-badge{background-color:#c3b1f0;}
@@ -285,10 +240,6 @@
   @media (prefers-reduced-motion: reduce){
     .hub-logo{animation:none;}
   }
-  @media (max-width:380px){
-    .mode-icon-emoji{font-size:2rem; max-height:2.2rem;}
-    .mode-title{font-size:0.88rem;}
-  }
 </style>
 </head>
 <body>
@@ -302,99 +253,87 @@
     <div class="mode-grid">
       <div class="card mode-card theme-red">
         <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/impostor-logo.svg" data-color="#e8929c" data-title="Impostor" data-desc="Todos ven la misma palabra... menos el impostor. Tú decides quién miente, o lo dejas al azar con temáticas.">ⓘ</button>
-        <a href="impostor.html" class="mode-card-link">
+        <a href="impostor.html" class="mode-card-link" aria-label="Impostor">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/impostor-logo.svg');-webkit-mask-image:url('images/hub/impostor-logo.svg');"></span>
-          <span class="mode-title">Impostor</span>
-        </a>
+          </a>
       </div>
 
       <div class="card mode-card theme-green">
         <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/times-up-logo.svg" data-color="#8fd9ac" data-title="Time's Up" data-desc="Formad equipos y adivinad personajes en 3 fases: descripción libre, una sola palabra y solo mímica. Mismas 40 cartas en las 3 rondas.">ⓘ</button>
-        <a href="times-up.html" class="mode-card-link">
+        <a href="times-up.html" class="mode-card-link" aria-label="Time's Up">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/times-up-logo.svg');-webkit-mask-image:url('images/hub/times-up-logo.svg');"></span>
-          <span class="mode-title">Time's Up</span>
-        </a>
+          </a>
       </div>
 
       <div class="card mode-card theme-violet">
         <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/hombres-lobo-logo.svg" data-color="#c3b1f0" data-title="Hombres Lobo" data-desc="Lobos contra aldeanos: de noche se caza, de día se vota. Roles y expansiones totalmente personalizables.">ⓘ</button>
-        <a href="hombres-lobo.html" class="mode-card-link">
+        <a href="hombres-lobo.html" class="mode-card-link" aria-label="Hombres Lobo">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/hombres-lobo-logo.svg');-webkit-mask-image:url('images/hub/hombres-lobo-logo.svg');"></span>
-          <span class="mode-title">Hombres Lobo</span>
-        </a>
+          </a>
       </div>
 
       <div class="card mode-card theme-rose disabled">
         <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/hitster-logo.svg" data-color="#eeaed0" data-title="Hitster" data-desc="Un dispositivo por equipo: escuchad la canción y colocadla en vuestra línea de tiempo. Varias épocas y ediciones.">ⓘ</button>
-        <span class="mode-card-link">
+        <span class="mode-card-link" aria-label="Hitster">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/hitster-logo.svg');-webkit-mask-image:url('images/hub/hitster-logo.svg');"></span>
-          <span class="mode-title">Hitster</span>
           <span class="coming-soon-badge">Próximamente</span>
         </span>
       </div>
 
       <div class="card mode-card theme-amber">
         <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/mimica-logo.svg" data-color="#f0c896" data-title="Mímica" data-desc="Te toca actuar sin hablar y que los demás adivinen la palabra. Contrarreloj y por turnos.">ⓘ</button>
-        <a href="mimica.html" class="mode-card-link">
+        <a href="mimica.html" class="mode-card-link" aria-label="Mímica">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/mimica-logo.svg');-webkit-mask-image:url('images/hub/mimica-logo.svg');"></span>
-          <span class="mode-title">Mímica</span>
-        </a>
+          </a>
       </div>
 
       <div class="card mode-card theme-teal">
         <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/verdad-o-reto-logo.svg" data-color="#9ee0da" data-title="Verdad o Reto" data-desc="Elige verdad o reto y que salga lo que tenga que salir. Con categorías suaves, de fiesta y +18.">ⓘ</button>
-        <a href="verdad-o-reto.html" class="mode-card-link">
+        <a href="verdad-o-reto.html" class="mode-card-link" aria-label="Verdad o Reto">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/verdad-o-reto-logo.svg');-webkit-mask-image:url('images/hub/verdad-o-reto-logo.svg');"></span>
-          <span class="mode-title">Verdad o Reto</span>
-        </a>
+          </a>
       </div>
 
       <div class="card mode-card theme-blue">
         <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/detective-club-logo.svg" data-color="#8fc1f0" data-title="Detective Club" data-desc="Un jugador no conoce la palabra secreta y debe disimular. Pistas con cartas Dixit, votos en privado y puntos en cada ronda.">ⓘ</button>
-        <a href="detective-club.html" class="mode-card-link">
+        <a href="detective-club.html" class="mode-card-link" aria-label="Detective Club">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/detective-club-logo.svg');-webkit-mask-image:url('images/hub/detective-club-logo.svg');"></span>
-          <span class="mode-title">Detective Club</span>
-        </a>
+          </a>
       </div>
 
       <div class="card mode-card theme-purple">
         <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/taboo-logo.svg" data-color="#a970e0" data-title="Taboo" data-desc="Describe la palabra a tu equipo sin decir ninguna de las palabras prohibidas. El equipo contrario vigila y puede cantarte falta.">ⓘ</button>
-        <a href="tabu.html" class="mode-card-link">
+        <a href="tabu.html" class="mode-card-link" aria-label="Taboo">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/taboo-logo.svg');-webkit-mask-image:url('images/hub/taboo-logo.svg');"></span>
-          <span class="mode-title">Taboo</span>
-        </a>
+          </a>
       </div>
 
       <div class="card mode-card theme-lime">
         <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/trivial-logo.svg" data-color="#a8d96a" data-title="Trivial" data-desc="Preguntas de cultura general por equipos. Acierta y suma puntos, agota el mazo y gana quien más sepa.">ⓘ</button>
-        <a href="trivial.html" class="mode-card-link">
+        <a href="trivial.html" class="mode-card-link" aria-label="Trivial">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/trivial-logo.svg');-webkit-mask-image:url('images/hub/trivial-logo.svg');"></span>
-          <span class="mode-title">Trivial</span>
-        </a>
+          </a>
       </div>
 
       <div class="card mode-card theme-yellow">
         <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/quien-es-mas-probable-que-logo.svg" data-color="#e8d66b" data-title="¿Quién es más probable?" data-desc="Una frase, un grupo, un dedo señalando. Vota quién de todos encaja mejor con cada situación.">ⓘ</button>
-        <a href="quien-es-mas-probable.html" class="mode-card-link">
+        <a href="quien-es-mas-probable.html" class="mode-card-link" aria-label="¿Quién es más probable?">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/quien-es-mas-probable-que-logo.svg');-webkit-mask-image:url('images/hub/quien-es-mas-probable-que-logo.svg');"></span>
-          <span class="mode-title">¿Quién es más probable?</span>
-        </a>
+          </a>
       </div>
 
       <div class="card mode-card theme-cyan">
         <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/yo-nunca-logo.svg" data-color="#5fc2d6" data-title="Yo Nunca" data-desc="El clásico de las confesiones. Si lo has hecho, pierdes una vida. El último con vidas gana.">ⓘ</button>
-        <a href="yo-nunca.html" class="mode-card-link">
+        <a href="yo-nunca.html" class="mode-card-link" aria-label="Yo Nunca">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/yo-nunca-logo.svg');-webkit-mask-image:url('images/hub/yo-nunca-logo.svg');"></span>
-          <span class="mode-title">Yo Nunca</span>
-        </a>
+          </a>
       </div>
 
       <div class="card mode-card theme-indigo">
         <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/que-haria-si-logo.svg" data-color="#8f9ffa" data-title="¿Qué Harías Si...?" data-desc="Escenarios imposibles para debatir entre risas. Cada uno responde en su turno qué haría.">ⓘ</button>
-        <a href="que-harias-si.html" class="mode-card-link">
+        <a href="que-harias-si.html" class="mode-card-link" aria-label="¿Qué Harías Si...?">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/que-haria-si-logo.svg');-webkit-mask-image:url('images/hub/que-haria-si-logo.svg');"></span>
-          <span class="mode-title">¿Qué Harías Si...?</span>
-        </a>
+          </a>
       </div>
     </div>
   </div>
