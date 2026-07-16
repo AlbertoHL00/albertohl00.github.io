@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<script src="analytics.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>¿Quién es más probable? · Game Hub</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="78" font-size="72" text-anchor="middle">%F0%9F%A4%B7</text></svg>'>
+<link rel="stylesheet" href="shared.css">
+<style>
+  :root{
+    --accent:#d9c14f;
+    --accent2:#f0e2a0;
+    --reveal-b:#f0e2a0;
+  }
+  html,body{
+    /* flat solid fill — a multi-layer gradient here used to leave gaps of
+       the raw background color showing on some viewports/scroll ranges */
+    background-color:var(--bg2);
+  }
+
+  .qp-phrase{
+    text-align:center;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:1.3rem;
+    line-height:1.4;
+    margin:4px 0 20px;
+  }
+
+  /* ---- player picker: same "tap a card" idea as the role-reveal roster in
+     Impostor/Hombres Lobo/Detective Club, but as a 2-column grid of every
+     player (nobody drops off — the group re-votes fresh each round) ---- */
+  .qp-roster{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .qp-roster .roster-row{
+    justify-content:center;
+    padding:18px 10px;
+    text-align:center;
+  }
+  .qp-roster .roster-row-name{
+    flex:none;
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+  }
+  .qp-roster .roster-row.selected{
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    border-color:transparent;
+    color:#04121f;
+  }
+
+  /* ---- final leaderboard ---- */
+  .qp-score-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 12px;
+    border-radius:12px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--glass-border);
+    margin-bottom:8px;
+    text-align:left;
+  }
+  .qp-score-row.winner{
+    border-color:var(--accent);
+    background:rgba(255,255,255,0.1);
+  }
+  .qp-score-name{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-weight:700;
+    min-width:0;
+  }
+  .qp-score-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:26px;
+    height:22px;
+    padding:0 6px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.12);
+    color:var(--text);
+    font-weight:800;
+    font-size:0.72rem;
+    flex-shrink:0;
+  }
+  .qp-score-row.winner .qp-score-pill{
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    color:#04121f;
+  }
+  .qp-score-value{
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:1.1rem;
+    flex-shrink:0;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SETUP -->
+  <div class="screen" id="screen-setup">
+    <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
+      </div>
+      <h1>¿QUIÉN ES MÁS PROBABLE?</h1>
+
+      <div id="setup-step-players">
+        <label><span class="label-icon">👥</span>Jugadores</label>
+        <div id="players-list"></div>
+        <div class="error-msg" id="players-error"></div>
+      </div>
+
+      <div class="night-nav" id="setup-nav">
+        <button type="button" class="night-nav-btn icon-only" id="setup-prev-btn" aria-label="Anterior"><span class="back-icon"></span></button>
+        <button type="button" class="night-nav-btn" id="setup-next-btn">Siguiente</button>
+      </div>
+
+      <div id="setup-step-settings" class="hidden">
+        <label><span class="label-icon">🏷️</span>Categorías</label>
+        <button type="button" class="chip-toggle-all" id="category-toggle-all-btn">Seleccionar todas</button>
+        <div class="chip-list" id="category-list"></div>
+
+        <div class="error-msg" id="setup-error"></div>
+
+        <div class="final-nav">
+          <button type="button" class="night-nav-btn icon-only" id="setup-final-back-btn" aria-label="Anterior"><span class="back-icon"></span></button>
+          <button class="btn-main" id="start-btn">Iniciar partida</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY GUIDE -->
+  <div class="guide-modal-backdrop hidden" id="guide-modal-backdrop">
+    <div class="guide-modal">
+      <button type="button" class="guide-modal-close" id="guide-modal-close">✕</button>
+      <h2>Cómo se juega</h2>
+
+      <h3>Objetivo</h3>
+      <p>Un juego para romper el hielo, sin ganadores de verdad. En cada ronda aparece una pregunta tipo "¿Quién es más probable que...?". Leedla en voz alta, discutid entre todos y decidid quién encaja mejor.</p>
+
+      <h3>Usar la app</h3>
+      <ol>
+        <li>Añade a los jugadores y elige las categorías de preguntas que queráis usar.</li>
+        <li>En cada ronda, todos ven la misma pregunta a la vez — no hay nada que ocultar.</li>
+        <li>Cuando el grupo se decida, toca el nombre de esa persona en la rejilla y pulsa "Siguiente".</li>
+        <li>Al final se muestra un marcador con quién fue el más votado durante toda la partida — solo por curiosidad.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ROUND SCREEN -->
+  <div class="screen hidden" id="screen-game">
+    <div class="card">
+      <div class="player-badge" id="round-badge">RONDA</div>
+      <div class="qp-phrase" id="qp-phrase"></div>
+
+      <div class="qp-roster" id="qp-roster"></div>
+
+      <button class="btn-main" id="next-btn" disabled>Siguiente</button>
+
+      <div class="progress-dots" id="progress-dots"></div>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div class="screen hidden" id="screen-end">
+    <div class="card">
+      <div class="end-icon">🤷</div>
+      <h1 style="font-size:1.5rem;">RESULTADOS</h1>
+      <p class="subtitle">Quién fue elegido más veces durante la partida:</p>
+      <div id="end-scoreboard"></div>
+      <button class="btn-main" id="new-round-btn">Nueva partida</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="shared.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var MIN_PLAYERS = 3, MAX_PLAYERS = 30;
+  var DECK_SIZE = 20; // rounds per match, capped so a big category selection doesn't drag on forever
+
+  var config = {
+    selectedCategories: [],
+    rows: loadSavedPlayerNames().slice(0, MAX_PLAYERS).map(function(n){ return { name: n }; }).concat([{ name: "" }])
+  };
+
+  function persistPlayers(){
+    savePlayerNames(config.rows.map(function(r){ return r.name.trim(); }).filter(function(n){ return n !== ""; }));
+  }
+
+  var CATEGORIAS = null;
+  var QUIEN_FALLBACK = [
+    { "id": "clasicas", "nombre": "Clásicas", "icono": "🏅", "frases": ["¿Quién es más probable que se pierda usando el GPS?", "¿Quién es más probable que llore viendo un anuncio?", "¿Quién es más probable que se quede dormido en el cine?", "¿Quién es más probable que hable solo en voz alta?", "¿Quién es más probable que olvide dónde dejó las llaves?", "¿Quién es más probable que se ría en el peor momento?", "¿Quién es más probable que llegue tarde a su propia boda?", "¿Quién es más probable que gane la lotería y siga trabajando igual?", "¿Quién es más probable que se disfrace mejor en Halloween?", "¿Quién es más probable que se pierda en su propio barrio?"] },
+    { "id": "fiesta", "nombre": "Fiesta", "icono": "🥳", "frases": ["¿Quién es más probable que acabe bailando encima de una mesa?", "¿Quién es más probable que organice la fiesta más loca del grupo?", "¿Quién es más probable que se quede dormido antes de medianoche?", "¿Quién es más probable que pierda el móvil en una fiesta?", "¿Quién es más probable que le cante una serenata a alguien random?", "¿Quién es más probable que convenza a todos de ir a por churros a las 5 de la mañana?", "¿Quién es más probable que sea el alma de la fiesta?", "¿Quién es más probable que organice un juego de beber improvisado?", "¿Quién es más probable que se le olvide dónde aparcó?", "¿Quién es más probable que termine la fiesta antes de que empiece de verdad?"] }
+  ];
+
+  function loadCategories(){
+    return fetch('quien-es-mas-probable.json')
+      .then(function(r){ if (!r.ok) throw new Error('bad response'); return r.json(); })
+      .then(function(data){ CATEGORIAS = data.categorias; })
+      .catch(function(){ CATEGORIAS = QUIEN_FALLBACK; })
+      .then(function(){
+        if (config.selectedCategories.length === 0){
+          config.selectedCategories = CATEGORIAS.map(function(c){ return c.id; });
+        }
+        renderCategoryList();
+        validateSetup();
+      });
+  }
+
+  var state = {
+    playerNames: [],
+    tallies: [],
+    deck: [],
+    round: 0,
+    totalRounds: 0,
+    chosenIdx: null
+  };
+
+  var screenSetup = document.getElementById('screen-setup');
+  var screenGame = document.getElementById('screen-game');
+  var screenEnd = document.getElementById('screen-end');
+  var ALL_SCREENS = [screenSetup, screenGame, screenEnd];
+
+  function switchScreen(target){
+    ALL_SCREENS.forEach(function(s){ s.classList.add('hidden'); });
+    target.classList.remove('hidden');
+  }
+
+  // ---------- players ----------
+  var rowsContainer = document.getElementById('players-list');
+
+  function effectivePlayerCount(rows){
+    var n = rows.length;
+    if (n > 0 && !rows[n - 1].name.trim()) n--; // trailing empty slot isn't a player yet
+    return n;
+  }
+
+  function rowHtml(row, idx, rows){
+    var isTrailingSlot = idx === rows.length - 1 && !row.name.trim();
+    if (isTrailingSlot){
+      return (
+        '<div class="player-row">' +
+          '<input type="text" class="player-name-input" data-index="' + idx + '" ' +
+            'placeholder="Jugador ' + (idx + 1) + '" maxlength="20" value="' + escapeHtml(row.name) + '">' +
+        '</div>'
+      );
+    }
+    return (
+      '<div class="player-row">' +
+        '<input type="text" class="player-name-input" data-index="' + idx + '" ' +
+          'placeholder="Jugador ' + (idx + 1) + '" maxlength="20" value="' + escapeHtml(row.name) + '">' +
+        '<button type="button" class="row-remove-btn" data-index="' + idx + '"' +
+          (effectivePlayerCount(rows) <= MIN_PLAYERS ? ' disabled' : '') + '>✕</button>' +
+      '</div>'
+    );
+  }
+
+  function renderRows(){
+    var rows = config.rows;
+    rowsContainer.innerHTML = rows.map(function(row, idx){
+      return rowHtml(row, idx, rows);
+    }).join('');
+  }
+
+  // keeps exactly one empty row at the end, ready for the next player
+  function normalizeTrailingSlot(){
+    var rows = config.rows;
+    while (rows.length > 1 && !rows[rows.length - 1].name.trim() && !rows[rows.length - 2].name.trim()){
+      rows.pop();
+    }
+    if (rows.length < MAX_PLAYERS && (rows.length === 0 || rows[rows.length - 1].name.trim())){
+      rows.push({ name: "" });
+    }
+  }
+
+  rowsContainer.addEventListener('input', function(e){
+    var target = e.target;
+    if (!target.classList.contains('player-name-input')) return;
+    var idx = parseInt(target.getAttribute('data-index'), 10);
+    config.rows[idx].name = target.value;
+    normalizeTrailingSlot();
+    persistPlayers();
+
+    var selStart = target.selectionStart, selEnd = target.selectionEnd;
+    renderRows();
+    var restored = rowsContainer.querySelector('.player-name-input[data-index="' + idx + '"]');
+    if (restored){
+      restored.focus();
+      restored.setSelectionRange(selStart, selEnd);
+    }
+    validateSetup();
+  });
+
+  rowsContainer.addEventListener('click', function(e){
+    var removeBtn = e.target.closest('.row-remove-btn');
+    if (!removeBtn || removeBtn.disabled) return;
+    var rIdx = parseInt(removeBtn.getAttribute('data-index'), 10);
+    config.rows.splice(rIdx, 1);
+    normalizeTrailingSlot();
+    renderRows();
+    persistPlayers();
+    validateSetup();
+  });
+
+  // ---------- categories ----------
+  var categoryListEl = document.getElementById('category-list');
+  var categoryToggleAllBtn = document.getElementById('category-toggle-all-btn');
+  var setupError = document.getElementById('setup-error');
+  var playersErrorEl = document.getElementById('players-error');
+  var startBtn = document.getElementById('start-btn');
+  var setupStepPlayersEl = document.getElementById('setup-step-players');
+  var setupStepSettingsEl = document.getElementById('setup-step-settings');
+  var setupNavEl = document.getElementById('setup-nav');
+  var setupPrevBtn = document.getElementById('setup-prev-btn');
+  var setupNextBtn = document.getElementById('setup-next-btn');
+  var setupFinalBackBtn = document.getElementById('setup-final-back-btn');
+
+  // 0 = jugadores, 1 = categorías — separate steps with explicit forward/back nav
+  var setupStep = 0;
+  function renderSetupStep(){
+    setupStepPlayersEl.classList.toggle('hidden', setupStep !== 0);
+    setupStepSettingsEl.classList.toggle('hidden', setupStep !== 1);
+    setupNavEl.classList.toggle('hidden', setupStep === 1);
+    setupPrevBtn.classList.toggle('hidden', setupStep === 0);
+  }
+  setupPrevBtn.addEventListener('click', function(){
+    if (setupStep > 0){ setupStep--; renderSetupStep(); validateSetup(); }
+  });
+  setupNextBtn.addEventListener('click', function(){
+    if (setupStep < 1 && !setupNextBtn.disabled){ setupStep++; renderSetupStep(); validateSetup(); }
+  });
+  setupFinalBackBtn.addEventListener('click', function(){
+    setupStep = 0;
+    renderSetupStep();
+    validateSetup();
+  });
+  renderSetupStep();
+
+  function renderToggleAllLabel(){
+    if (!CATEGORIAS){ categoryToggleAllBtn.textContent = 'Seleccionar todas'; return; }
+    categoryToggleAllBtn.textContent = config.selectedCategories.length === CATEGORIAS.length ? 'Quitar todas' : 'Seleccionar todas';
+  }
+
+  function renderCategoryList(){
+    if (!CATEGORIAS || CATEGORIAS.length === 0){
+      categoryListEl.innerHTML = '<p class="chip-loading">Cargando categorías…</p>';
+      renderToggleAllLabel();
+      return;
+    }
+    categoryListEl.innerHTML = CATEGORIAS.map(function(c){
+      var selected = config.selectedCategories.indexOf(c.id) !== -1;
+      return '<button type="button" class="chip' + (selected ? ' selected' : '') + '" data-category-id="' + c.id + '">' +
+        '<span class="chip-icon">' + escapeHtml(c.icono || '📦') + '</span>' +
+        '<span class="chip-name">' + escapeHtml(c.nombre) + '</span>' +
+      '</button>';
+    }).join('');
+    renderToggleAllLabel();
+  }
+
+  categoryListEl.addEventListener('click', function(e){
+    var chip = e.target.closest('.chip');
+    if (!chip) return;
+    var id = chip.getAttribute('data-category-id');
+    var idx = config.selectedCategories.indexOf(id);
+    if (idx === -1) config.selectedCategories.push(id);
+    else config.selectedCategories.splice(idx, 1);
+    renderCategoryList();
+    validateSetup();
+  });
+
+  categoryToggleAllBtn.addEventListener('click', function(){
+    if (!CATEGORIAS) return;
+    if (config.selectedCategories.length === CATEGORIAS.length){
+      config.selectedCategories = [];
+    } else {
+      config.selectedCategories = CATEGORIAS.map(function(c){ return c.id; });
+    }
+    renderCategoryList();
+    validateSetup();
+  });
+
+  function buildDeck(){
+    var pool = [];
+    CATEGORIAS.forEach(function(c){
+      if (config.selectedCategories.indexOf(c.id) !== -1) pool = pool.concat(c.frases);
+    });
+    return shuffle(pool.slice()).slice(0, DECK_SIZE);
+  }
+
+  function validateSetup(){
+    var rows = config.rows;
+    var playerMsgs = [];
+    var hasEmptyName = rows.some(function(r, idx){ return idx !== rows.length - 1 && !r.name.trim(); });
+    if (hasEmptyName) playerMsgs.push("Todos los jugadores necesitan un nombre.");
+    if (effectivePlayerCount(rows) < MIN_PLAYERS) playerMsgs.push("Necesitas al menos " + MIN_PLAYERS + " jugadores.");
+
+    var settingsMsgs = [];
+    if (!CATEGORIAS) settingsMsgs.push("Cargando categorías…");
+    else if (config.selectedCategories.length === 0) settingsMsgs.push("Selecciona al menos una categoría.");
+
+    var playersValid = playerMsgs.length === 0;
+    var settingsValid = settingsMsgs.length === 0;
+    playersErrorEl.textContent = playerMsgs[0] || "";
+    setupError.textContent = settingsMsgs[0] || "";
+    setupNextBtn.disabled = setupStep === 0 && !playersValid;
+    startBtn.disabled = !(playersValid && settingsValid);
+    return playersValid && settingsValid;
+  }
+
+  function enterSetup(){
+    renderRows();
+    renderCategoryList();
+    setupStep = 0;
+    renderSetupStep();
+    validateSetup();
+    switchScreen(screenSetup);
+  }
+
+  // ---------- round screen ----------
+  var roundBadge = document.getElementById('round-badge');
+  var phraseEl = document.getElementById('qp-phrase');
+  var rosterEl = document.getElementById('qp-roster');
+  var nextBtn = document.getElementById('next-btn');
+  var progressDots = document.getElementById('progress-dots');
+  var newRoundBtn = document.getElementById('new-round-btn');
+
+  var dots = createDots(progressDots);
+
+  function renderRoster(){
+    rosterEl.innerHTML = state.playerNames.map(function(name, idx){
+      var selected = state.chosenIdx === idx;
+      return '<button type="button" class="roster-row' + (selected ? ' selected' : '') + '" data-index="' + idx + '">' +
+        '<span class="roster-row-name">' + escapeHtml(name) + '</span>' +
+      '</button>';
+    }).join('');
+    nextBtn.disabled = state.chosenIdx === null;
+  }
+
+  rosterEl.addEventListener('click', function(e){
+    var row = e.target.closest('.roster-row');
+    if (!row) return;
+    state.chosenIdx = parseInt(row.getAttribute('data-index'), 10);
+    renderRoster();
+  });
+
+  function showRound(i){
+    roundBadge.textContent = "RONDA " + (i + 1) + " / " + state.totalRounds;
+    phraseEl.textContent = state.deck[i];
+    state.chosenIdx = null;
+    renderRoster();
+    dots.update(i);
+  }
+
+  nextBtn.addEventListener('click', function(){
+    if (nextBtn.disabled) return;
+    state.tallies[state.chosenIdx]++;
+    state.round++;
+    if (state.round >= state.totalRounds){
+      showEnd();
+    } else {
+      showRound(state.round);
+    }
+  });
+
+  // ---------- end screen ----------
+  var endScoreboardEl = document.getElementById('end-scoreboard');
+
+  function showEnd(){
+    var ranked = state.playerNames.map(function(name, idx){
+      return { name: name, count: state.tallies[idx] };
+    }).sort(function(a, b){ return b.count - a.count; });
+    var maxCount = ranked.length ? ranked[0].count : 0;
+
+    endScoreboardEl.innerHTML = ranked.map(function(p){
+      var isTop = maxCount > 0 && p.count === maxCount;
+      return '<div class="qp-score-row' + (isTop ? ' winner' : '') + '">' +
+        '<span class="qp-score-name"><span class="qp-score-pill">' + (isTop ? '🏆' : '') + '</span>' + escapeHtml(p.name) + '</span>' +
+        '<span class="qp-score-value">' + p.count + '</span>' +
+      '</div>';
+    }).join('');
+
+    switchScreen(screenEnd);
+  }
+
+  newRoundBtn.addEventListener('click', function(){
+    enterSetup();
+  });
+
+  startBtn.addEventListener('click', function(){
+    if (!validateSetup()) return;
+    config.rows.forEach(function(r){ r.name = r.name.trim(); });
+
+    state.playerNames = config.rows.map(function(r){ return r.name; }).filter(function(n){ return n !== ""; });
+    state.tallies = state.playerNames.map(function(){ return 0; });
+    state.deck = buildDeck();
+    state.totalRounds = state.deck.length;
+    state.round = 0;
+
+    dots.build(state.totalRounds);
+    showRound(0);
+    switchScreen(screenGame);
+  });
+
+  // ---------- how-to-play guide ----------
+  setupModal(
+    document.getElementById('guide-btn'),
+    document.getElementById('guide-modal-backdrop'),
+    document.getElementById('guide-modal-close')
+  );
+
+  // ---------- init ----------
+  renderRows();
+  loadCategories();
+})();
+</script>
+</body>
+</html>

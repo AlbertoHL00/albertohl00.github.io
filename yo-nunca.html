@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<script src="analytics.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Yo Nunca · Game Hub</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="78" font-size="72" text-anchor="middle">%F0%9F%99%85</text></svg>'>
+<link rel="stylesheet" href="shared.css">
+<style>
+  :root{
+    --accent:#2f9fb0;
+    --accent2:#7fe3e8;
+    --reveal-b:#7fe3e8;
+  }
+  html,body{
+    /* flat solid fill — a multi-layer gradient here used to leave gaps of
+       the raw background color showing on some viewports/scroll ranges */
+    background-color:var(--bg2);
+  }
+
+  .yn-phrase{
+    font-family:var(--font-display);
+    font-size:1.4rem;
+    font-weight:700;
+    text-align:center;
+    line-height:1.3;
+    margin:6px 0 20px;
+    word-break:break-word;
+  }
+
+  /* ---- alive-player grid: same "card of bare names" shape as the shared
+     #reveal-roster picker, but scoped locally since that id belongs to the
+     Impostor/Hombres Lobo/Detective Club reveal screen ---- */
+  #yn-roster{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  #yn-roster .roster-row{
+    flex-direction:column;
+    justify-content:center;
+    padding:16px 10px;
+    text-align:center;
+  }
+  #yn-roster .roster-row-name{
+    flex:none;
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+  }
+  #yn-roster .roster-row.marked{
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    border-color:transparent;
+    color:#fff;
+  }
+  .yn-lives{
+    margin-top:4px;
+    font-size:0.8rem;
+    letter-spacing:1px;
+    color:var(--text-dim);
+  }
+  #yn-roster .roster-row.marked .yn-lives{color:rgba(255,255,255,0.85);}
+  .yn-hint{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:0.85rem;
+    margin-bottom:14px;
+  }
+  .yn-eliminated-note{
+    text-align:center;
+    font-size:0.78rem;
+    color:var(--text-dim);
+    margin:2px 0 4px;
+  }
+  .yn-survivors-list{
+    text-align:center;
+    font-size:1rem;
+    font-weight:700;
+    color:var(--text);
+    margin:10px 0 4px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SETUP -->
+  <div class="screen" id="screen-setup">
+    <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
+      </div>
+      <h1>YO NUNCA</h1>
+
+      <div id="setup-step-players">
+        <label><span class="label-icon">👥</span>Jugadores</label>
+        <div id="players-list"></div>
+        <div class="error-msg" id="players-error"></div>
+      </div>
+
+      <div class="night-nav" id="setup-nav">
+        <button type="button" class="night-nav-btn icon-only" id="setup-prev-btn" aria-label="Anterior"><span class="back-icon"></span></button>
+        <button type="button" class="night-nav-btn" id="setup-next-btn">Siguiente</button>
+      </div>
+
+      <div id="setup-step-settings" class="hidden">
+        <label><span class="label-icon">🏷️</span>Categorías</label>
+        <button type="button" class="chip-toggle-all" id="category-toggle-all-btn">Seleccionar todas</button>
+        <div class="chip-list" id="category-list"></div>
+
+        <label><span class="label-icon">✋</span>Vidas por jugador</label>
+        <div class="stepper">
+          <button type="button" id="lives-minus">−</button>
+          <div class="value" id="lives-value">5</div>
+          <button type="button" id="lives-plus">+</button>
+        </div>
+        <p class="count-info">Como los dedos de una mano: cada vez que te toca la frase, pierdes una vida. Quien se queda sin vidas, queda eliminado.</p>
+
+        <div class="error-msg" id="setup-error"></div>
+
+        <div class="final-nav">
+          <button type="button" class="night-nav-btn icon-only" id="setup-final-back-btn" aria-label="Anterior"><span class="back-icon"></span></button>
+          <button class="btn-main" id="start-btn">Iniciar partida</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY GUIDE -->
+  <div class="guide-modal-backdrop hidden" id="guide-modal-backdrop">
+    <div class="guide-modal">
+      <button type="button" class="guide-modal-close" id="guide-modal-close">✕</button>
+      <h2>Cómo se juega</h2>
+
+      <h3>Objetivo</h3>
+      <p>Un clásico para romper el hielo. Cada ronda aparece una frase "Nunca he...". Léela en voz alta: quien SÍ lo haya hecho, pierde una vida (como bajar un dedo).</p>
+
+      <h3>Usar la app</h3>
+      <ol>
+        <li>Añade a los jugadores, elige las categorías y cuántas vidas tiene cada uno (5 por defecto, como los dedos de una mano).</li>
+        <li>En cada ronda, lee la frase en voz alta para todo el grupo.</li>
+        <li>Toca en la rejilla a todos los que SÍ hayan hecho lo que dice la frase (puede ser ninguno, uno o varios) y pulsa "Confirmar ronda".</li>
+        <li>A quien se le acaban las vidas queda eliminado y ya no aparece en las rondas siguientes.</li>
+        <li>La partida termina cuando queda un único jugador con vidas (el ganador) o cuando se acaban las frases.</li>
+      </ol>
+
+      <h3>Honestidad</h3>
+      <p>La app no puede comprobar quién ha hecho qué: todo se basa en la sinceridad de cada jugador.</p>
+
+      <h3>Categorías</h3>
+      <ul>
+        <li><strong>Suave:</strong> frases ligeras, aptas para cualquier grupo.</li>
+        <li><strong>Fiesta:</strong> un punto más atrevidas, pensadas para ambiente de fiesta.</li>
+        <li><strong>Atrevido (+18):</strong> contenido para adultos.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN: one phrase per round, mark who it applies to -->
+  <div class="screen hidden" id="screen-game">
+    <div class="card">
+      <div class="setup-header">
+        <span class="back-btn" style="cursor:default;" id="game-status">Quedan 0 frases</span>
+      </div>
+
+      <div class="yn-phrase" id="yn-phrase">Nunca he...</div>
+      <p class="yn-hint">Toca a quien SÍ lo haya hecho (puede ser nadie, uno o varios).</p>
+
+      <div id="yn-roster"></div>
+      <div class="yn-eliminated-note hidden" id="yn-eliminated-note"></div>
+
+      <button class="btn-main" id="confirm-round-btn">Confirmar ronda</button>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div class="screen hidden" id="screen-end">
+    <div class="card">
+      <div class="end-icon" id="end-icon">🏆</div>
+      <h1 style="font-size:1.6rem;" id="end-title">PARTIDA TERMINADA</h1>
+      <p class="subtitle" id="end-subtitle"></p>
+      <div class="yn-survivors-list" id="end-survivors"></div>
+      <button class="btn-main" id="new-round-btn">Iniciar nueva ronda</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="shared.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var MIN_PLAYERS = 3, MAX_PLAYERS = 20;
+  var MIN_LIVES = 3, MAX_LIVES = 10, DEFAULT_LIVES = 5;
+
+  var config = {
+    selectedCategories: [],
+    lives: DEFAULT_LIVES,
+    rows: loadSavedPlayerNames().slice(0, MAX_PLAYERS).map(function(n){ return { name: n }; }).concat([{ name: "" }])
+  };
+
+  function persistPlayers(){
+    savePlayerNames(config.rows.map(function(r){ return r.name.trim(); }).filter(function(n){ return n !== ""; }));
+  }
+
+  var CATEGORIES = null;
+  var CATEGORIES_FALLBACK = [
+    { "id": "suave", "nombre": "Suave", "icono": "😇", "frases": ["Nunca he mentido sobre mi edad.", "Nunca he fingido estar enfermo para no ir a trabajar o estudiar.", "Nunca me he quedado dormido en clase o en una reunión.", "Nunca he llorado viendo una película.", "Nunca me he perdido en una ciudad que no conocía.", "Nunca he cantado en la ducha pensando que nadie me oía.", "Nunca he roto algo en casa de otra persona y no lo he dicho.", "Nunca he mandado un mensaje a la persona equivocada.", "Nunca me he caído delante de mucha gente.", "Nunca he copiado en un examen."] },
+    { "id": "fiesta", "nombre": "Fiesta", "icono": "🎉", "frases": ["Nunca he bailado sobre una mesa o silla.", "Nunca me he despertado sin recordar cómo llegué a casa.", "Nunca he vomitado en una fiesta.", "Nunca he besado a alguien por una apuesta.", "Nunca he mentido sobre cuánto había bebido.", "Nunca he perdido el móvil en una fiesta.", "Nunca he cantado karaoke estando muy borracho.", "Nunca me he colado en una fiesta a la que no estaba invitado.", "Nunca he mezclado bebidas que no debía.", "Nunca he tenido una resaca de las que duran dos días."] }
+  ];
+
+  function loadCategories(){
+    return fetch('yo-nunca.json')
+      .then(function(r){ if (!r.ok) throw new Error('bad response'); return r.json(); })
+      .then(function(data){ CATEGORIES = data.categorias; })
+      .catch(function(){ CATEGORIES = CATEGORIES_FALLBACK; })
+      .then(function(){
+        if (config.selectedCategories.length === 0){
+          config.selectedCategories = CATEGORIES.map(function(c){ return c.id; });
+        }
+        renderCategoryList();
+        validateSetup();
+      });
+  }
+
+  var state = {
+    playerNames: [],
+    lives: [],       // parallel to playerNames
+    marked: [],      // parallel to playerNames: marked this round?
+    deck: []
+  };
+
+  var screenSetup = document.getElementById('screen-setup');
+  var screenGame = document.getElementById('screen-game');
+  var screenEnd = document.getElementById('screen-end');
+  var ALL_SCREENS = [screenSetup, screenGame, screenEnd];
+
+  function switchScreen(target){
+    ALL_SCREENS.forEach(function(s){ s.classList.add('hidden'); });
+    target.classList.remove('hidden');
+  }
+
+  // ---------- players ----------
+  // No "add player" button: the last row is always an empty slot, and
+  // filling it grows the list automatically (see normalizeTrailingSlot).
+  var rowsContainer = document.getElementById('players-list');
+
+  function effectivePlayerCount(rows){
+    var n = rows.length;
+    if (n > 0 && !rows[n - 1].name.trim()) n--; // trailing empty slot isn't a player yet
+    return n;
+  }
+
+  function rowHtml(row, idx, rows){
+    var isTrailingSlot = idx === rows.length - 1 && !row.name.trim();
+    if (isTrailingSlot){
+      return (
+        '<div class="player-row">' +
+          '<input type="text" class="player-name-input" data-index="' + idx + '" ' +
+            'placeholder="Jugador ' + (idx + 1) + '" maxlength="20" value="' + escapeHtml(row.name) + '">' +
+        '</div>'
+      );
+    }
+    return (
+      '<div class="player-row">' +
+        '<input type="text" class="player-name-input" data-index="' + idx + '" ' +
+          'placeholder="Jugador ' + (idx + 1) + '" maxlength="20" value="' + escapeHtml(row.name) + '">' +
+        '<button type="button" class="row-remove-btn" data-index="' + idx + '"' +
+          (effectivePlayerCount(rows) <= MIN_PLAYERS ? ' disabled' : '') + '>✕</button>' +
+      '</div>'
+    );
+  }
+
+  function renderRows(){
+    var rows = config.rows;
+    rowsContainer.innerHTML = rows.map(function(row, idx){
+      return rowHtml(row, idx, rows);
+    }).join('');
+  }
+
+  // keeps exactly one empty row at the end, ready for the next player
+  function normalizeTrailingSlot(){
+    var rows = config.rows;
+    while (rows.length > 1 && !rows[rows.length - 1].name.trim() && !rows[rows.length - 2].name.trim()){
+      rows.pop();
+    }
+    if (rows.length < MAX_PLAYERS && (rows.length === 0 || rows[rows.length - 1].name.trim())){
+      rows.push({ name: "" });
+    }
+  }
+
+  rowsContainer.addEventListener('input', function(e){
+    var target = e.target;
+    if (!target.classList.contains('player-name-input')) return;
+    var idx = parseInt(target.getAttribute('data-index'), 10);
+    config.rows[idx].name = target.value;
+    normalizeTrailingSlot();
+    persistPlayers();
+
+    var selStart = target.selectionStart, selEnd = target.selectionEnd;
+    renderRows();
+    var restored = rowsContainer.querySelector('.player-name-input[data-index="' + idx + '"]');
+    if (restored){
+      restored.focus();
+      restored.setSelectionRange(selStart, selEnd);
+    }
+    validateSetup();
+  });
+
+  rowsContainer.addEventListener('click', function(e){
+    var removeBtn = e.target.closest('.row-remove-btn');
+    if (!removeBtn || removeBtn.disabled) return;
+    var rIdx = parseInt(removeBtn.getAttribute('data-index'), 10);
+    config.rows.splice(rIdx, 1);
+    normalizeTrailingSlot();
+    renderRows();
+    persistPlayers();
+    validateSetup();
+  });
+
+  // ---------- categories ----------
+  var categoryListEl = document.getElementById('category-list');
+  var categoryToggleAllBtn = document.getElementById('category-toggle-all-btn');
+  var setupError = document.getElementById('setup-error');
+  var playersErrorEl = document.getElementById('players-error');
+  var startBtn = document.getElementById('start-btn');
+  var setupStepPlayersEl = document.getElementById('setup-step-players');
+  var setupStepSettingsEl = document.getElementById('setup-step-settings');
+  var setupNavEl = document.getElementById('setup-nav');
+  var setupPrevBtn = document.getElementById('setup-prev-btn');
+  var setupNextBtn = document.getElementById('setup-next-btn');
+  var setupFinalBackBtn = document.getElementById('setup-final-back-btn');
+
+  // 0 = jugadores, 1 = resto de ajustes — separate steps with explicit
+  // forward/back navigation instead of one long scrolling form
+  var setupStep = 0;
+  function renderSetupStep(){
+    setupStepPlayersEl.classList.toggle('hidden', setupStep !== 0);
+    setupStepSettingsEl.classList.toggle('hidden', setupStep !== 1);
+    setupNavEl.classList.toggle('hidden', setupStep === 1);
+    setupPrevBtn.classList.toggle('hidden', setupStep === 0);
+  }
+  setupPrevBtn.addEventListener('click', function(){
+    if (setupStep > 0){ setupStep--; renderSetupStep(); validateSetup(); }
+  });
+  setupNextBtn.addEventListener('click', function(){
+    if (setupStep < 1 && !setupNextBtn.disabled){ setupStep++; renderSetupStep(); validateSetup(); }
+  });
+  setupFinalBackBtn.addEventListener('click', function(){
+    setupStep = 0;
+    renderSetupStep();
+    validateSetup();
+  });
+  renderSetupStep(); // sync nav buttons to setupStep's initial value on page load
+
+  function renderToggleAllLabel(){
+    if (!CATEGORIES){ categoryToggleAllBtn.textContent = 'Seleccionar todas'; return; }
+    categoryToggleAllBtn.textContent = config.selectedCategories.length === CATEGORIES.length ? 'Quitar todas' : 'Seleccionar todas';
+  }
+
+  function renderCategoryList(){
+    if (!CATEGORIES || CATEGORIES.length === 0){
+      categoryListEl.innerHTML = '<p class="chip-loading">Cargando categorías…</p>';
+      renderToggleAllLabel();
+      return;
+    }
+    categoryListEl.innerHTML = CATEGORIES.map(function(c){
+      var selected = config.selectedCategories.indexOf(c.id) !== -1;
+      return '<button type="button" class="chip' + (selected ? ' selected' : '') + '" data-category-id="' + c.id + '">' +
+        '<span class="chip-icon">' + escapeHtml(c.icono || '📦') + '</span>' +
+        '<span class="chip-name">' + escapeHtml(c.nombre) + '</span>' +
+      '</button>';
+    }).join('');
+    renderToggleAllLabel();
+  }
+
+  categoryListEl.addEventListener('click', function(e){
+    var chip = e.target.closest('.chip');
+    if (!chip) return;
+    var id = chip.getAttribute('data-category-id');
+    var idx = config.selectedCategories.indexOf(id);
+    if (idx === -1) config.selectedCategories.push(id);
+    else config.selectedCategories.splice(idx, 1);
+    renderCategoryList();
+    validateSetup();
+  });
+
+  categoryToggleAllBtn.addEventListener('click', function(){
+    if (!CATEGORIES) return;
+    if (config.selectedCategories.length === CATEGORIES.length){
+      config.selectedCategories = [];
+    } else {
+      config.selectedCategories = CATEGORIES.map(function(c){ return c.id; });
+    }
+    renderCategoryList();
+    validateSetup();
+  });
+
+  // ---------- lives stepper ----------
+  var livesValueEl = document.getElementById('lives-value');
+  var livesMinusBtn = document.getElementById('lives-minus');
+  var livesPlusBtn = document.getElementById('lives-plus');
+  function renderLives(){ livesValueEl.textContent = config.lives; }
+  livesMinusBtn.addEventListener('click', function(){
+    config.lives = clamp(config.lives - 1, MIN_LIVES, MAX_LIVES);
+    renderLives();
+    popValue(livesValueEl);
+  });
+  livesPlusBtn.addEventListener('click', function(){
+    config.lives = clamp(config.lives + 1, MIN_LIVES, MAX_LIVES);
+    renderLives();
+    popValue(livesValueEl);
+  });
+
+  function buildWordPool(){
+    var pool = [];
+    CATEGORIES.forEach(function(c){
+      if (config.selectedCategories.indexOf(c.id) !== -1) pool = pool.concat(c.frases);
+    });
+    return pool;
+  }
+
+  function validateSetup(){
+    var rows = config.rows;
+    var playerMsgs = [];
+    var hasEmptyName = rows.some(function(r, idx){ return idx !== rows.length - 1 && !r.name.trim(); });
+    if (hasEmptyName) playerMsgs.push("Todos los jugadores necesitan un nombre.");
+    if (effectivePlayerCount(rows) < MIN_PLAYERS) playerMsgs.push("Necesitas al menos " + MIN_PLAYERS + " jugadores.");
+    else if (hasDuplicatePlayerNames(rows)) playerMsgs.push("No puede haber dos jugadores con el mismo nombre.");
+
+    var settingsMsgs = [];
+    if (!CATEGORIES) settingsMsgs.push("Cargando categorías…");
+    else if (config.selectedCategories.length === 0) settingsMsgs.push("Selecciona al menos una categoría.");
+
+    var playersValid = playerMsgs.length === 0;
+    var settingsValid = settingsMsgs.length === 0;
+    playersErrorEl.textContent = playerMsgs[0] || "";
+    setupError.textContent = settingsMsgs[0] || "";
+    setupNextBtn.disabled = setupStep === 0 && !playersValid;
+    startBtn.disabled = !(playersValid && settingsValid);
+    return playersValid && settingsValid;
+  }
+
+  function enterSetup(){
+    renderRows();
+    renderCategoryList();
+    renderLives();
+    setupStep = 0;
+    renderSetupStep();
+    validateSetup();
+    switchScreen(screenSetup);
+  }
+
+  // ---------- game screen ----------
+  var gameStatusEl = document.getElementById('game-status');
+  var phraseEl = document.getElementById('yn-phrase');
+  var rosterEl = document.getElementById('yn-roster');
+  var eliminatedNoteEl = document.getElementById('yn-eliminated-note');
+  var confirmBtn = document.getElementById('confirm-round-btn');
+  var endIconEl = document.getElementById('end-icon');
+  var endTitleEl = document.getElementById('end-title');
+  var endSubtitleEl = document.getElementById('end-subtitle');
+  var endSurvivorsEl = document.getElementById('end-survivors');
+  var newRoundBtn = document.getElementById('new-round-btn');
+
+  function aliveIndexes(){
+    var arr = [];
+    for (var i = 0; i < state.lives.length; i++) if (state.lives[i] > 0) arr.push(i);
+    return arr;
+  }
+
+  function livesIcons(n){
+    if (n > 6) return '❤ ×' + n;
+    var out = '';
+    for (var i = 0; i < n; i++) out += '❤';
+    return out;
+  }
+
+  function renderRoster(){
+    var alive = aliveIndexes();
+    rosterEl.innerHTML = alive.map(function(idx){
+      var marked = state.marked[idx];
+      return '<button type="button" class="roster-row' + (marked ? ' marked' : '') + '" data-index="' + idx + '">' +
+        '<span class="roster-row-name">' + escapeHtml(state.playerNames[idx]) + '</span>' +
+        '<span class="yn-lives">' + livesIcons(state.lives[idx]) + '</span>' +
+      '</button>';
+    }).join('');
+
+    var eliminated = [];
+    for (var i = 0; i < state.playerNames.length; i++) if (state.lives[i] <= 0) eliminated.push(state.playerNames[i]);
+    eliminatedNoteEl.classList.toggle('hidden', eliminated.length === 0);
+    if (eliminated.length){
+      eliminatedNoteEl.textContent = 'Eliminados: ' + eliminated.join(', ');
+    }
+  }
+
+  rosterEl.addEventListener('click', function(e){
+    var row = e.target.closest('.roster-row');
+    if (!row) return;
+    var idx = parseInt(row.getAttribute('data-index'), 10);
+    state.marked[idx] = !state.marked[idx];
+    renderRoster();
+  });
+
+  function showRound(){
+    var alive = aliveIndexes();
+    if (alive.length <= 1 || state.deck.length === 0){
+      endGame(alive);
+      return;
+    }
+    state.marked = state.playerNames.map(function(){ return false; });
+    phraseEl.textContent = state.deck.shift();
+    gameStatusEl.textContent = 'Quedan ' + state.deck.length + ' frases';
+    renderRoster();
+    switchScreen(screenGame);
+  }
+
+  confirmBtn.addEventListener('click', function(){
+    for (var i = 0; i < state.playerNames.length; i++){
+      if (state.marked[i]) state.lives[i] = Math.max(0, state.lives[i] - 1);
+    }
+    showRound();
+  });
+
+  function endGame(alive){
+    if (alive.length === 1){
+      endIconEl.textContent = '🏆';
+      endTitleEl.textContent = '¡' + state.playerNames[alive[0]].toUpperCase() + ' GANA!';
+      endSubtitleEl.textContent = 'El último con vidas se lleva la partida.';
+      endSurvivorsEl.textContent = '';
+    } else {
+      endIconEl.textContent = '🤝';
+      endTitleEl.textContent = 'SE ACABARON LAS FRASES';
+      endSubtitleEl.textContent = alive.length > 1 ? 'Estos jugadores siguen en pie:' : 'Nadie ha quedado en pie.';
+      endSurvivorsEl.textContent = alive.map(function(i){ return state.playerNames[i]; }).join(', ');
+    }
+    switchScreen(screenEnd);
+  }
+
+  newRoundBtn.addEventListener('click', function(){
+    enterSetup();
+  });
+
+  startBtn.addEventListener('click', function(){
+    if (!validateSetup()) return;
+    config.rows.forEach(function(r){ r.name = r.name.trim(); });
+
+    state.playerNames = config.rows.map(function(r){ return r.name; }).filter(function(n){ return n !== ""; });
+    state.lives = state.playerNames.map(function(){ return config.lives; });
+    state.marked = state.playerNames.map(function(){ return false; });
+    state.deck = shuffle(buildWordPool().slice());
+
+    showRound();
+  });
+
+  // ---------- how-to-play guide ----------
+  setupModal(
+    document.getElementById('guide-btn'),
+    document.getElementById('guide-modal-backdrop'),
+    document.getElementById('guide-modal-close')
+  );
+
+  // ---------- init ----------
+  renderRows();
+  renderLives();
+  loadCategories();
+})();
+</script>
+</body>
+</html>

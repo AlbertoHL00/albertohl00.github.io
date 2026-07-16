@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<script src="analytics.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Impostor · Game Hub</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="78" font-size="72" text-anchor="middle">%F0%9F%8E%AD</text></svg>'>
+<link rel="stylesheet" href="shared.css">
+<style>
+  :root{
+    --accent:#9c3f47;
+    --accent2:#bf7078;
+    --reveal-b:#bf7078;
+  }
+  html,body{
+    /* flat solid fill — a multi-layer gradient here used to leave gaps of
+       the raw background color showing on some viewports/scroll ranges */
+    background-color:var(--bg2);
+  }
+  .packages-dropdown-btn{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 14px;
+    border-radius:14px;
+    border:1px solid var(--glass-border);
+    background:rgba(255,255,255,0.05);
+    color:var(--text);
+    font-size:0.88rem;
+    font-weight:600;
+    cursor:pointer;
+    text-align:left;
+  }
+  .packages-dropdown-btn:active{transform:scale(0.98);}
+  .packages-dropdown-summary{
+    color:var(--text-dim);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .packages-dropdown-chevron{
+    flex-shrink:0;
+    color:var(--text-dim);
+    transition:transform .2s;
+  }
+  .packages-dropdown-btn[aria-expanded="true"] .packages-dropdown-chevron{
+    transform:rotate(180deg);
+  }
+  .packages-dropdown-panel{
+    margin-top:10px;
+  }
+  .player-row.is-impostor{
+    background:rgba(156,63,71,0.12);
+    border-color:rgba(156,63,71,0.4);
+  }
+  .player-row.is-impostor .row-toggle-btn{
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    border-color:transparent;
+  }
+
+  /* ---- debate / vote screen ---- */
+  .start-player-line{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:0.85rem;
+    font-weight:600;
+    margin:0 0 18px;
+  }
+  .start-player-line strong{color:var(--text);}
+  .debate-title{transition:color .2s;}
+  .debate-title.game-over-impostores{
+    background:none;
+    -webkit-background-clip:unset;
+    background-clip:unset;
+    -webkit-text-fill-color:currentColor;
+    color:var(--danger);
+  }
+  .debate-title.game-over-civiles{
+    background:none;
+    -webkit-background-clip:unset;
+    background-clip:unset;
+    -webkit-text-fill-color:currentColor;
+    color:var(--safe);
+  }
+  .debate-timer{
+    display:flex;
+    justify-content:center;
+    align-items:baseline;
+    font-family:var(--font-display);
+    font-size:3rem;
+    font-weight:800;
+    margin:6px 0 10px;
+    letter-spacing:1px;
+    font-variant-numeric:tabular-nums;
+  }
+  .debate-timer-part{
+    display:inline-block;
+    width:2ch;
+    text-align:center;
+  }
+  .debate-timer-colon{
+    display:inline-block;
+  }
+  @keyframes debateTimerBlink{
+    0%, 100%{ color:var(--danger); opacity:1; }
+    50%{ color:var(--danger); opacity:0.25; }
+  }
+  .debate-timer-wrap.time-up .debate-timer{
+    animation:debateTimerBlink 0.5s steps(1) infinite;
+  }
+  .vote-row{
+    display:flex;
+    align-items:center;
+    padding:12px 14px;
+    border-radius:12px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--glass-border);
+    margin-bottom:8px;
+    cursor:pointer;
+    font-weight:600;
+    transition:background .15s, border-color .15s, transform .1s;
+  }
+  .vote-row:active{transform:scale(0.98);}
+  .vote-row.selected{
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    border-color:transparent;
+    color:#fff;
+  }
+  .vote-result-icon{
+    text-align:center;
+    font-size:3rem;
+    margin-bottom:8px;
+  }
+  .vote-result-title{
+    text-align:center;
+    font-family:var(--font-display);
+    font-size:1.3rem;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .vote-result-title.reveal-civil{color:var(--safe);}
+  .vote-result-title.reveal-impostor{color:var(--danger);}
+  .vote-result-detail-continue{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:0.85rem;
+    margin:0 0 10px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SETUP: IMPOSTOR (manual o aleatorio) -->
+  <div class="screen" id="screen-setup">
+    <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
+      </div>
+      <h1>IMPOSTOR</h1>
+
+      <div id="setup-step-players">
+        <label><span class="label-icon">👥</span>Jugadores</label>
+        <div id="impostor-players-list"></div>
+        <div class="error-msg" id="impostor-players-error"></div>
+      </div>
+
+      <div class="night-nav" id="setup-nav">
+        <button type="button" class="night-nav-btn icon-only" id="setup-prev-btn" aria-label="Anterior"><span class="back-icon"></span></button>
+        <button type="button" class="night-nav-btn" id="setup-next-btn">Siguiente</button>
+      </div>
+
+      <div id="setup-step-settings" class="hidden">
+        <div class="submode-toggle">
+          <button type="button" class="submode-btn" id="submode-custom-btn">Personalizada</button>
+          <button type="button" class="submode-btn" id="submode-random-btn">Aleatoria</button>
+        </div>
+
+        <div id="custom-word-wrap">
+          <label for="word-input-imp"><span class="label-icon">🗣️</span>Palabra secreta</label>
+          <input type="text" id="word-input-imp" placeholder="Ej: Playa, Pizza, Batman..." maxlength="40">
+
+          <label class="switch-toggle">
+            <input type="checkbox" id="custom-random-assign-toggle">
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+            🎲 Asignar el impostor al azar
+          </label>
+          <p class="count-info" id="custom-random-assign-desc"></p>
+
+          <div id="custom-random-count-wrap" class="hidden">
+            <label><span class="label-icon">🎭</span>Número de impostores</label>
+            <div class="stepper">
+              <button type="button" id="custom-impostors-minus">−</button>
+              <div class="value" id="custom-impostors-value">1</div>
+              <button type="button" id="custom-impostors-plus">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="random-config-wrap" class="hidden">
+          <label><span class="label-icon">📦</span>Paquetes</label>
+          <button type="button" class="packages-dropdown-btn" id="packages-dropdown-btn" aria-expanded="false">
+            <span class="packages-dropdown-summary" id="packages-dropdown-summary">Selecciona paquetes</span>
+            <span class="packages-dropdown-chevron">▾</span>
+          </button>
+          <div class="packages-dropdown-panel hidden" id="packages-dropdown-panel">
+            <button type="button" class="chip-toggle-all" id="package-toggle-all-btn">Seleccionar todos</button>
+            <div class="chip-list" id="package-list"></div>
+          </div>
+        </div>
+
+        <label><span class="label-icon">⏱️</span>Tiempo para debatir</label>
+        <div class="stepper">
+          <button type="button" id="debate-minutes-minus">−</button>
+          <div class="value" id="debate-minutes-value">Sin límite</div>
+          <button type="button" id="debate-minutes-plus">+</button>
+        </div>
+
+        <div id="random-impostors-wrap" class="hidden">
+          <label><span class="label-icon">🎭</span>Número de impostores</label>
+          <div class="stepper">
+            <button type="button" id="random-impostors-minus">−</button>
+            <div class="value" id="random-impostors-value">1</div>
+            <button type="button" id="random-impostors-plus">+</button>
+          </div>
+
+          <label><span class="label-icon">💡</span>Modo de pista para impostores</label>
+          <div class="submode-toggle" id="impostor-mode-toggle">
+            <button type="button" class="submode-btn" id="impostor-mode-none-btn">Sin pista</button>
+            <button type="button" class="submode-btn" id="impostor-mode-hint-btn">Con pista</button>
+            <button type="button" class="submode-btn" id="impostor-mode-mrblanco-btn">Mr. Blanco</button>
+          </div>
+          <p class="count-info" id="impostor-mode-desc"></p>
+        </div>
+
+        <div class="count-info" id="impostor-count-info"></div>
+        <div class="error-msg" id="impostor-setup-error"></div>
+
+        <div class="final-nav">
+          <button type="button" class="night-nav-btn icon-only" id="setup-final-back-btn" aria-label="Anterior"><span class="back-icon"></span></button>
+          <button class="btn-main" id="impostor-start-btn">Iniciar partida</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY GUIDE -->
+  <div class="guide-modal-backdrop hidden" id="guide-modal-backdrop">
+    <div class="guide-modal">
+      <button type="button" class="guide-modal-close" id="guide-modal-close">✕</button>
+      <h2>Cómo se juega</h2>
+
+      <h3>Objetivo</h3>
+      <p>Todos los jugadores ven la misma palabra secreta... excepto el impostor (o impostores), que no la conocen y deben disimular.</p>
+
+      <h3>Modo personalizado</h3>
+      <ul>
+        <li>Escribe tú la palabra secreta.</li>
+        <li>Marca manualmente quién es el impostor tocando su icono 👤/🎭, o activa "Asignar el impostor al azar" para que la app lo elija por ti.</li>
+      </ul>
+
+      <h3>Modo aleatorio</h3>
+      <ul>
+        <li>Elige los paquetes temáticos que quieras usar y cuántos impostores habrá.</li>
+        <li>Elige el modo de pista: <strong>Sin pista</strong> (el impostor solo ve que lo es), <strong>Con pista</strong> (ve que es impostor y además una palabra relacionada) o <strong>Mr. Blanco</strong> (recibe una palabra relacionada pero NUNCA se le dice que es el impostor).</li>
+        <li>La app reparte la palabra y los impostores al azar.</li>
+      </ul>
+
+      <h3>Cómo jugar la ronda</h3>
+      <ol>
+        <li>Pasa el dispositivo: cada jugador ve su rol en privado y lo oculta antes de pasarlo.</li>
+        <li>Al terminar, la app indica quién empieza a hablar y ya podéis ver la lista para votar.</li>
+        <li>Por turnos, cada uno dice una palabra o pista relacionada sin decir la palabra secreta directamente.</li>
+        <li>Si configuraste un tiempo de debate, la app avisa con una alarma y el contador parpadea en rojo al agotarse; podéis votar en cualquier momento, con o sin tiempo agotado.</li>
+        <li>Votad a quien creáis impostor: se elimina y se revela si acertasteis.</li>
+        <li>Si quedan impostores en minoría, se juega otra ronda de palabras y votación con los jugadores vivos. Ganan los civiles si se descubren todos los impostores; ganan los impostores si superan en número a los civiles, o si solo queda 1 impostor contra 1 civil.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ROLE REVEAL ROSTER: tap your own name to show your card in private -->
+  <div class="screen hidden" id="screen-game">
+    <div class="card">
+      <p class="subtitle">Toca tu nombre para ver tu rol. Nadie más debe mirar.</p>
+
+      <div class="roster-list" id="reveal-roster"></div>
+
+      <button class="btn-main" id="reveal-continue-btn" disabled>Empezar debate</button>
+    </div>
+  </div>
+
+  <!-- role card modal, opened from the roster above -->
+  <div class="guide-modal-backdrop hidden" id="reveal-modal-backdrop">
+    <div class="guide-modal reveal-modal">
+      <button type="button" class="guide-modal-close" id="reveal-modal-close" disabled>✕</button>
+      <div class="reveal-wrap" id="reveal-wrap">
+        <div class="reveal-content" id="reveal-content"></div>
+        <button type="button" class="reveal-btn" id="reveal-btn">
+          <span class="reveal-icon">👁️</span>
+          <span class="reveal-text">Revelar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEBATE / VOTE SCREEN -->
+  <div class="screen hidden" id="screen-debate">
+    <div class="card">
+      <h1 class="debate-title" style="font-size:1.6rem;" id="debate-title">A DEBATIR</h1>
+      <p class="subtitle" id="debate-subtitle">Debatid y decidid quién creéis que es el impostor</p>
+      <p class="start-player-line" id="start-player-line"></p>
+
+      <div id="debate-timer-wrap" class="hidden">
+        <div class="debate-timer" id="debate-timer">
+          <span class="debate-timer-part" id="debate-timer-mm">00</span><span class="debate-timer-colon">:</span><span class="debate-timer-part" id="debate-timer-ss">00</span>
+        </div>
+      </div>
+
+      <div id="vote-section">
+        <label>¿Quién creéis que es el impostor?</label>
+        <div id="vote-players-list"></div>
+        <button class="btn-main" id="confirm-vote-btn" disabled>Confirmar voto</button>
+      </div>
+
+      <div id="vote-result" class="hidden">
+        <div class="vote-result-icon" id="vote-result-icon">🎭</div>
+        <div class="vote-result-title" id="vote-result-title"></div>
+        <p class="subtitle" id="vote-result-detail"></p>
+        <button class="btn-main" id="vote-next-btn">Siguiente ronda</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="shared.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var MIN_PLAYERS = 3, MAX_PLAYERS = 20;
+  var MIN_IMPOSTORS = 1;
+
+  var MAX_DEBATE_MINUTES = 30;
+
+  var config = {
+    subMode: "random", // 'custom' | 'random'
+    word: "",
+    randomImpostors: 1,
+    customRandomAssign: false, // custom mode: assign the impostor(s) at random instead of tapping who it is
+    customImpostorCount: 1,
+    impostorMode: "none", // 'none' | 'hint' | 'mrblanco'
+    debateMinutes: 0, // 0 = sin límite
+    selectedPackages: [],
+    rows: loadSavedPlayerNames().slice(0, MAX_PLAYERS).map(function(n){ return { name: n, isImpostor: false }; }).concat([{ name: "", isImpostor: false }])
+  };
+
+  function persistPlayers(){
+    savePlayerNames(config.rows.map(function(r){ return r.name.trim(); }).filter(function(n){ return n !== ""; }));
+  }
+
+  var PACKAGES = null;
+  var PACKAGES_FALLBACK = [
+    { "id": "animales_y_naturaleza", "nombre": "Animales y naturaleza", "icono": "🦁", "palabras": ["Elefante", "León", "Jirafa", "Delfín", "Águila", "Tortuga", "Canguro", "Pingüino", "Tigre", "Oso", "Cebra", "Koala", "Búho", "Cocodrilo", "Serpiente", "Mono", "Lobo", "Zorro", "Ballena", "Pulpo", "Camaleón", "Murciélago", "Flamenco", "Erizo", "Panda", "Rinoceronte", "Hipopótamo", "Avestruz", "Camello", "Foca", "Nutria", "Mapache", "Puma", "Gorila", "Loro", "Medusa", "Tucán", "Escorpión", "Volcán", "Cascada", "Huracán", "Arcoíris", "Terremoto", "Nieve", "Tormenta", "Desierto", "Glaciar", "Océano", "Bosque", "Río", "Estrella", "Luna", "Eclipse", "Niebla", "Marea", "Duna", "Cueva", "Géiser", "Iceberg", "Relámpago", "Bahía", "Meseta", "Acantilado", "Pantano", "Manantial", "Cordillera", "Tundra", "Jaguar", "Leopardo", "Hiena", "Chimpancé", "Orangután", "Armadillo", "Perezoso", "Cangrejo", "Estrella de mar", "Anguila", "Piraña", "Buitre", "Halcón", "Colibrí", "Cisne", "Pavo real", "Ardilla", "Castor", "Alce", "Jabalí"], "relacionadas": {"Elefante": "Rinoceronte", "León": "Leopardo", "Jirafa": "Cebra", "Delfín": "Ballena", "Águila": "Halcón", "Tortuga": "Cocodrilo", "Canguro": "Koala", "Pingüino": "Foca", "Tigre": "Jaguar", "Oso": "Panda", "Cebra": "Jirafa", "Koala": "Canguro", "Búho": "Lechuza", "Cocodrilo": "Caimán", "Serpiente": "Lagarto", "Mono": "Gorila", "Lobo": "Zorro", "Zorro": "Lobo", "Ballena": "Delfín", "Pulpo": "Medusa", "Camaleón": "Iguana", "Murciélago": "Búho", "Flamenco": "Cigüeña", "Erizo": "Puercoespín", "Panda": "Oso", "Rinoceronte": "Hipopótamo", "Hipopótamo": "Elefante", "Avestruz": "Emú", "Camello": "Dromedario", "Foca": "Morsa", "Nutria": "Castor", "Mapache": "Mofeta", "Puma": "Lince", "Gorila": "Chimpancé", "Loro": "Guacamayo", "Medusa": "Pulpo", "Tucán": "Loro", "Escorpión": "Araña", "Volcán": "Géiser", "Cascada": "Río", "Huracán": "Tormenta", "Arcoíris": "Eclipse", "Terremoto": "Volcán", "Nieve": "Glaciar", "Tormenta": "Huracán", "Desierto": "Duna", "Glaciar": "Iceberg", "Océano": "Costa", "Bosque": "Pantano", "Río": "Cascada", "Estrella": "Luna", "Luna": "Estrella", "Eclipse": "Arcoíris", "Niebla": "Nube", "Marea": "Océano", "Duna": "Desierto", "Cueva": "Manantial", "Géiser": "Fumarola", "Iceberg": "Banquisa", "Relámpago": "Trueno", "Bahía": "Acantilado", "Meseta": "Cordillera", "Acantilado": "Bahía", "Pantano": "Bosque", "Manantial": "Cueva", "Cordillera": "Meseta", "Tundra": "Estepa", "Jaguar": "Puma", "Leopardo": "Guepardo", "Hiena": "Chacal", "Chimpancé": "Orangután", "Orangután": "Mono", "Armadillo": "Perezoso", "Perezoso": "Armadillo", "Cangrejo": "Langosta", "Estrella de mar": "Erizo de mar", "Anguila": "Morena", "Piraña": "Barracuda", "Buitre": "Cóndor", "Halcón": "Águila", "Colibrí": "Mariposa", "Cisne": "Pato", "Pavo real": "Faisán", "Ardilla": "Marmota", "Castor": "Nutria", "Alce": "Reno", "Jabalí": "Ciervo"} },
+    { "id": "vida_cotidiana", "nombre": "Vida cotidiana", "icono": "🏠", "palabras": ["Paraguas", "Mochila", "Teléfono", "Bicicleta", "Espejo", "Reloj", "Llave", "Silla", "Almohada", "Tijeras", "Cepillo", "Maleta", "Lámpara", "Cartera", "Gafas", "Guitarra", "Mapa", "Vela", "Escalera", "Cámara", "Sombrilla", "Termo", "Brújula", "Cargador", "Auriculares", "Mando a distancia", "Bombilla", "Cubo de basura", "Percha", "Toalla", "Cepillo de dientes", "Peine", "Encendedor", "Botella", "Sartén", "Despertador", "Ducha", "Desayuno", "Fregadero", "Lavadora", "Nevera", "Aspiradora", "Cesta de la compra", "Plancha", "Microondas", "Batidora", "Tostadora", "Cortinas", "Alfombra", "Colchón", "Sábanas", "Manta", "Jabón", "Champú", "Detergente", "Fregona", "Escoba", "Recogedor"], "relacionadas": {"Paraguas": "Sombrilla", "Mochila": "Maleta", "Teléfono": "Cámara", "Bicicleta": "Patinete", "Espejo": "Cuadro", "Reloj": "Despertador", "Llave": "Cerradura", "Silla": "Mesa", "Almohada": "Manta", "Tijeras": "Navaja", "Cepillo": "Peine", "Maleta": "Mochila", "Lámpara": "Bombilla", "Cartera": "Bolso", "Gafas": "Lentillas", "Guitarra": "Piano", "Mapa": "Brújula", "Vela": "Encendedor", "Escalera": "Taburete", "Cámara": "Teléfono", "Sombrilla": "Paraguas", "Termo": "Botella", "Brújula": "Mapa", "Cargador": "Auriculares", "Auriculares": "Cargador", "Mando a distancia": "Televisor", "Bombilla": "Lámpara", "Cubo de basura": "Escoba", "Percha": "Armario", "Toalla": "Albornoz", "Cepillo de dientes": "Pasta de dientes", "Peine": "Cepillo", "Encendedor": "Vela", "Botella": "Termo", "Sartén": "Olla", "Despertador": "Reloj", "Ducha": "Bañera", "Desayuno": "Merienda", "Fregadero": "Lavavajillas", "Lavadora": "Secadora", "Nevera": "Congelador", "Aspiradora": "Mopa", "Cesta de la compra": "Carrito de la compra", "Plancha": "Tabla de planchar", "Microondas": "Horno", "Batidora": "Licuadora", "Tostadora": "Microondas", "Cortinas": "Persiana", "Alfombra": "Cortinas", "Colchón": "Almohada", "Sábanas": "Colchón", "Manta": "Sábanas", "Jabón": "Champú", "Champú": "Detergente", "Detergente": "Jabón", "Fregona": "Recogedor", "Escoba": "Fregona", "Recogedor": "Cubo de basura"} },
+    { "id": "anime", "nombre": "Anime", "icono": "🎌", "palabras": ["Naruto", "One Piece", "Dragon Ball", "Shin Chan", "Doraemon", "Ataque a los Titanes", "Death Note", "My Hero Academia", "Demon Slayer", "Sailor Moon", "Fullmetal Alchemist", "Evangelion", "Detective Conan", "Digimon", "Bleach", "Jujutsu Kaisen", "InuYasha", "Pokémon", "Dragon Ball Z", "Sakura Card Captor", "Spy x Family", "Chainsaw Man", "Hunter x Hunter", "Cowboy Bebop", "Vinland Saga", "Tokyo Ghoul", "Fruits Basket", "Ranma ½", "Slam Dunk", "Yu-Gi-Oh!", "Gintama", "Black Clover", "One Punch Man", "Dr. Slump", "City Hunter"], "relacionadas": {"Naruto": "Bleach", "One Piece": "Dragon Ball", "Dragon Ball": "One Piece", "Shin Chan": "Doraemon", "Doraemon": "Shin Chan", "Ataque a los Titanes": "Tokyo Ghoul", "Death Note": "Detective Conan", "My Hero Academia": "One Punch Man", "Demon Slayer": "Jujutsu Kaisen", "Sailor Moon": "Sakura Card Captor", "Fullmetal Alchemist": "InuYasha", "Evangelion": "Cowboy Bebop", "Detective Conan": "Death Note", "Digimon": "Pokémon", "Bleach": "Naruto", "Jujutsu Kaisen": "Demon Slayer", "InuYasha": "Fullmetal Alchemist", "Pokémon": "Digimon", "Dragon Ball Z": "Vinland Saga", "Sakura Card Captor": "Sailor Moon", "Spy x Family": "City Hunter", "Chainsaw Man": "Ataque a los Titanes", "Hunter x Hunter": "Black Clover", "Cowboy Bebop": "Evangelion", "Vinland Saga": "Dragon Ball Z", "Tokyo Ghoul": "Chainsaw Man", "Fruits Basket": "Dr. Slump", "Ranma ½": "Gintama", "Slam Dunk": "Yu-Gi-Oh!", "Yu-Gi-Oh!": "Slam Dunk", "Gintama": "Ranma ½", "Black Clover": "Hunter x Hunter", "One Punch Man": "My Hero Academia", "Dr. Slump": "Fruits Basket", "City Hunter": "Spy x Family"} },
+    { "id": "cine_y_television", "nombre": "Cine y televisión", "icono": "🎬", "palabras": ["Friends", "Stranger Things", "Breaking Bad", "Juego de Tronos", "Titanic", "Star Wars", "Harry Potter", "El Padrino", "Matrix", "Los Simpson", "La Casa de Papel", "Vengadores", "Jurassic Park", "El Señor de los Anillos", "Black Mirror", "Big Bang Theory", "Peaky Blinders", "El Ministerio del Tiempo", "Élite", "Narcos", "Gladiator", "Forrest Gump", "Grease", "Rocky", "El Resplandor", "Cadena Perpetua", "Pulp Fiction", "Regreso al Futuro", "Los Goonies", "La Vida es Bella", "Cuéntame", "Merlí", "El Silencio de los Corderos", "Origen", "El Club de la Lucha", "Interstellar", "Whiplash", "La La Land", "Parásitos", "Joker", "Avatar", "El Exorcista", "Psicosis", "Tiburón", "Karate Kid", "Los Otros", "El Sexto Sentido"], "relacionadas": {"Friends": "How I Met Your Mother", "Stranger Things": "It", "Breaking Bad": "Ozark", "Juego de Tronos": "Vikingos", "Titanic": "Pearl Harbor", "Star Wars": "Star Trek", "Harry Potter": "Las Crónicas de Narnia", "El Padrino": "Uno de los Nuestros", "Matrix": "Blade Runner", "Los Simpson": "Padre de Familia", "La Casa de Papel": "Ocean's Eleven", "Vengadores": "Liga de la Justicia", "Jurassic Park": "King Kong", "El Señor de los Anillos": "Eragon", "Black Mirror": "Westworld", "Big Bang Theory": "Silicon Valley", "Peaky Blinders": "Los Soprano", "El Ministerio del Tiempo": "Doctor Who", "Élite": "Sex Education", "Narcos": "Sicario", "Gladiator": "Troya", "Forrest Gump": "El Curioso Caso de Benjamin Button", "Grease": "High School Musical", "Rocky": "Million Dollar Baby", "El Resplandor": "Cementerio de Animales", "Cadena Perpetua": "Escape de Alcatraz", "Pulp Fiction": "Kill Bill", "Regreso al Futuro": "El Efecto Mariposa", "Los Goonies": "Cuenta Conmigo", "La Vida es Bella": "El Diario de Ana Frank", "Cuéntame": "Amar en Tiempos Revueltos", "Merlí": "El Club de los Poetas Muertos", "El Silencio de los Corderos": "Seven", "Origen": "Donnie Darko", "El Club de la Lucha": "American Psycho", "Interstellar": "Gravity", "Whiplash": "Amadeus", "La La Land": "Cantando Bajo la Lluvia", "Parásitos": "Rompenieves", "Joker": "Taxi Driver", "Avatar": "Dune", "El Exorcista": "La Profecía", "Psicosis": "La Matanza de Texas", "Tiburón": "Piraña", "Karate Kid": "Kickboxer", "Los Otros": "Amityville", "El Sexto Sentido": "Poltergeist"} },
+    { "id": "cuerpo_y_salud", "nombre": "Cuerpo y salud", "icono": "🩺", "palabras": ["Corazón", "Pulmón", "Cerebro", "Estómago", "Hígado", "Riñón", "Esqueleto", "Músculo", "Vacuna", "Termómetro", "Fiebre", "Resfriado", "Alergia", "Vitamina", "Dieta", "Ejercicio", "Estetoscopio", "Radiografía", "Tirita", "Jeringuilla", "Silla de ruedas", "Muleta", "Mascarilla", "Análisis de sangre", "Piel", "Sangre", "Hueso", "Tendón", "Nervio", "Pupila", "Retina", "Cadera", "Rodilla", "Codo", "Muñeca", "Tobillo"], "relacionadas": {"Corazón": "Pulmón", "Pulmón": "Corazón", "Cerebro": "Médula espinal", "Estómago": "Hígado", "Hígado": "Riñón", "Riñón": "Estómago", "Esqueleto": "Músculo", "Músculo": "Esqueleto", "Vacuna": "Jeringuilla", "Termómetro": "Fiebre", "Fiebre": "Resfriado", "Resfriado": "Alergia", "Alergia": "Termómetro", "Vitamina": "Dieta", "Dieta": "Ejercicio", "Ejercicio": "Vitamina", "Estetoscopio": "Radiografía", "Radiografía": "Análisis de sangre", "Tirita": "Mascarilla", "Jeringuilla": "Vacuna", "Silla de ruedas": "Muleta", "Muleta": "Silla de ruedas", "Mascarilla": "Tirita", "Análisis de sangre": "Estetoscopio", "Piel": "Sangre", "Sangre": "Hueso", "Hueso": "Tendón", "Tendón": "Nervio", "Nervio": "Piel", "Pupila": "Retina", "Retina": "Pupila", "Cadera": "Rodilla", "Rodilla": "Codo", "Codo": "Muñeca", "Muñeca": "Tobillo", "Tobillo": "Cadera"} },
+    { "id": "deportes", "nombre": "Deportes", "icono": "🏅", "palabras": ["Fútbol", "Baloncesto", "Tenis", "Natación", "Ciclismo", "Boxeo", "Voleibol", "Atletismo", "Golf", "Surf", "Esquí", "Rugby", "Béisbol", "Kárate", "Ajedrez", "Patinaje", "Escalada", "Bádminton", "Waterpolo", "Gimnasia", "Remo", "Esgrima", "Hockey", "Vela", "Snowboard", "Triatlón", "Halterofilia", "Tiro con arco", "Motociclismo", "Automovilismo", "Skate", "Pádel", "Squash", "Curling", "Lucha libre", "Ciclismo BMX", "Piragüismo", "Petanca", "Bolos", "Billar", "Dardos", "Paracaidismo", "Puenting", "Parapente", "Buceo", "Snorkel"], "relacionadas": {"Fútbol": "Fútbol Americano", "Baloncesto": "Balonmano", "Tenis": "Tenis de Mesa", "Natación": "Clavados", "Ciclismo": "Duatlón", "Boxeo": "Kickboxing", "Voleibol": "Voley Playa", "Atletismo": "Maratón", "Golf": "Minigolf", "Surf": "Bodyboard", "Esquí": "Trineo", "Rugby": "Fútbol Australiano", "Béisbol": "Sóftbol", "Kárate": "Taekwondo", "Ajedrez": "Damas", "Patinaje": "Hockey sobre Hielo", "Escalada": "Montañismo", "Bádminton": "Frontón", "Waterpolo": "Rugby Acuático", "Gimnasia": "Patinaje Artístico", "Remo": "Windsurf", "Esgrima": "Kendo", "Hockey": "Lacrosse", "Vela": "Motonáutica", "Snowboard": "Esquí Acuático", "Triatlón": "Pentatlón Moderno", "Halterofilia": "Culturismo", "Tiro con arco": "Tiro Olímpico", "Motociclismo": "Kárting", "Automovilismo": "Rally", "Skate": "Parkour", "Pádel": "Frontenis", "Squash": "Racquetball", "Curling": "Skeleton", "Lucha libre": "Judo", "Ciclismo BMX": "Ciclismo de Montaña", "Piragüismo": "Rafting", "Petanca": "Croquet", "Bolos": "Bochas", "Billar": "Snooker", "Dardos": "Herradura", "Paracaidismo": "Ala Delta", "Puenting": "Salto BASE", "Parapente": "Globo Aerostático", "Buceo": "Pesca Submarina", "Snorkel": "Kitesurf"} },
+    { "id": "escuela", "nombre": "Escuela", "icono": "🎒", "palabras": ["Pizarra", "Lápiz", "Goma de borrar", "Examen", "Recreo", "Pupitre", "Tiza", "Libro de texto", "Deberes", "Regla", "Sacapuntas", "Uniforme escolar", "Notas", "Bedel", "Comedor escolar", "Excursión escolar", "Cuaderno", "Mapa mundi", "Profesor", "Biblioteca", "Aula", "Timbre", "Director", "Matrícula", "Nota media", "Beca", "Selectividad", "Suspenso", "Aprobado", "Pizarra digital", "Carpeta", "Estuche"], "relacionadas": {"Pizarra": "Proyector", "Lápiz": "Bolígrafo", "Goma de borrar": "Típex", "Examen": "Control", "Recreo": "Patio", "Pupitre": "Silla", "Tiza": "Rotulador", "Libro de texto": "Diccionario", "Deberes": "Trabajo en Equipo", "Regla": "Escuadra", "Sacapuntas": "Tijeras", "Uniforme escolar": "Mochila", "Notas": "Boletín", "Bedel": "Secretaría", "Comedor escolar": "Cafetería", "Excursión escolar": "Viaje de Fin de Curso", "Cuaderno": "Agenda", "Mapa mundi": "Globo Terráqueo", "Profesor": "Tutor", "Biblioteca": "Librería", "Aula": "Laboratorio", "Timbre": "Sirena", "Director": "Jefe de Estudios", "Matrícula": "Admisión", "Nota media": "Expediente Académico", "Beca": "Préstamo Estudiantil", "Selectividad": "Oposición", "Suspenso": "Recuperación", "Aprobado": "Notable", "Pizarra digital": "Tablet", "Carpeta": "Archivador", "Estuche": "Fiambrera"} },
+    { "id": "fantasia", "nombre": "Fantasía", "icono": "🐉", "palabras": ["Zeus", "Dragón", "Unicornio", "Sirena", "Fantasma", "Vampiro", "Hada", "Duende", "Bruja", "Hombre lobo", "Caperucita Roja", "Minotauro", "Centauro", "Fénix", "Genio de la lámpara", "Excálibur", "Pegaso", "Cíclope", "Elfo", "Enano", "Ogro", "Troll", "Hipogrifo", "Basilisco", "Quimera", "Grifo", "Nigromante", "Hechizo", "Varita mágica", "Poción"], "relacionadas": {"Zeus": "Poseidón", "Dragón": "Leviatán", "Unicornio": "Ciervo Blanco", "Sirena": "Ninfa", "Fantasma": "Zombi", "Vampiro": "Momia", "Hada": "Silfo", "Duende": "Gnomo", "Bruja": "Chamán", "Hombre lobo": "Yeti", "Caperucita Roja": "Blancanieves", "Minotauro": "Sátiro", "Centauro": "Golem", "Fénix": "Ave Roc", "Genio de la lámpara": "Hada Madrina", "Excálibur": "Martillo de Thor", "Pegaso": "Caballo de Troya", "Cíclope": "Gigante", "Elfo": "Fauno", "Enano": "Trasgo", "Ogro": "Bestia", "Troll": "Kobold", "Hipogrifo": "Wyvern", "Basilisco": "Medusa", "Quimera": "Manticora", "Grifo": "Esfinge", "Nigromante": "Hechicero", "Hechizo": "Maldición", "Varita mágica": "Bola de Cristal", "Poción": "Amuleto"} },
+    { "id": "futbol", "nombre": "Fútbol", "icono": "⚽", "palabras": ["Balón", "Portería", "Árbitro", "Tarjeta roja", "Penalti", "Fuera de juego", "Delantero", "Portero", "Entrenador", "Afición", "Mundial", "Champions League", "Falta", "Córner", "Fichaje", "Vestuario", "Bota de fútbol", "Chilena", "Derbi", "Prórroga", "Balón de oro", "Titular", "Suplente", "Lateral", "Central", "Extremo", "Pivote", "Regate", "Remate", "Saque de esquina", "Tanda de penaltis", "Descenso"], "relacionadas": {"Balón": "Red", "Portería": "Área", "Árbitro": "VAR", "Tarjeta roja": "Tarjeta Amarilla", "Penalti": "Tiro Libre", "Fuera de juego": "Mano", "Delantero": "Mediocentro", "Portero": "Líbero", "Entrenador": "Director Deportivo", "Afición": "Ultras", "Mundial": "Eurocopa", "Champions League": "Europa League", "Falta": "Simulación", "Córner": "Saque de Banda", "Fichaje": "Cesión", "Vestuario": "Banquillo", "Bota de fútbol": "Espinillera", "Chilena": "Rabona", "Derbi": "Final", "Prórroga": "Descuento", "Balón de oro": "Bota de Oro", "Titular": "Capitán", "Suplente": "Lesionado", "Lateral": "Interior", "Central": "Carrilero", "Extremo": "Media Punta", "Pivote": "Enganche", "Regate": "Túnel", "Remate": "Pase", "Saque de esquina": "Saque de Meta", "Tanda de penaltis": "Muerte Súbita", "Descenso": "Ascenso"} },
+    { "id": "gente_famosa", "nombre": "Gente famosa", "icono": "🌟", "palabras": ["Albert Einstein", "Leonardo da Vinci", "Cristiano Ronaldo", "Lionel Messi", "Michael Jackson", "Freddie Mercury", "Marilyn Monroe", "Charles Chaplin", "Pablo Picasso", "Frida Kahlo", "Elvis Presley", "Walt Disney", "Steve Jobs", "Beyoncé", "Shakira", "Rafael Nadal", "Usain Bolt", "Mahatma Gandhi", "William Shakespeare", "Cleopatra", "Isaac Newton", "Charles Darwin", "Nelson Mandela", "Martin Luther King", "Napoleón Bonaparte", "Julio César", "Vincent van Gogh", "Wolfgang Amadeus Mozart", "Ludwig van Beethoven", "Stephen Hawking", "Marie Curie", "Serena Williams", "Michael Jordan", "LeBron James", "Bob Marley"], "relacionadas": {"Albert Einstein": "Nikola Tesla", "Leonardo da Vinci": "Miguel Ángel", "Cristiano Ronaldo": "Pelé", "Lionel Messi": "Diego Maradona", "Michael Jackson": "Prince", "Freddie Mercury": "David Bowie", "Marilyn Monroe": "Audrey Hepburn", "Charles Chaplin": "Buster Keaton", "Pablo Picasso": "Salvador Dalí", "Frida Kahlo": "Diego Rivera", "Elvis Presley": "Chuck Berry", "Walt Disney": "Hayao Miyazaki", "Steve Jobs": "Bill Gates", "Beyoncé": "Rihanna", "Shakira": "Jennifer Lopez", "Rafael Nadal": "Roger Federer", "Usain Bolt": "Carl Lewis", "Mahatma Gandhi": "Jawaharlal Nehru", "William Shakespeare": "Miguel de Cervantes", "Cleopatra": "Nefertiti", "Isaac Newton": "Galileo Galilei", "Charles Darwin": "Gregor Mendel", "Nelson Mandela": "Desmond Tutu", "Martin Luther King": "Rosa Parks", "Napoleón Bonaparte": "Alejandro Magno", "Julio César": "Augusto", "Vincent van Gogh": "Claude Monet", "Wolfgang Amadeus Mozart": "Johann Sebastian Bach", "Ludwig van Beethoven": "Franz Schubert", "Stephen Hawking": "Carl Sagan", "Marie Curie": "Rosalind Franklin", "Serena Williams": "Venus Williams", "Michael Jordan": "Kobe Bryant", "LeBron James": "Stephen Curry", "Bob Marley": "Jimmy Cliff"} },
+    { "id": "juegos", "nombre": "Juegos", "icono": "🎮", "palabras": ["Minecraft", "Fortnite", "Among Us", "FIFA", "Mario Kart", "The Legend of Zelda", "Pokémon", "Grand Theft Auto", "Call of Duty", "Roblox", "League of Legends", "Animal Crossing", "Candy Crush", "Tetris", "Sonic", "Fall Guys", "Overwatch", "Clash Royale", "The Sims", "Super Mario Bros", "Halo", "God of War", "Resident Evil", "Street Fighter", "Uncharted", "Assassin's Creed", "Red Dead Redemption", "Pac-Man", "Brawl Stars", "Genshin Impact", "Valorant", "Parchís", "Monopoly", "Uno", "Twister", "Escondite", "Dominó", "Cartas", "Bingo", "Stardew Valley", "Terraria", "Portal", "Cuphead", "Hollow Knight", "Hades", "Rocket League", "Just Dance", "Wii Sports", "Piedra papel o tijera"], "relacionadas": {"Minecraft": "Garry's Mod", "Fortnite": "PUBG", "Among Us": "Town of Salem", "FIFA": "PES", "Mario Kart": "Crash Team Racing", "The Legend of Zelda": "Metroid", "Pokémon": "Digimon", "Grand Theft Auto": "Saints Row", "Call of Duty": "Battlefield", "Roblox": "Rec Room", "League of Legends": "Dota 2", "Animal Crossing": "Harvest Moon", "Candy Crush": "Bejeweled", "Tetris": "Puyo Puyo", "Sonic": "Crash Bandicoot", "Fall Guys": "Gang Beasts", "Overwatch": "Apex Legends", "Clash Royale": "Clash of Clans", "The Sims": "Second Life", "Super Mario Bros": "Donkey Kong", "Halo": "Destiny", "God of War": "Darksiders", "Resident Evil": "Silent Hill", "Street Fighter": "Mortal Kombat", "Uncharted": "Tomb Raider", "Assassin's Creed": "Watch Dogs", "Red Dead Redemption": "Far Cry", "Pac-Man": "Frogger", "Brawl Stars": "Mobile Legends", "Genshin Impact": "Honkai Star Rail", "Valorant": "Counter-Strike", "Parchís": "Oca", "Monopoly": "El Juego de la Vida", "Uno": "Exploding Kittens", "Twister": "Simón Dice", "Escondite": "Pilla-pilla", "Dominó": "Damas", "Cartas": "Dados", "Bingo": "Lotería", "Stardew Valley": "My Time at Portia", "Terraria": "Starbound", "Portal": "The Talos Principle", "Cuphead": "Contra", "Hollow Knight": "Ori and the Blind Forest", "Hades": "Dead Cells", "Rocket League": "Need for Speed", "Just Dance": "Dance Dance Revolution", "Wii Sports": "Kinect Sports", "Piedra papel o tijera": "Cara o cruz"} },
+    { "id": "marcas", "nombre": "Marcas", "icono": "🏷️", "palabras": ["Nike", "Adidas", "Coca-Cola", "Apple", "Samsung", "McDonald's", "Google", "Netflix", "Amazon", "Zara", "IKEA", "Pepsi", "Ferrari", "BMW", "Lego", "Gucci", "Puma", "Levi's", "Spotify", "Danone", "Starbucks", "Burger King", "KFC", "H&M", "Bershka", "Chanel", "Rolex", "Sony", "Microsoft", "PlayStation", "Xbox", "Red Bull"], "relacionadas": {"Nike": "Reebok", "Adidas": "Under Armour", "Coca-Cola": "Fanta", "Apple": "Huawei", "Samsung": "LG", "McDonald's": "Wendy's", "Google": "Bing", "Netflix": "HBO Max", "Amazon": "eBay", "Zara": "Mango", "IKEA": "Conforama", "Pepsi": "7 Up", "Ferrari": "Lamborghini", "BMW": "Mercedes-Benz", "Lego": "Playmobil", "Gucci": "Prada", "Puma": "Fila", "Levi's": "Wrangler", "Spotify": "Deezer", "Danone": "Nestlé", "Starbucks": "Costa Coffee", "Burger King": "Five Guys", "KFC": "Popeyes", "H&M": "Uniqlo", "Bershka": "Pull&Bear", "Chanel": "Dior", "Rolex": "Omega", "Sony": "Panasonic", "Microsoft": "IBM", "PlayStation": "Nintendo Switch", "Xbox": "Sega", "Red Bull": "Monster Energy"} },
+    { "id": "moda_y_ropa", "nombre": "Moda y ropa", "icono": "👗", "palabras": ["Vaquero", "Camiseta", "Vestido", "Zapatillas", "Bufanda", "Abrigo", "Sombrero", "Corbata", "Falda", "Traje", "Cinturón", "Bikini", "Chándal", "Botas", "Guantes", "Pijama", "Gorra", "Calcetines", "Pasarela", "Desfile de moda", "Camisa", "Blazer", "Mono", "Kimono", "Poncho", "Turbante", "Diadema", "Pendientes", "Collar", "Pulsera", "Reloj de pulsera", "Tacones"], "relacionadas": {"Vaquero": "Chinos", "Camiseta": "Polo", "Vestido": "Túnica", "Zapatillas": "Sandalias", "Bufanda": "Pañuelo", "Abrigo": "Chaqueta", "Sombrero": "Boina", "Corbata": "Pajarita", "Falda": "Pantalón", "Traje": "Esmoquin", "Cinturón": "Tirantes", "Bikini": "Bañador", "Chándal": "Leggins", "Botas": "Zuecos", "Guantes": "Manoplas", "Pijama": "Bata", "Gorra": "Gorro de lana", "Calcetines": "Medias", "Pasarela": "Alfombra roja", "Desfile de moda": "Photocall", "Camisa": "Blusa", "Blazer": "Cárdigan", "Mono": "Peto", "Kimono": "Sari", "Poncho": "Capa", "Turbante": "Velo", "Diadema": "Horquilla", "Pendientes": "Piercing", "Collar": "Broche", "Pulsera": "Anillo", "Reloj de pulsera": "Brazalete", "Tacones": "Bailarinas"} },
+    { "id": "mundo_y_lugares", "nombre": "Mundo y lugares", "icono": "🌍", "palabras": ["Playa", "Montaña", "Biblioteca", "Aeropuerto", "Hospital", "Escuela", "Supermercado", "Cine", "Parque", "Museo", "Restaurante", "Castillo", "Desierto", "Bosque", "Isla", "Cárcel", "Iglesia", "Estadio", "Granja", "Volcán", "Faro", "Circo", "Mercado", "Puerto", "Universidad", "Ayuntamiento", "Cementerio", "Fábrica", "Oficina", "Gimnasio", "Piscina", "Selva", "Sabana", "Iglú", "Palacio", "Francia", "Japón", "Egipto", "Torre Eiffel", "Gran Muralla China", "Pirámides de Guiza", "Machu Picchu", "Nueva York", "Coliseo Romano", "Taj Mahal", "Roma", "Londres", "Río de Janeiro", "Sídney", "Venecia", "Amazonas", "Sahara", "Himalaya", "Polo Norte", "Polo Sur", "Gran Cañón", "Stonehenge"], "relacionadas": {"Playa": "Acantilado", "Montaña": "Cueva", "Biblioteca": "Librería", "Aeropuerto": "Estación de tren", "Hospital": "Farmacia", "Escuela": "Guardería", "Supermercado": "Panadería", "Cine": "Teatro", "Parque": "Jardín botánico", "Museo": "Galería de arte", "Restaurante": "Cafetería", "Castillo": "Torre", "Desierto": "Estepa", "Bosque": "Pradera", "Isla": "Península", "Cárcel": "Comisaría", "Iglesia": "Mezquita", "Estadio": "Polideportivo", "Granja": "Rancho", "Volcán": "Géiser", "Faro": "Muelle", "Circo": "Feria", "Mercado": "Rastro", "Puerto": "Astillero", "Universidad": "Instituto", "Ayuntamiento": "Parlamento", "Cementerio": "Cripta", "Fábrica": "Almacén", "Oficina": "Coworking", "Gimnasio": "Pista de atletismo", "Piscina": "Balneario", "Selva": "Manglar", "Sabana": "Tundra", "Iglú": "Cabaña", "Palacio": "Mansión", "Francia": "Italia", "Japón": "Corea del Sur", "Egipto": "Grecia", "Torre Eiffel": "Torre de Pisa", "Gran Muralla China": "Ciudad Prohibida", "Pirámides de Guiza": "Esfinge", "Machu Picchu": "Chichén Itzá", "Nueva York": "Los Ángeles", "Coliseo Romano": "Partenón", "Taj Mahal": "Fuerte Rojo", "Roma": "Florencia", "Londres": "París", "Río de Janeiro": "Buenos Aires", "Sídney": "Melbourne", "Venecia": "Ámsterdam", "Amazonas": "Congo", "Sahara": "Gobi", "Himalaya": "Andes", "Polo Norte": "Groenlandia", "Polo Sur": "Patagonia", "Gran Cañón": "Yellowstone", "Stonehenge": "Menhires de Carnac"} },
+    { "id": "musica", "nombre": "Música", "icono": "🎵", "palabras": ["Shape of You", "Blinding Lights", "Happy", "Roar", "Firework", "Uptown Funk", "Someone Like You", "Bad Guy", "Levitating", "Watermelon Sugar", "As It Was", "Anti-Hero", "Flowers", "Dance Monkey", "Old Town Road", "Hello", "Shake It Off", "Rolling in the Deep", "Radioactive", "Perfect", "Counting Stars", "Chandelier", "Wrecking Ball", "Despacito", "Gasolina", "Vivir Mi Vida", "La Bicicleta", "Danza Kuduro", "Con Calma", "Ay Vamos", "Mi Gente", "Bailando", "La Bamba", "Waka Waka", "Chantaje", "Felices los 4", "Tusa", "Amorfoda", "Ella Baila Sola", "TQG", "Provenza", "La Tortura", "Suavemente", "El Perdón", "Loba", "Perro Fiel", "Bohemian Rhapsody", "Highway to Hell", "Smoke on the Water", "Hotel California", "Sweet Child O' Mine", "Livin' on a Prayer", "Enter Sandman", "Stairway to Heaven", "Back in Black", "Comfortably Numb", "Nothing Else Matters", "We Will Rock You", "Should I Stay or Should I Go", "Paranoid", "Under Pressure", "Wonderwall", "Numb", "In the End", "Africa", "Eye of the Tiger", "Immigrant Song", "Money", "Sweet Home Alabama", "Yesterday", "Imagine", "Billie Jean", "Thriller", "My Heart Will Go On", "I Will Always Love You", "Shallow", "Viva la Vida", "Clocks", "Havana", "Señorita", "All of Me"], "relacionadas": {"Shape of You": "Photograph", "Blinding Lights": "Save Your Tears", "Happy": "Get Lucky", "Roar": "Dark Horse", "Firework": "Teenage Dream", "Uptown Funk": "24K Magic", "Someone Like You": "Set Fire to the Rain", "Bad Guy": "Bury a Friend", "Levitating": "Don't Start Now", "Watermelon Sugar": "Golden", "As It Was": "Sign of the Times", "Anti-Hero": "Cardigan", "Flowers": "Party in the U.S.A.", "Dance Monkey": "Cheerleader", "Old Town Road": "Industry Baby", "Hello": "Easy on Me", "Shake It Off": "Blank Space", "Rolling in the Deep": "Skyfall", "Radioactive": "Believer", "Perfect": "Thinking Out Loud", "Counting Stars": "Apologize", "Chandelier": "Cheap Thrills", "Wrecking Ball": "The Climb", "Despacito": "Échame la Culpa", "Gasolina": "Limbo", "Vivir Mi Vida": "Valió la Pena", "La Bicicleta": "La Gota Fría", "Danza Kuduro": "Taboo", "Con Calma": "Shaky Shaky", "Ay Vamos": "Ginza", "Mi Gente": "Reggaetón", "Bailando": "Súbeme la Radio", "La Bamba": "La Cucaracha", "Waka Waka": "Hips Don't Lie", "Chantaje": "Loca", "Felices los 4": "Hawái", "Tusa": "Bichota", "Amorfoda": "Callaita", "Ella Baila Sola": "La Bebé", "TQG": "Mi Ex Tenía Razón", "Provenza": "Amargura", "La Tortura": "Antología", "Suavemente": "Píntame", "El Perdón": "Travesuras", "Loba": "Estoy Aquí", "Perro Fiel": "Te Felicito", "Bohemian Rhapsody": "Somebody to Love", "Highway to Hell": "Thunderstruck", "Smoke on the Water": "Child in Time", "Hotel California": "Take It Easy", "Sweet Child O' Mine": "Paradise City", "Livin' on a Prayer": "It's My Life", "Enter Sandman": "Master of Puppets", "Stairway to Heaven": "Kashmir", "Back in Black": "T.N.T.", "Comfortably Numb": "Wish You Were Here", "Nothing Else Matters": "One", "We Will Rock You": "Don't Stop Me Now", "Should I Stay or Should I Go": "London Calling", "Paranoid": "Iron Man", "Under Pressure": "Heroes", "Wonderwall": "Don't Look Back in Anger", "Numb": "Crawling", "In the End": "Faint", "Africa": "Rosanna", "Eye of the Tiger": "Danger Zone", "Immigrant Song": "Whole Lotta Love", "Money": "Another Brick in the Wall", "Sweet Home Alabama": "Free Bird", "Yesterday": "Let It Be", "Imagine": "Instant Karma!", "Billie Jean": "Beat It", "Thriller": "Smooth Criminal", "My Heart Will Go On": "Because You Loved Me", "I Will Always Love You": "Greatest Love of All", "Shallow": "Always Remember Us This Way", "Viva la Vida": "Fix You", "Clocks": "Yellow", "Havana": "Never Be the Same", "Señorita": "There's Nothing Holdin' Me Back", "All of Me": "Ordinary People"} },
+    { "id": "para_adultos", "nombre": "Para adultos (+18)", "icono": "🔞", "palabras": ["Resaca", "Tinder", "Despedida de soltero", "Ligar", "Botellón", "Chupito", "Afterwork", "Barra libre", "Karaoke", "Reguetón", "Cubata", "Tequila", "Verdad o reto", "Beso francés", "Cita a ciegas", "Piropo", "Lencería", "Striptease", "Cuernos", "Amante", "Coqueteo", "Ex", "Soltería", "Amor de verano", "Rollo de una noche", "Vermú", "Terraza", "Fiesta de la espuma", "Discoteca", "Reservado", "Copa", "Barra"], "relacionadas": {"Resaca": "Borrachera", "Tinder": "Speed Dating", "Despedida de soltero": "Boda", "Ligar": "Flechazo", "Botellón": "Litrona", "Chupito": "Combinado", "Afterwork": "Networking", "Barra libre": "Consumición", "Karaoke": "Playback", "Reguetón": "Salsa", "Cubata": "Mojito", "Tequila": "Ron", "Verdad o reto": "Yo nunca", "Beso francés": "Chupetón", "Cita a ciegas": "Celestina", "Piropo": "Guiño", "Lencería": "Perfume", "Striptease": "Pole dance", "Cuernos": "Divorcio", "Amante": "Aventura", "Coqueteo": "Mirada", "Ex": "Despecho", "Soltería": "Compromiso", "Amor de verano": "Amor a distancia", "Rollo de una noche": "Amigos con derecho", "Vermú": "Tapeo", "Terraza": "Chiringuito", "Fiesta de la espuma": "Fiesta de la piscina", "Discoteca": "Pub", "Reservado": "Lista VIP", "Copa": "Botella", "Barra": "Camarero"} },
+    { "id": "personajes", "nombre": "Personajes", "icono": "👤", "palabras": ["Sherlock Holmes", "James Bond", "Indiana Jones", "Robin Hood", "Drácula", "Frankenstein", "El Zorro", "Alicia en el País de las Maravillas", "Willy Wonka", "Jack Sparrow", "Hannibal Lecter", "Gandalf", "Legolas", "Shrek", "Yoda", "Darth Vader", "Homer Simpson", "Pikachu", "Mario Bros", "Sonic", "Merlín", "Capitán Garfio", "El Gato con Botas", "Pulgarcito", "El Grinch", "Scrooge", "Blancanieves", "Rapunzel", "Pinocho", "Aladino", "Peter Pan", "Doctor Jekyll y Mr. Hyde"], "relacionadas": {"Sherlock Holmes": "Hércules Poirot", "James Bond": "Jason Bourne", "Indiana Jones": "Lara Croft", "Robin Hood": "Guillermo Tell", "Drácula": "Nosferatu", "Frankenstein": "El Hombre Lobo", "El Zorro": "Batman", "Alicia en el País de las Maravillas": "Dorothy (El Mago de Oz)", "Willy Wonka": "El Sombrerero Loco", "Jack Sparrow": "Barbanegra", "Hannibal Lecter": "Norman Bates", "Gandalf": "Dumbledore", "Legolas": "Katniss Everdeen", "Shrek": "Hagrid", "Yoda": "Maestro Miyagi", "Darth Vader": "Voldemort", "Homer Simpson": "Peter Griffin", "Pikachu": "Kirby", "Mario Bros": "Crash Bandicoot", "Sonic": "Mega Man", "Merlín": "El Hada Madrina", "Capitán Garfio": "Barbarroja", "El Gato con Botas": "El Lobo Feroz", "Pulgarcito": "Caperucita Roja", "El Grinch": "Krampus", "Scrooge": "Mr. Potter", "Blancanieves": "La Bella Durmiente", "Rapunzel": "Cenicienta", "Pinocho": "El Hombre de Hojalata", "Aladino": "Simbad el Marino", "Peter Pan": "Mowgli", "Doctor Jekyll y Mr. Hyde": "Gollum"} },
+    { "id": "tecnologia", "nombre": "Tecnología", "icono": "💻", "palabras": ["Instagram", "TikTok", "YouTube", "WhatsApp", "Meme", "Influencer", "Selfie", "Emoji", "Viral", "Streaming", "Podcast", "Reels", "Twitter", "Snapchat", "Hashtag", "Story", "Seguidores", "Me gusta", "Tendencia", "Directo", "Robot", "Internet", "Inteligencia artificial", "Wifi", "Dron", "Realidad virtual", "Ordenador", "Impresora 3D", "Ciberseguridad", "Código QR", "Bluetooth", "USB", "Contraseña", "Servidor", "Nube", "Antivirus", "Firewall", "Navegador", "Buscador", "Algoritmo"], "relacionadas": {"Instagram": "Pinterest", "TikTok": "Vine", "YouTube": "Twitch", "WhatsApp": "Telegram", "Meme": "GIF", "Influencer": "Community Manager", "Selfie": "Foto de grupo", "Emoji": "Sticker", "Viral": "Clickbait", "Streaming": "Descarga", "Podcast": "Vlog", "Reels": "Shorts", "Twitter": "Threads", "Snapchat": "BeReal", "Hashtag": "Arroba", "Story": "Publicación", "Seguidores": "Suscriptores", "Me gusta": "Comentario", "Tendencia": "Moda", "Directo": "Videollamada", "Robot": "Androide", "Internet": "Red 5G", "Inteligencia artificial": "Machine Learning", "Wifi": "Datos móviles", "Dron": "Satélite", "Realidad virtual": "Realidad aumentada", "Ordenador": "Portátil", "Impresora 3D": "Escáner 3D", "Ciberseguridad": "Hacker", "Código QR": "Código de barras", "Bluetooth": "NFC", "USB": "Disco duro", "Contraseña": "Huella dactilar", "Servidor": "Base de datos", "Nube": "Almacenamiento local", "Antivirus": "Malware", "Firewall": "VPN", "Navegador": "Aplicación", "Buscador": "Asistente virtual", "Algoritmo": "Código fuente"} },
+    { "id": "trabajos", "nombre": "Trabajos", "icono": "💼", "palabras": ["Médico", "Bombero", "Profesor", "Piloto", "Cocinero", "Policía", "Abogado", "Peluquero", "Arquitecto", "Fontanero", "Astronauta", "Cantante", "Actor", "Periodista", "Electricista", "Enfermero", "Veterinario", "Panadero", "Jardinero", "Camarero", "Mecánico", "Notario", "Traductor", "Pescador", "Diseñador", "Programador", "Escritor", "Guía turístico", "Repartidor", "Modisto", "Florista", "Carpintero", "Minero", "Buzo", "Sastre", "Auxiliar de vuelo", "Ingeniero", "Psicólogo", "Dentista", "Cirujano", "Bibliotecario", "Recepcionista", "Contable", "Comercial", "Fisioterapeuta", "Analista"], "relacionadas": {"Médico": "Farmacéutico", "Bombero": "Socorrista", "Profesor": "Director de colegio", "Piloto": "Controlador aéreo", "Cocinero": "Repostero", "Policía": "Guardia de seguridad", "Abogado": "Juez", "Peluquero": "Esteticista", "Arquitecto": "Delineante", "Fontanero": "Techador", "Astronauta": "Ingeniero aeroespacial", "Cantante": "Compositor", "Actor": "Director de cine", "Periodista": "Presentador de televisión", "Electricista": "Técnico de mantenimiento", "Enfermero": "Cuidador", "Veterinario": "Adiestrador canino", "Panadero": "Molinero", "Jardinero": "Agricultor", "Camarero": "Barman", "Mecánico": "Chapista", "Notario": "Registrador de la propiedad", "Traductor": "Lingüista", "Pescador": "Marinero", "Diseñador": "Ilustrador", "Programador": "Administrador de sistemas", "Escritor": "Editor", "Guía turístico": "Agente de viajes", "Repartidor": "Transportista", "Modisto": "Estilista", "Florista": "Viverista", "Carpintero": "Ebanista", "Minero": "Geólogo", "Buzo": "Oceanógrafo", "Sastre": "Zapatero", "Auxiliar de vuelo": "Agente de aeropuerto", "Ingeniero": "Físico", "Psicólogo": "Psiquiatra", "Dentista": "Higienista dental", "Cirujano": "Anestesista", "Bibliotecario": "Archivero", "Recepcionista": "Conserje", "Contable": "Auditor", "Comercial": "Publicista", "Fisioterapeuta": "Entrenador personal", "Analista": "Estadístico"} },
+    { "id": "transportes", "nombre": "Transportes", "icono": "🚗", "palabras": ["Avión", "Barco", "Tren", "Coche", "Autobús", "Moto", "Helicóptero", "Submarino", "Camión", "Tranvía", "Globo aerostático", "Cohete", "Patinete", "Ambulancia", "Furgoneta", "Metro", "Taxi", "Carreta", "Yate", "Teleférico", "Monopatín", "Carro de golf", "Monociclo", "Kayak", "Velero", "Zepelín", "Trineo", "Góndola", "Autocaravana", "Todoterreno", "Tuk-tuk", "Segway", "Hidroavión", "Planeador", "Funicular", "Camioneta", "Quad", "Barco de vela", "Crucero", "Coche de carreras"], "relacionadas": {"Avión": "Ala delta", "Barco": "Balsa", "Tren": "Monorraíl", "Coche": "Bicicleta", "Autobús": "Microbús", "Moto": "Scooter eléctrico", "Helicóptero": "Dron", "Submarino": "Batiscafo", "Camión": "Grúa", "Tranvía": "Trolebús", "Globo aerostático": "Paracaídas", "Cohete": "Nave espacial", "Patinete": "Patines", "Ambulancia": "Coche de policía", "Furgoneta": "Remolque", "Metro": "Tren de cercanías", "Taxi": "Coche de alquiler", "Carreta": "Carruaje", "Yate": "Lancha", "Teleférico": "Telesilla", "Monopatín": "Hoverboard", "Carro de golf": "Buggy de playa", "Monociclo": "Triciclo", "Kayak": "Canoa", "Velero": "Catamarán", "Zepelín": "Autogiro", "Trineo": "Motonieve", "Góndola": "Piragua", "Autocaravana": "Caravana", "Todoterreno": "Pick-up", "Tuk-tuk": "Mototaxi", "Segway": "Patín eléctrico", "Hidroavión": "Vehículo anfibio", "Planeador": "Parapente", "Funicular": "Escalera mecánica", "Camioneta": "Monovolumen", "Quad": "Moto de cross", "Barco de vela": "Barcaza", "Crucero": "Ferry", "Coche de carreras": "Kart"} },
+    { "id": "verano", "nombre": "Verano", "icono": "☀️", "palabras": ["Bañador", "Bronceado", "Protector solar", "Chanclas", "Vacaciones", "Camping", "Barbacoa", "Ventilador", "Helado", "Sandía", "Piscina", "Playa", "Ola de calor", "Festival de música", "Gafas de sol", "Toalla de playa", "Sombrilla", "Siesta", "Feria", "Flotador", "Cubo y pala", "Colchoneta", "Nevera portátil", "Chiringuito", "Sandalias", "Abanico", "Sombrero de paja", "Crema after-sun", "Piragua", "Sombra"], "relacionadas": {"Bañador": "Bikini", "Bronceado": "Quemadura solar", "Protector solar": "Aloe vera", "Chanclas": "Zapatillas de agua", "Vacaciones": "Viaje", "Camping": "Excursión", "Barbacoa": "Picnic", "Ventilador": "Aire acondicionado", "Helado": "Granizado", "Sandía": "Melón", "Piscina": "Parque acuático", "Playa": "Cala", "Ola de calor": "Sequía", "Festival de música": "Concierto", "Gafas de sol": "Gorra", "Toalla de playa": "Esterilla", "Sombrilla": "Toldo", "Siesta": "Tumbona", "Feria": "Verbena", "Flotador": "Manguitos", "Cubo y pala": "Castillo de arena", "Colchoneta": "Hamaca", "Nevera portátil": "Termo", "Chiringuito": "Terraza", "Sandalias": "Alpargatas", "Abanico": "Persiana", "Sombrero de paja": "Pamela", "Crema after-sun": "Loción hidratante", "Piragua": "Tabla de surf", "Sombra": "Árbol"} },
+    { "id": "comida", "nombre": "Comida", "icono": "🍕", "palabras": ["Pizza", "Paella", "Hamburguesa", "Sushi", "Tacos", "Helado", "Chocolate", "Ensalada", "Espagueti", "Croquetas", "Tortilla", "Churros", "Palomitas", "Sandía", "Queso", "Pan", "Sopa", "Empanada", "Guacamole", "Flan", "Gazpacho", "Lasaña", "Bocadillo", "Crepe", "Nachos", "Ramen", "Curry", "Fajitas", "Ceviche", "Risotto", "Gofre", "Bizcocho", "Mazapán", "Cocido", "Fabada", "Salmorejo", "Migas", "Kebab", "Perrito caliente", "Burrito", "Quesadilla", "Dim sum", "Poke", "Falafel", "Hummus", "Tarta de queso", "Brownie", "Macaron", "Tiramisú"], "relacionadas": {"Pizza": "Calzone", "Paella": "Fideuá", "Hamburguesa": "Sándwich", "Sushi": "Sashimi", "Tacos": "Enchiladas", "Helado": "Sorbete", "Chocolate": "Caramelo", "Ensalada": "Menestra de verduras", "Espagueti": "Macarrones", "Croquetas": "Buñuelos", "Tortilla": "Revuelto", "Churros": "Torrijas", "Palomitas": "Patatas fritas", "Sandía": "Melón", "Queso": "Mantequilla", "Pan": "Focaccia", "Sopa": "Caldo", "Empanada": "Pastel de carne", "Guacamole": "Pico de gallo", "Flan": "Natillas", "Gazpacho": "Ajoblanco", "Lasaña": "Canelones", "Bocadillo": "Panini", "Crepe": "Tortita", "Nachos": "Salsa picante", "Ramen": "Udon", "Curry": "Biryani", "Fajitas": "Chimichanga", "Ceviche": "Tiradito", "Risotto": "Arroz caldoso", "Gofre": "Magdalena", "Bizcocho": "Tarta", "Mazapán": "Turrón", "Cocido": "Callos", "Fabada": "Lentejas", "Salmorejo": "Vichyssoise", "Migas": "Sopa de ajo", "Kebab": "Shawarma", "Perrito caliente": "Pretzel", "Burrito": "Torta mexicana", "Quesadilla": "Gordita", "Dim sum": "Bao", "Poke": "Onigiri", "Falafel": "Kefta", "Hummus": "Baba ghanoush", "Tarta de queso": "Tarta de manzana", "Brownie": "Galleta", "Macaron": "Merengue", "Tiramisú": "Panna cotta"} },
+    { "id": "disney", "nombre": "Disney", "icono": "🏰", "palabras": ["La Sirenita", "El Rey León", "Frozen", "Aladdín", "Blancanieves", "Mulan", "Toy Story", "Cenicienta", "Coco", "Encanto", "Moana", "Enredados", "Los Increíbles", "Buscando a Nemo", "Zootrópolis", "Peter Pan", "La Bella y la Bestia", "Hércules", "Lilo y Stitch", "Vaiana", "Bambi", "Pinocho", "Wall-E", "Ratatouille", "Up", "Valiente", "Tarzán", "Pocahontas", "Dumbo", "Luca", "Soul", "Pesadilla antes de Navidad", "Fantasía", "Los Aristogatos", "La Dama y el Vagabundo", "El Libro de la Selva", "Cars", "Monstruos S.A.", "Del Revés", "Onward", "Elemental"], "relacionadas": {"La Sirenita": "La Princesa y el Sapo", "El Rey León": "Hermano Oso", "Frozen": "Raya y el último dragón", "Aladdín": "Wish: El Poder de los Deseos", "Blancanieves": "La Bella Durmiente", "Mulan": "Hércules", "Toy Story": "Ralph el Demoledor", "Cenicienta": "Enredados", "Coco": "Encanto", "Encanto": "Vaiana", "Moana": "Piratas del Caribe", "Enredados": "Merlín el Encantador", "Los Increíbles": "Grandes Héroes", "Buscando a Nemo": "Buscando a Dory", "Zootrópolis": "Robin Hood", "Peter Pan": "Mary Poppins", "La Bella y la Bestia": "Blancanieves", "Hércules": "Atlantis: El Imperio Perdido", "Lilo y Stitch": "El Viaje de Arlo", "Vaiana": "Lilo y Stitch", "Bambi": "El Zorro y el Sabueso", "Pinocho": "Bolt", "Wall-E": "Elio", "Ratatouille": "Bichos: Una Aventura en Miniatura", "Up": "Winnie the Pooh", "Valiente": "Mulan", "Tarzán": "El Rey León", "Pocahontas": "Peter y el Dragón", "Dumbo": "Bambi", "Luca": "Ratatouille", "Soul": "Del Revés", "Pesadilla antes de Navidad": "Hocus Pocus", "Fantasía": "Soul", "Los Aristogatos": "La Dama y el Vagabundo", "La Dama y el Vagabundo": "Los Aristogatos", "El Libro de la Selva": "Tarzán", "Cars": "Planes", "Monstruos S.A.": "Monstruos University", "Del Revés": "Red", "Onward": "Descubriendo a los Robinson", "Elemental": "Zootrópolis"} },
+    { "id": "espana", "nombre": "España", "icono": "🇪🇸", "palabras": ["Flamenco", "Paella", "Sagrada Familia", "Real Madrid", "La Alhambra", "Camino de Santiago", "Siesta", "Feria de Abril", "Sanfermines", "Tortilla de patatas", "Movida Madrileña", "Semana Santa", "Costa del Sol", "Ibiza", "Rioja", "Museo del Prado", "La Tomatina", "Gaudí", "Las Meninas", "El Rocío", "Toledo", "Sevilla", "San Sebastián", "Jamón ibérico", "Sangría", "Bota de vino", "Castañuelas", "Torero", "Fallas de Valencia", "Rastro de Madrid", "Madrid", "Granada", "Bilbao", "Valencia", "Málaga", "Canarias", "Baleares", "Guardia Civil", "Correfoc", "Botijo"], "relacionadas": {"Flamenco": "Sevillanas", "Paella": "Gazpacho", "Sagrada Familia": "Park Güell", "Real Madrid": "FC Barcelona", "La Alhambra": "Mezquita de Córdoba", "Camino de Santiago": "Catedral de Santiago", "Siesta": "Sobremesa", "Feria de Abril": "Feria de Málaga", "Sanfermines": "Toro de la Vega", "Tortilla de patatas": "Croquetas", "Movida Madrileña": "El Destape", "Semana Santa": "Corpus Christi", "Costa del Sol": "Costa Brava", "Ibiza": "Formentera", "Rioja": "Ribera del Duero", "Museo del Prado": "Museo Reina Sofía", "La Tomatina": "Batalla del Vino de Haro", "Gaudí": "Picasso", "Las Meninas": "El Guernica", "El Rocío": "Virgen del Pilar", "Toledo": "Ávila", "Sevilla": "Córdoba", "San Sebastián": "Vitoria", "Jamón ibérico": "Chorizo", "Sangría": "Tinto de verano", "Bota de vino": "Porrón", "Castañuelas": "Pandereta", "Torero": "Rejoneador", "Fallas de Valencia": "Hogueras de San Juan", "Rastro de Madrid": "Mercado de San Miguel", "Madrid": "Barcelona", "Granada": "Almería", "Bilbao": "Santander", "Valencia": "Alicante", "Málaga": "Marbella", "Canarias": "Tenerife", "Baleares": "Mallorca", "Guardia Civil": "Policía Nacional", "Correfoc": "Castells", "Botijo": "Cántaro"} },
+    { "id": "dibujos_animados", "nombre": "Dibujos animados", "icono": "🖍️", "palabras": ["Bob Esponja", "Los Picapiedra", "Tom y Jerry", "Scooby-Doo", "Peppa Pig", "Bugs Bunny", "Popeye", "El Coyote y el Correcaminos", "Hora de Aventuras", "Los Padrinos Mágicos", "Ben 10", "El Pájaro Loco", "Los Pitufos", "Heidi", "David el Gnomo", "Inspector Gadget", "Los Autos Locos", "Hey Arnold", "Tortugas Ninja", "He-Man", "Thundercats", "Cazafantasmas", "Animaniacs", "Looney Tunes", "Daffy Duck", "Piolín", "Bob Patiño", "Doraemon"], "relacionadas": {"Bob Esponja": "Ed, Edd y Eddy", "Los Picapiedra": "Los Jetsons", "Tom y Jerry": "Chip y Chop", "Scooby-Doo": "Kim Possible", "Peppa Pig": "Caillou", "Bugs Bunny": "Droopy", "Popeye": "Tintín", "El Coyote y el Correcaminos": "Don Gato y su Pandilla", "Hora de Aventuras": "Steven Universe", "Los Padrinos Mágicos": "Jimmy Neutron", "Ben 10": "Max Steel", "El Pájaro Loco": "Pato Donald", "Los Pitufos": "Barbapapá", "Heidi": "Marco", "David el Gnomo": "La Abeja Maya", "Inspector Gadget": "Sherlock Holmes", "Los Autos Locos": "Meteoro", "Hey Arnold": "Recreo", "Tortugas Ninja": "Los Caballeros del Zodiaco", "He-Man": "Los Transformers", "Thundercats": "G.I. Joe", "Cazafantasmas": "Casper", "Animaniacs": "Tiny Toons", "Looney Tunes": "Hanna-Barbera", "Daffy Duck": "Silvestre", "Piolín": "Correcaminos", "Bob Patiño": "Homero Simpson", "Doraemon": "Astroboy"} },
+    { "id": "superheroes", "nombre": "Superhéroes", "icono": "🦸", "palabras": ["Superman", "Batman", "Spiderman", "Iron Man", "Wonder Woman", "Hulk", "Thor", "Flash", "Aquaman", "Capitán América", "Deadpool", "Joker", "Wolverine", "Linterna Verde", "Viuda Negra", "Doctor Strange", "Black Panther", "Capitana Marvel", "Robin", "Catwoman", "Los 4 Fantásticos", "Duende Verde", "Green Arrow", "Hawkeye", "Ant-Man", "Star-Lord", "Groot", "Rocket Raccoon", "Nightwing", "Shazam", "Cyborg", "Vision"], "relacionadas": {"Superman": "Supergirl", "Batman": "Moon Knight", "Spiderman": "Daredevil", "Iron Man": "War Machine", "Wonder Woman": "Xena", "Hulk": "Juggernaut", "Thor": "Hércules", "Flash": "Quicksilver", "Aquaman": "Namor", "Capitán América": "Soldado de Invierno", "Deadpool": "Harley Quinn", "Joker": "Lex Luthor", "Wolverine": "Sabretooth", "Linterna Verde": "Escarabajo Azul", "Viuda Negra": "Mística", "Doctor Strange": "Constantine", "Black Panther": "Tormenta", "Capitana Marvel": "She-Hulk", "Robin": "Batgirl", "Catwoman": "Gata Negra", "Los 4 Fantásticos": "Liga de la Justicia", "Duende Verde": "Venom", "Green Arrow": "Deathstroke", "Hawkeye": "Bullseye", "Ant-Man": "El Átomo", "Star-Lord": "Nova", "Groot": "La Cosa del Pantano", "Rocket Raccoon": "Howard el Pato", "Nightwing": "Capucha Roja", "Shazam": "Hombre Plástico", "Cyborg": "RoboCop", "Vision": "Ultron"} },
+    { "id": "celebraciones", "nombre": "Fiestas y celebraciones", "icono": "🎉", "palabras": ["Navidad", "Halloween", "Cumpleaños", "Boda", "San Valentín", "Año Nuevo", "Carnaval", "Comunión", "Graduación", "Baby shower", "Despedida de soltera", "Jubilación", "Aniversario", "Fin de curso", "Reyes Magos", "Nochevieja", "Día de la Madre", "Día del Padre", "Bautizo", "Inauguración", "Festival", "Feria", "Procesión", "Vigilia", "Brindis", "Sorpresa"], "relacionadas": {"Navidad": "Nochebuena", "Halloween": "Día de Muertos", "Cumpleaños": "Día del Santo", "Boda": "Pedida de mano", "San Valentín": "Día de la Amistad", "Año Nuevo": "Año Nuevo Chino", "Carnaval": "Semana Santa", "Comunión": "Confirmación", "Graduación": "Puesta de largo", "Baby shower": "Fiesta de revelación de género", "Despedida de soltera": "Despedida de soltero", "Jubilación": "Ascenso", "Aniversario": "Compromiso", "Fin de curso": "Viaje de fin de curso", "Reyes Magos": "Papá Noel", "Nochevieja": "Solsticio de invierno", "Día de la Madre": "Día del Niño", "Día del Padre": "Día de los Abuelos", "Bautizo": "Bar Mitzvá", "Inauguración": "Clausura", "Festival": "Concierto", "Feria": "Romería", "Procesión": "Peregrinación", "Vigilia": "Ayuno", "Brindis": "Banquete", "Sorpresa": "Regalo"} },
+    { "id": "emociones", "nombre": "Emociones", "icono": "😊", "palabras": ["Felicidad", "Tristeza", "Sorpresa", "Miedo", "Amor", "Celos", "Nostalgia", "Vergüenza", "Orgullo", "Ansiedad", "Euforia", "Ternura", "Rabia", "Culpa", "Esperanza", "Soledad", "Empatía", "Curiosidad", "Alivio", "Frustración", "Confianza", "Decepción", "Gratitud", "Compasión", "Asombro", "Aburrimiento", "Pánico", "Serenidad"], "relacionadas": {"Felicidad": "Satisfacción", "Tristeza": "Melancolía", "Sorpresa": "Confusión", "Miedo": "Inseguridad", "Amor": "Deseo", "Celos": "Envidia", "Nostalgia": "Arrepentimiento", "Vergüenza": "Humillación", "Orgullo": "Arrogancia", "Ansiedad": "Estrés", "Euforia": "Entusiasmo", "Ternura": "Protección", "Rabia": "Indignación", "Culpa": "Remordimiento", "Esperanza": "Optimismo", "Soledad": "Aislamiento", "Empatía": "Solidaridad", "Curiosidad": "Interés", "Alivio": "Paz", "Frustración": "Impotencia", "Confianza": "Lealtad", "Decepción": "Desconfianza", "Gratitud": "Humildad", "Compasión": "Piedad", "Asombro": "Admiración", "Aburrimiento": "Apatía", "Pánico": "Histeria", "Serenidad": "Plenitud"} }
+  ];
+
+  function loadPackages(){
+    return fetch('packages.json')
+      .then(function(r){ if (!r.ok) throw new Error('bad response'); return r.json(); })
+      .then(function(data){ PACKAGES = data.paquetes; })
+      .catch(function(){ PACKAGES = PACKAGES_FALLBACK; })
+      .then(function(){
+        if (config.selectedPackages.length === 0){
+          config.selectedPackages = PACKAGES.map(function(p){ return p.id; });
+        }
+        renderPackageList();
+        validateSetup();
+      });
+  }
+
+  var state = {
+    word: "",
+    hintWord: null,
+    mrBlancoWord: null,
+    impostorMode: "none", // 'none' | 'hint' | 'mrblanco'
+    players: 0,
+    roles: [],
+    playerNames: [],
+    current: 0,
+    alive: [],
+    gameOver: false,
+    winner: null // 'impostores' | 'civiles'
+  };
+
+  var screenSetup = document.getElementById('screen-setup');
+  var screenGame = document.getElementById('screen-game');
+  var screenDebate = document.getElementById('screen-debate');
+  var ALL_SCREENS = [screenSetup, screenGame, screenDebate];
+
+  function switchScreen(target){
+    ALL_SCREENS.forEach(function(s){ s.classList.add('hidden'); });
+    target.classList.remove('hidden');
+  }
+
+  var impWordInput = document.getElementById('word-input-imp');
+  var customRandomAssignToggle = document.getElementById('custom-random-assign-toggle');
+  var customRandomAssignDesc = document.getElementById('custom-random-assign-desc');
+  var customRandomCountWrap = document.getElementById('custom-random-count-wrap');
+  var customImpostorsMinus = document.getElementById('custom-impostors-minus');
+  var customImpostorsPlus = document.getElementById('custom-impostors-plus');
+  var customImpostorsValue = document.getElementById('custom-impostors-value');
+  var rowsContainer = document.getElementById('impostor-players-list');
+  var impostorCountInfo = document.getElementById('impostor-count-info');
+  var setupError = document.getElementById('impostor-setup-error');
+  var playersErrorEl = document.getElementById('impostor-players-error');
+  var startBtn = document.getElementById('impostor-start-btn');
+  var setupStepPlayersEl = document.getElementById('setup-step-players');
+  var setupStepSettingsEl = document.getElementById('setup-step-settings');
+  var setupNavEl = document.getElementById('setup-nav');
+  var setupPrevBtn = document.getElementById('setup-prev-btn');
+  var setupNextBtn = document.getElementById('setup-next-btn');
+  var setupFinalBackBtn = document.getElementById('setup-final-back-btn');
+
+  // 0 = jugadores, 1 = resto de ajustes — separate steps with explicit
+  // forward/back navigation instead of one long scrolling form
+  var setupStep = 0;
+  function renderSetupStep(){
+    setupStepPlayersEl.classList.toggle('hidden', setupStep !== 0);
+    setupStepSettingsEl.classList.toggle('hidden', setupStep !== 1);
+    setupNavEl.classList.toggle('hidden', setupStep === 1);
+    setupPrevBtn.classList.toggle('hidden', setupStep === 0);
+  }
+  setupPrevBtn.addEventListener('click', function(){
+    if (setupStep > 0){ setupStep--; renderSetupStep(); validateSetup(); }
+  });
+  setupNextBtn.addEventListener('click', function(){
+    if (setupStep < 1 && !setupNextBtn.disabled){ setupStep++; renderSetupStep(); validateSetup(); }
+  });
+  setupFinalBackBtn.addEventListener('click', function(){
+    setupStep = 0;
+    renderSetupStep();
+    validateSetup();
+  });
+  renderSetupStep(); // sync nav buttons to setupStep's initial value on page load
+  var submodeCustomBtn = document.getElementById('submode-custom-btn');
+  var submodeRandomBtn = document.getElementById('submode-random-btn');
+  var customWordWrap = document.getElementById('custom-word-wrap');
+  var randomConfigWrap = document.getElementById('random-config-wrap');
+  var randomImpostorsWrap = document.getElementById('random-impostors-wrap');
+  var randomImpostorsMinus = document.getElementById('random-impostors-minus');
+  var randomImpostorsPlus = document.getElementById('random-impostors-plus');
+  var randomImpostorsValue = document.getElementById('random-impostors-value');
+  var packageListEl = document.getElementById('package-list');
+  var packageToggleAllBtn = document.getElementById('package-toggle-all-btn');
+  var packagesDropdownBtn = document.getElementById('packages-dropdown-btn');
+  var packagesDropdownPanel = document.getElementById('packages-dropdown-panel');
+  var packagesDropdownSummary = document.getElementById('packages-dropdown-summary');
+  var impostorModeNoneBtn = document.getElementById('impostor-mode-none-btn');
+  var impostorModeHintBtn = document.getElementById('impostor-mode-hint-btn');
+  var impostorModeMrBlancoBtn = document.getElementById('impostor-mode-mrblanco-btn');
+  var impostorModeDesc = document.getElementById('impostor-mode-desc');
+  var debateMinutesMinus = document.getElementById('debate-minutes-minus');
+  var debateMinutesPlus = document.getElementById('debate-minutes-plus');
+  var debateMinutesValue = document.getElementById('debate-minutes-value');
+
+  function renderCustomRandomAssignDesc(){
+    customRandomAssignDesc.textContent = config.customRandomAssign ?
+      'La app elige en secreto quién es el impostor al iniciar la partida.' :
+      'Marca manualmente al impostor tocando su icono 👤 → 🎭 en la lista de jugadores (paso anterior).';
+  }
+
+  var IMPOSTOR_MODE_DESC = {
+    none: 'Los impostores no reciben ninguna palabra.',
+    hint: 'Los impostores ven que lo son y reciben una palabra relacionada como pista.',
+    mrblanco: 'Los impostores reciben una palabra relacionada SIN saber que son impostores.'
+  };
+
+  function setImpostorMode(mode){
+    config.impostorMode = mode;
+    impostorModeNoneBtn.classList.toggle('active', mode === 'none');
+    impostorModeHintBtn.classList.toggle('active', mode === 'hint');
+    impostorModeMrBlancoBtn.classList.toggle('active', mode === 'mrblanco');
+    impostorModeDesc.textContent = IMPOSTOR_MODE_DESC[mode];
+  }
+  impostorModeNoneBtn.addEventListener('click', function(){ setImpostorMode('none'); });
+  impostorModeHintBtn.addEventListener('click', function(){ setImpostorMode('hint'); });
+  impostorModeMrBlancoBtn.addEventListener('click', function(){ setImpostorMode('mrblanco'); });
+
+  function renderDebateMinutes(){
+    debateMinutesValue.textContent = config.debateMinutes === 0 ? 'Sin límite' : (config.debateMinutes + ' min');
+  }
+  debateMinutesMinus.addEventListener('click', function(){
+    config.debateMinutes = clamp(config.debateMinutes - 1, 0, MAX_DEBATE_MINUTES);
+    renderDebateMinutes();
+    popValue(debateMinutesValue);
+  });
+  debateMinutesPlus.addEventListener('click', function(){
+    config.debateMinutes = clamp(config.debateMinutes + 1, 0, MAX_DEBATE_MINUTES);
+    renderDebateMinutes();
+    popValue(debateMinutesValue);
+  });
+
+  // No "add player" button: the last row is always an empty slot, and
+  // filling it grows the list automatically (see normalizeTrailingSlot).
+  function effectivePlayerCount(rows){
+    var n = rows.length;
+    if (n > 0 && !rows[n - 1].name.trim()) n--; // trailing empty slot isn't a player yet
+    return n;
+  }
+
+  function rowHtml(row, idx, rows, showToggle){
+    var isTrailingSlot = idx === rows.length - 1 && !row.name.trim();
+    if (isTrailingSlot){
+      return (
+        '<div class="player-row">' +
+          '<input type="text" class="player-name-input" data-index="' + idx + '" ' +
+            'placeholder="Jugador ' + (idx + 1) + '" maxlength="20" value="' + escapeHtml(row.name) + '">' +
+        '</div>'
+      );
+    }
+    var impClass = (showToggle && row.isImpostor) ? ' is-impostor' : '';
+    return (
+      '<div class="player-row' + impClass + '">' +
+        '<input type="text" class="player-name-input" data-index="' + idx + '" ' +
+          'placeholder="Jugador ' + (idx + 1) + '" maxlength="20" value="' + escapeHtml(row.name) + '">' +
+        (showToggle ?
+          '<button type="button" class="row-toggle-btn" data-index="' + idx + '" title="Marcar como impostor">' +
+            (row.isImpostor ? '🎭' : '👤') +
+          '</button>'
+        : '') +
+        '<button type="button" class="row-remove-btn" data-index="' + idx + '"' +
+          (effectivePlayerCount(rows) <= MIN_PLAYERS ? ' disabled' : '') + '>✕</button>' +
+      '</div>'
+    );
+  }
+
+  function renderRows(){
+    var rows = config.rows;
+    var showToggle = config.subMode === 'custom' && !config.customRandomAssign;
+    rowsContainer.innerHTML = rows.map(function(row, idx){
+      return rowHtml(row, idx, rows, showToggle);
+    }).join('');
+  }
+
+  // keeps exactly one empty row at the end, ready for the next player
+  function normalizeTrailingSlot(){
+    var rows = config.rows;
+    while (rows.length > 1 && !rows[rows.length - 1].name.trim() && !rows[rows.length - 2].name.trim()){
+      rows.pop();
+    }
+    if (rows.length < MAX_PLAYERS && (rows.length === 0 || rows[rows.length - 1].name.trim())){
+      rows.push({ name: "", isImpostor: false });
+    }
+  }
+
+  rowsContainer.addEventListener('input', function(e){
+    var target = e.target;
+    if (!target.classList.contains('player-name-input')) return;
+    var idx = parseInt(target.getAttribute('data-index'), 10);
+    config.rows[idx].name = target.value;
+    normalizeTrailingSlot();
+    persistPlayers();
+
+    var selStart = target.selectionStart, selEnd = target.selectionEnd;
+    renderRows();
+    refreshRandomImpostorBounds();
+    refreshCustomImpostorBounds();
+    var restored = rowsContainer.querySelector('.player-name-input[data-index="' + idx + '"]');
+    if (restored){
+      restored.focus();
+      restored.setSelectionRange(selStart, selEnd);
+    }
+    validateSetup();
+  });
+
+  rowsContainer.addEventListener('click', function(e){
+    var toggleBtn = e.target.closest('.row-toggle-btn');
+    var removeBtn = e.target.closest('.row-remove-btn');
+    if (toggleBtn){
+      var tIdx = parseInt(toggleBtn.getAttribute('data-index'), 10);
+      config.rows[tIdx].isImpostor = !config.rows[tIdx].isImpostor;
+      renderRows();
+      validateSetup();
+    } else if (removeBtn && !removeBtn.disabled){
+      var rIdx = parseInt(removeBtn.getAttribute('data-index'), 10);
+      config.rows.splice(rIdx, 1);
+      normalizeTrailingSlot();
+      renderRows();
+      refreshRandomImpostorBounds();
+      refreshCustomImpostorBounds();
+      persistPlayers();
+      validateSetup();
+    }
+  });
+
+  impWordInput.addEventListener('input', validateSetup);
+
+  function setSubMode(mode){
+    config.subMode = mode;
+    var isCustom = mode === 'custom';
+    submodeCustomBtn.classList.toggle('active', isCustom);
+    submodeRandomBtn.classList.toggle('active', !isCustom);
+    customWordWrap.classList.toggle('hidden', !isCustom);
+    customRandomAssignToggle.checked = config.customRandomAssign;
+    customRandomCountWrap.classList.toggle('hidden', !(isCustom && config.customRandomAssign));
+    randomConfigWrap.classList.toggle('hidden', isCustom);
+    randomImpostorsWrap.classList.toggle('hidden', isCustom);
+    impostorCountInfo.classList.toggle('hidden', !isCustom);
+    renderCustomRandomAssignDesc();
+    setImpostorMode(config.impostorMode);
+    refreshRandomImpostorBounds();
+    refreshCustomImpostorBounds();
+    renderPackageList();
+    renderRows();
+    validateSetup();
+  }
+
+  submodeCustomBtn.addEventListener('click', function(){ setSubMode('custom'); });
+  submodeRandomBtn.addEventListener('click', function(){ setSubMode('random'); });
+
+  customRandomAssignToggle.addEventListener('change', function(){
+    config.customRandomAssign = customRandomAssignToggle.checked;
+    customRandomCountWrap.classList.toggle('hidden', !config.customRandomAssign);
+    renderCustomRandomAssignDesc();
+    refreshCustomImpostorBounds();
+    renderRows();
+    validateSetup();
+  });
+
+  function refreshCustomImpostorBounds(){
+    var maxImp = effectivePlayerCount(config.rows) - 1;
+    if (config.customImpostorCount > maxImp) config.customImpostorCount = Math.max(MIN_IMPOSTORS, maxImp);
+    if (config.customImpostorCount < MIN_IMPOSTORS) config.customImpostorCount = MIN_IMPOSTORS;
+    customImpostorsValue.textContent = config.customImpostorCount;
+  }
+
+  customImpostorsMinus.addEventListener('click', function(){
+    config.customImpostorCount = clamp(config.customImpostorCount - 1, MIN_IMPOSTORS, effectivePlayerCount(config.rows) - 1);
+    customImpostorsValue.textContent = config.customImpostorCount;
+    popValue(customImpostorsValue);
+    validateSetup();
+  });
+  customImpostorsPlus.addEventListener('click', function(){
+    config.customImpostorCount = clamp(config.customImpostorCount + 1, MIN_IMPOSTORS, effectivePlayerCount(config.rows) - 1);
+    customImpostorsValue.textContent = config.customImpostorCount;
+    popValue(customImpostorsValue);
+    validateSetup();
+  });
+
+  function refreshRandomImpostorBounds(){
+    var maxImp = effectivePlayerCount(config.rows) - 1;
+    if (config.randomImpostors > maxImp) config.randomImpostors = Math.max(MIN_IMPOSTORS, maxImp);
+    if (config.randomImpostors < MIN_IMPOSTORS) config.randomImpostors = MIN_IMPOSTORS;
+    randomImpostorsValue.textContent = config.randomImpostors;
+  }
+
+  randomImpostorsMinus.addEventListener('click', function(){
+    config.randomImpostors = clamp(config.randomImpostors - 1, MIN_IMPOSTORS, effectivePlayerCount(config.rows) - 1);
+    randomImpostorsValue.textContent = config.randomImpostors;
+    popValue(randomImpostorsValue);
+    validateSetup();
+  });
+  randomImpostorsPlus.addEventListener('click', function(){
+    config.randomImpostors = clamp(config.randomImpostors + 1, MIN_IMPOSTORS, effectivePlayerCount(config.rows) - 1);
+    randomImpostorsValue.textContent = config.randomImpostors;
+    popValue(randomImpostorsValue);
+    validateSetup();
+  });
+
+  function renderToggleAllLabel(){
+    if (!PACKAGES){ packageToggleAllBtn.textContent = 'Seleccionar todos'; return; }
+    packageToggleAllBtn.textContent = config.selectedPackages.length === PACKAGES.length ? 'Quitar todos' : 'Seleccionar todos';
+  }
+
+  function renderPackagesSummary(){
+    if (!PACKAGES){ packagesDropdownSummary.textContent = 'Cargando paquetes…'; return; }
+    var total = PACKAGES.length;
+    var selected = config.selectedPackages.length;
+    if (selected === 0) packagesDropdownSummary.textContent = 'Ningún paquete seleccionado';
+    else if (selected === total) packagesDropdownSummary.textContent = 'Todos los paquetes (' + total + ')';
+    else packagesDropdownSummary.textContent = selected + ' de ' + total + ' paquetes';
+  }
+
+  function renderPackageList(){
+    renderPackagesSummary();
+    if (!PACKAGES || PACKAGES.length === 0){
+      packageListEl.innerHTML = '<p class="chip-loading">Cargando paquetes…</p>';
+      renderToggleAllLabel();
+      return;
+    }
+    packageListEl.innerHTML = PACKAGES.map(function(p){
+      var selected = config.selectedPackages.indexOf(p.id) !== -1;
+      return '<button type="button" class="chip' + (selected ? ' selected' : '') + '" data-package-id="' + p.id + '">' +
+        '<span class="chip-icon">' + escapeHtml(p.icono || '📦') + '</span>' +
+        '<span class="chip-name">' + escapeHtml(p.nombre) + '</span>' +
+      '</button>';
+    }).join('');
+    renderToggleAllLabel();
+  }
+
+  packageListEl.addEventListener('click', function(e){
+    var chip = e.target.closest('.chip');
+    if (!chip) return;
+    var id = chip.getAttribute('data-package-id');
+    var idx = config.selectedPackages.indexOf(id);
+    if (idx === -1) config.selectedPackages.push(id);
+    else config.selectedPackages.splice(idx, 1);
+    renderPackageList();
+    validateSetup();
+  });
+
+  packageToggleAllBtn.addEventListener('click', function(){
+    if (!PACKAGES) return;
+    if (config.selectedPackages.length === PACKAGES.length){
+      config.selectedPackages = [];
+    } else {
+      config.selectedPackages = PACKAGES.map(function(p){ return p.id; });
+    }
+    renderPackageList();
+    validateSetup();
+  });
+
+  packagesDropdownBtn.addEventListener('click', function(){
+    var isOpen = !packagesDropdownPanel.classList.contains('hidden');
+    packagesDropdownPanel.classList.toggle('hidden', isOpen);
+    packagesDropdownBtn.setAttribute('aria-expanded', String(!isOpen));
+  });
+
+  function pickRandomWordWithHint(){
+    var pool = [];
+    PACKAGES.forEach(function(p){
+      if (config.selectedPackages.indexOf(p.id) !== -1){
+        p.palabras.forEach(function(w){ pool.push({ word: w, packageId: p.id, pkg: p }); });
+      }
+    });
+    var chosen = pool[Math.floor(Math.random() * pool.length)];
+
+    // prefer the curated related word from packages.json; fall back to any
+    // other word from the same package if the data is missing for some reason
+    var hint = chosen.pkg.relacionadas && chosen.pkg.relacionadas[chosen.word];
+    if (!hint){
+      var related = pool.filter(function(item){
+        return item.packageId === chosen.packageId && item.word !== chosen.word;
+      });
+      if (related.length === 0){
+        related = pool.filter(function(item){ return item.word !== chosen.word; });
+      }
+      hint = related.length ? related[Math.floor(Math.random() * related.length)].word : null;
+    }
+    return { word: chosen.word, hint: hint };
+  }
+
+  function validateSetup(){
+    var rows = config.rows;
+    var playerMsgs = [];
+    var hasEmptyName = rows.some(function(r, idx){ return idx !== rows.length - 1 && !r.name.trim(); });
+    if (hasEmptyName) playerMsgs.push("Todos los jugadores necesitan un nombre.");
+    else if (hasDuplicatePlayerNames(rows)) playerMsgs.push("No puede haber dos jugadores con el mismo nombre.");
+
+    var players = effectivePlayerCount(rows);
+    if (players < MIN_PLAYERS) playerMsgs.push("Necesitas al menos " + MIN_PLAYERS + " jugadores.");
+
+    var settingsMsgs = [];
+    if (config.subMode === 'custom'){
+      var word = impWordInput.value.trim();
+      if (!word) settingsMsgs.push("Escribe una palabra secreta.");
+      if (config.customRandomAssign){
+        if (config.customImpostorCount >= players) settingsMsgs.push("Debe haber menos impostores que jugadores.");
+        impostorCountInfo.textContent = config.customImpostorCount + (config.customImpostorCount === 1 ? " impostor" : " impostores") + " al azar de " + players + " jugadores";
+      } else {
+        var impCount = rows.filter(function(r){ return r.isImpostor; }).length;
+        if (impCount < MIN_IMPOSTORS) settingsMsgs.push("Selecciona al menos un impostor.");
+        if (impCount >= players) settingsMsgs.push("No todos los jugadores pueden ser impostores.");
+        impostorCountInfo.textContent = impCount + (impCount === 1 ? " impostor" : " impostores") + " de " + players + " jugadores";
+      }
+    } else {
+      if (!PACKAGES) settingsMsgs.push("Cargando paquetes…");
+      else if (config.selectedPackages.length === 0) settingsMsgs.push("Selecciona al menos un paquete.");
+      if (config.randomImpostors >= players) settingsMsgs.push("Debe haber menos impostores que jugadores.");
+    }
+
+    var playersValid = playerMsgs.length === 0;
+    var settingsValid = settingsMsgs.length === 0;
+    playersErrorEl.textContent = playerMsgs[0] || "";
+    setupError.textContent = settingsMsgs[0] || "";
+    setupNextBtn.disabled = setupStep === 0 && !playersValid;
+    startBtn.disabled = !(playersValid && settingsValid);
+    return playersValid && settingsValid;
+  }
+
+  function enterSetup(prefillWord){
+    stopDebateTimer();
+    impWordInput.value = prefillWord ? config.word : '';
+    setSubMode(config.subMode);
+    renderDebateMinutes();
+    setupStep = 0;
+    renderSetupStep();
+    switchScreen(screenSetup);
+  }
+
+  // ---------- role reveal roster: tap your own name to show your card ----------
+  var revealRosterEl = document.getElementById('reveal-roster');
+  var revealContinueBtn = document.getElementById('reveal-continue-btn');
+  var revealModalBackdrop = document.getElementById('reveal-modal-backdrop');
+  var revealModalClose = document.getElementById('reveal-modal-close');
+  var revealWrap = document.getElementById('reveal-wrap');
+  var revealContent = document.getElementById('reveal-content');
+  var revealBtn = document.getElementById('reveal-btn');
+
+  // reuses the modal's close button as the "nextBtn": createRevealCard keeps
+  // it disabled until the card has actually been tapped open, so a row can't
+  // be marked as viewed without being seen at least once
+  var revealCard = createRevealCard(revealWrap, revealContent, revealBtn, revealModalClose);
+  var currentRevealIdx = -1;
+
+  function renderRevealRoster(){
+    var html = '';
+    for (var idx = 0; idx < state.playerNames.length; idx++){
+      if (state.viewed[idx]) continue;
+      html += '<button type="button" class="roster-row" data-index="' + idx + '">' +
+        '<span class="roster-row-name">' + escapeHtml(state.playerNames[idx]) + '</span>' +
+      '</button>';
+    }
+    revealRosterEl.innerHTML = html;
+    revealContinueBtn.disabled = state.viewed.some(function(v){ return !v; });
+  }
+
+  function openRevealModal(idx){
+    currentRevealIdx = idx;
+
+    var isImpostor = state.roles[idx];
+    // Mr. Blanco impostors get a related word with zero visual tell (same
+    // styling as a civil) so the app itself never gives away who they are.
+    var isMrBlanco = isImpostor && state.impostorMode === 'mrblanco';
+    var displayWord = isMrBlanco ? (state.mrBlancoWord || state.word) :
+      isImpostor ? (state.hintWord || "IMPOSTOR") : state.word;
+    revealContent.textContent = displayWord;
+    revealContent.className = 'reveal-content ' + (isImpostor && !isMrBlanco ? 'impostor' : 'word');
+
+    revealCard.showFor(isImpostor && !isMrBlanco);
+    revealModalBackdrop.classList.remove('hidden');
+  }
+
+  revealRosterEl.addEventListener('click', function(e){
+    var row = e.target.closest('.roster-row');
+    if (!row) return;
+    openRevealModal(parseInt(row.getAttribute('data-index'), 10));
+  });
+
+  revealModalClose.addEventListener('click', function(){
+    if (revealModalClose.disabled) return;
+    revealModalBackdrop.classList.add('hidden');
+    state.viewed[currentRevealIdx] = true;
+    renderRevealRoster();
+  });
+
+  revealContinueBtn.addEventListener('click', function(){
+    if (revealContinueBtn.disabled) return;
+    switchScreen(screenDebate);
+    startDebatePhase();
+  });
+
+  function aliveIndexes(){
+    var arr = [];
+    for (var i = 0; i < state.players; i++) if (state.alive[i]) arr.push(i);
+    return arr;
+  }
+
+  // ---------- debate + vote ----------
+  var debateTitleEl = document.getElementById('debate-title');
+  var debateSubtitleEl = document.getElementById('debate-subtitle');
+  var startPlayerLineEl = document.getElementById('start-player-line');
+  var debateTimerWrap = document.getElementById('debate-timer-wrap');
+  var debateTimerMm = document.getElementById('debate-timer-mm');
+  var debateTimerSs = document.getElementById('debate-timer-ss');
+  var voteSection = document.getElementById('vote-section');
+  var votePlayersList = document.getElementById('vote-players-list');
+  var confirmVoteBtn = document.getElementById('confirm-vote-btn');
+  var voteResult = document.getElementById('vote-result');
+  var voteResultIcon = document.getElementById('vote-result-icon');
+  var voteResultTitle = document.getElementById('vote-result-title');
+  var voteResultDetail = document.getElementById('vote-result-detail');
+  var voteNextBtn = document.getElementById('vote-next-btn');
+
+  var DEBATE_TITLE_DEFAULT = 'A DEBATIR';
+  var DEBATE_SUBTITLE_DEFAULT = 'Debatid y decidid quién creéis que es el impostor';
+
+  var debateTimerInterval = null;
+  var selectedVoteIdx = null;
+  var audioCtx = null;
+  var isFirstDebate = true;
+
+  function updateDebateTimerDisplay(totalSeconds){
+    var m = Math.floor(totalSeconds / 60), s = totalSeconds % 60;
+    debateTimerMm.textContent = (m < 10 ? '0' : '') + m;
+    debateTimerSs.textContent = (s < 10 ? '0' : '') + s;
+  }
+
+  function stopDebateTimer(){
+    if (debateTimerInterval){ clearInterval(debateTimerInterval); debateTimerInterval = null; }
+  }
+
+  // creating/resuming the AudioContext here happens inside a click handler
+  // (starting the debate), which satisfies the browser's user-gesture
+  // requirement so the later, timer-triggered alarm beep can actually play
+  function unlockAlarmAudio(){
+    if (!audioCtx){
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){ audioCtx = null; }
+    } else if (audioCtx.state === 'suspended'){
+      audioCtx.resume();
+    }
+  }
+
+  function playAlarmSound(){
+    if (!audioCtx) return;
+    var now = audioCtx.currentTime;
+    [0, 0.3, 0.6].forEach(function(offset){
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.0001, now + offset);
+      gain.gain.exponentialRampToValueAtTime(0.25, now + offset + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.25);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.3);
+    });
+  }
+
+  function triggerTimeUpAlarm(){
+    debateTimerWrap.classList.add('time-up');
+    playAlarmSound();
+  }
+
+  function clearTimeUpAlarm(){
+    debateTimerWrap.classList.remove('time-up');
+  }
+
+  function resetDebateHeader(){
+    state.gameOver = false;
+    state.winner = null;
+    isFirstDebate = true;
+    debateTitleEl.textContent = DEBATE_TITLE_DEFAULT;
+    debateTitleEl.className = 'debate-title';
+    debateSubtitleEl.textContent = DEBATE_SUBTITLE_DEFAULT;
+    voteNextBtn.textContent = 'Siguiente ronda';
+  }
+
+  function endGame(winner){
+    state.gameOver = true;
+    state.winner = winner;
+    debateTitleEl.textContent = winner === 'impostores' ? 'GANAN LOS IMPOSTORES' : 'GANAN LOS CIVILES';
+    debateTitleEl.className = 'debate-title game-over-' + winner;
+    debateSubtitleEl.textContent = 'La partida ha terminado.';
+    voteNextBtn.textContent = 'Nueva partida';
+  }
+
+  function pickStartingPlayer(){
+    var alive = aliveIndexes();
+    var starter = alive[Math.floor(Math.random() * alive.length)];
+    startPlayerLineEl.innerHTML = 'Empieza a hablar: <strong>' + escapeHtml(state.playerNames[starter]) + '</strong>';
+  }
+
+  function startDebatePhase(){
+    unlockAlarmAudio();
+    debateTimerWrap.classList.add('hidden');
+    clearTimeUpAlarm();
+    voteResult.classList.add('hidden');
+    selectedVoteIdx = null;
+    confirmVoteBtn.disabled = true;
+    stopDebateTimer();
+
+    if (isFirstDebate){
+      pickStartingPlayer();
+      isFirstDebate = false;
+    } else {
+      startPlayerLineEl.textContent = '';
+    }
+    renderVotePlayers();
+    voteSection.classList.remove('hidden');
+
+    if (config.debateMinutes > 0){
+      var remaining = config.debateMinutes * 60;
+      updateDebateTimerDisplay(remaining);
+      debateTimerWrap.classList.remove('hidden');
+      debateTimerInterval = setInterval(function(){
+        remaining--;
+        updateDebateTimerDisplay(remaining);
+        if (remaining <= 0){
+          stopDebateTimer();
+          triggerTimeUpAlarm();
+        }
+      }, 1000);
+    }
+  }
+
+  function renderVotePlayers(){
+    votePlayersList.innerHTML = state.playerNames.map(function(name, idx){
+      if (!state.alive[idx]) return '';
+      return '<div class="vote-row" data-index="' + idx + '">' + escapeHtml(name) + '</div>';
+    }).join('');
+  }
+
+  votePlayersList.addEventListener('click', function(e){
+    var row = e.target.closest('.vote-row');
+    if (!row) return;
+    selectedVoteIdx = parseInt(row.getAttribute('data-index'), 10);
+    Array.prototype.forEach.call(votePlayersList.children, function(el){
+      el.classList.toggle('selected', parseInt(el.getAttribute('data-index'), 10) === selectedVoteIdx);
+    });
+    confirmVoteBtn.disabled = false;
+  });
+
+  confirmVoteBtn.addEventListener('click', function(){
+    if (selectedVoteIdx === null) return;
+    stopDebateTimer();
+    clearTimeUpAlarm();
+    voteSection.classList.add('hidden');
+
+    var idx = selectedVoteIdx;
+    var wasImpostor = state.roles[idx];
+    state.alive[idx] = false;
+
+    var impostorsAlive = 0, civiliansAlive = 0;
+    state.roles.forEach(function(isImp, i){
+      if (!state.alive[i]) return;
+      if (isImp) impostorsAlive++; else civiliansAlive++;
+    });
+
+    voteResultIcon.textContent = wasImpostor ? '🎭' : '😇';
+    voteResultTitle.textContent = state.playerNames[idx] + (wasImpostor ? ' era IMPOSTOR' : ' era CIVIL');
+    voteResultTitle.className = 'vote-result-title ' + (wasImpostor ? 'reveal-impostor' : 'reveal-civil');
+
+    // impostors win on a strict majority, or on the final 1-vs-1 standoff
+    // (a tie at 2-vs-2 or larger still lets the game continue)
+    var impostorsWin = impostorsAlive > civiliansAlive ||
+      (impostorsAlive === 1 && civiliansAlive === 1);
+
+    if (impostorsAlive === 0){
+      voteResultDetail.textContent = 'Todos los impostores han sido descubiertos.';
+      endGame('civiles');
+    } else if (impostorsWin){
+      voteResultDetail.textContent = civiliansAlive === 1 ?
+        'Solo queda un civil frente al impostor.' : 'Los impostores ya son mayoría.';
+      endGame('impostores');
+    } else {
+      voteResultDetail.textContent = 'Quedan ' + impostorsAlive + (impostorsAlive === 1 ? ' impostor' : ' impostores') +
+        ' y ' + civiliansAlive + (civiliansAlive === 1 ? ' civil' : ' civiles') + '. Otra ronda de palabras y votación.';
+      voteNextBtn.textContent = 'Siguiente ronda';
+    }
+
+    voteResult.classList.remove('hidden');
+  });
+
+  voteNextBtn.addEventListener('click', function(){
+    if (state.gameOver){
+      enterSetup(false);
+    } else {
+      voteResult.classList.add('hidden');
+      startDebatePhase();
+    }
+  });
+
+  startBtn.addEventListener('click', function(){
+    if (!validateSetup()) return;
+    config.rows.forEach(function(r){ r.name = r.name.trim(); });
+    var realRows = config.rows.filter(function(r){ return r.name !== ""; });
+
+    var chosenWord, roles, hintWord = null, mrBlancoWord = null, impostorMode = 'none';
+    if (config.subMode === 'custom'){
+      config.word = impWordInput.value.trim();
+      chosenWord = config.word;
+      config.word = '';
+      roles = config.customRandomAssign ?
+        buildRandomRoles(realRows.length, config.customImpostorCount) :
+        realRows.map(function(r){ return r.isImpostor; });
+    } else {
+      var picked = pickRandomWordWithHint();
+      chosenWord = picked.word;
+      impostorMode = config.impostorMode;
+      if (impostorMode === 'hint') hintWord = picked.hint;
+      else if (impostorMode === 'mrblanco') mrBlancoWord = picked.hint;
+      roles = buildRandomRoles(realRows.length, config.randomImpostors);
+    }
+    renderRows();
+
+    state.word = chosenWord;
+    state.hintWord = hintWord;
+    state.mrBlancoWord = mrBlancoWord;
+    state.impostorMode = impostorMode;
+    state.playerNames = realRows.map(function(r){ return r.name; });
+    state.roles = roles;
+    state.players = state.playerNames.length;
+    state.alive = state.playerNames.map(function(){ return true; });
+    state.viewed = state.playerNames.map(function(){ return false; });
+
+    resetDebateHeader();
+    renderRevealRoster();
+    switchScreen(screenGame);
+  });
+
+  // ---------- how-to-play guide ----------
+  setupModal(
+    document.getElementById('guide-btn'),
+    document.getElementById('guide-modal-backdrop'),
+    document.getElementById('guide-modal-close')
+  );
+
+  // ---------- init ----------
+  setSubMode(config.subMode);
+  loadPackages();
+})();
+</script>
+</body>
+</html>
