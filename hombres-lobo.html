@@ -601,6 +601,7 @@
     <div class="card">
       <div class="setup-header">
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn" id="advanced-btn" aria-label="Más ajustes">⚙️</button>
         <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
       </div>
       <h1>HOMBRES LOBO</h1>
@@ -629,13 +630,6 @@
       </div>
 
       <div id="setup-step-final" class="hidden">
-        <label><span class="label-icon">⏱️</span>Tiempo para votar</label>
-        <div class="stepper">
-          <button type="button" id="vote-minutes-minus">−</button>
-          <div class="value" id="vote-minutes-value">Sin límite</div>
-          <button type="button" id="vote-minutes-plus">+</button>
-        </div>
-
         <label class="switch-toggle">
           <input type="checkbox" id="unguided-mode-toggle">
           <span class="switch-track"><span class="switch-thumb"></span></span>
@@ -696,6 +690,21 @@
 
       <h3>Roles disponibles</h3>
       <div class="guide-roles-catalog" id="guide-roles-catalog"><p class="chip-loading">Cargando roles…</p></div>
+    </div>
+  </div>
+
+  <!-- ADVANCED SETTINGS: time knobs that are usually left at their default -->
+  <div class="guide-modal-backdrop hidden" id="advanced-modal-backdrop">
+    <div class="guide-modal">
+      <button type="button" class="guide-modal-close" id="advanced-modal-close">✕</button>
+      <h2>Más ajustes</h2>
+
+      <label><span class="label-icon">⏱️</span>Tiempo para votar</label>
+      <div class="stepper">
+        <button type="button" id="vote-minutes-minus">−</button>
+        <div class="value" id="vote-minutes-value">Sin límite</div>
+        <button type="button" id="vote-minutes-plus">+</button>
+      </div>
     </div>
   </div>
 
@@ -1337,6 +1346,13 @@
     document.getElementById('guide-btn'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
+  );
+
+  // ---------- advanced settings (vote timer — usually left at default) ----------
+  setupModal(
+    document.getElementById('advanced-btn'),
+    document.getElementById('advanced-modal-backdrop'),
+    document.getElementById('advanced-modal-close')
   );
 
   // ---------- role picker tip (explains the long-press-for-details gesture) ----------

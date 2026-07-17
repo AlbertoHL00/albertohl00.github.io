@@ -27,90 +27,16 @@
     text-align:center;
     font-family:var(--font-display);
     font-weight:700;
-    font-size:1.3rem;
+    font-size:1.5rem;
     line-height:1.4;
-    margin:4px 0 20px;
-  }
-
-  /* ---- player picker: same "tap a card" idea as the role-reveal roster in
-     Impostor/Hombres Lobo/Detective Club, but as a 2-column grid of every
-     player (nobody drops off — the group re-votes fresh each round) ---- */
-  .qp-roster{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-    margin-bottom:18px;
-  }
-  .qp-roster .roster-row{
-    justify-content:center;
-    padding:18px 10px;
-    text-align:center;
-  }
-  .qp-roster .roster-row-name{
-    flex:none;
-    white-space:normal;
-    overflow:visible;
-    text-overflow:clip;
-  }
-  .qp-roster .roster-row.selected{
-    background:linear-gradient(135deg, var(--accent), var(--accent2));
-    border-color:transparent;
-    color:#04121f;
-  }
-
-  /* ---- final leaderboard ---- */
-  .qp-score-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:10px 12px;
-    border-radius:12px;
-    background:rgba(255,255,255,0.05);
-    border:1px solid var(--glass-border);
-    margin-bottom:8px;
-    text-align:left;
-  }
-  .qp-score-row.winner{
-    border-color:var(--accent);
-    background:rgba(255,255,255,0.1);
-  }
-  .qp-score-name{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    font-weight:700;
-    min-width:0;
-  }
-  .qp-score-pill{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    min-width:26px;
-    height:22px;
-    padding:0 6px;
-    border-radius:999px;
-    background:rgba(255,255,255,0.12);
-    color:var(--text);
-    font-weight:800;
-    font-size:0.72rem;
-    flex-shrink:0;
-  }
-  .qp-score-row.winner .qp-score-pill{
-    background:linear-gradient(135deg, var(--accent), var(--accent2));
-    color:#04121f;
-  }
-  .qp-score-value{
-    font-family:var(--font-display);
-    font-weight:800;
-    font-size:1.1rem;
-    flex-shrink:0;
+    margin:10px 0 20px;
   }
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- SETUP -->
+  <!-- SETUP: no players — this is a read-it-aloud icebreaker, everyone just points -->
   <div class="screen" id="screen-setup">
     <div class="card">
       <div class="setup-header">
@@ -119,29 +45,13 @@
       </div>
       <h1>¿QUIÉN ES MÁS PROBABLE?</h1>
 
-      <div id="setup-step-players">
-        <label><span class="label-icon">👥</span>Jugadores</label>
-        <div id="players-list"></div>
-        <div class="error-msg" id="players-error"></div>
-      </div>
+      <label><span class="label-icon">🏷️</span>Categorías</label>
+      <button type="button" class="chip-toggle-all" id="category-toggle-all-btn">Seleccionar todas</button>
+      <div class="chip-list" id="category-list"></div>
 
-      <div class="night-nav" id="setup-nav">
-        <button type="button" class="night-nav-btn icon-only" id="setup-prev-btn" aria-label="Anterior"><span class="back-icon"></span></button>
-        <button type="button" class="night-nav-btn" id="setup-next-btn">Siguiente</button>
-      </div>
+      <div class="error-msg" id="setup-error"></div>
 
-      <div id="setup-step-settings" class="hidden">
-        <label><span class="label-icon">🏷️</span>Categorías</label>
-        <button type="button" class="chip-toggle-all" id="category-toggle-all-btn">Seleccionar todas</button>
-        <div class="chip-list" id="category-list"></div>
-
-        <div class="error-msg" id="setup-error"></div>
-
-        <div class="final-nav">
-          <button type="button" class="night-nav-btn icon-only" id="setup-final-back-btn" aria-label="Anterior"><span class="back-icon"></span></button>
-          <button class="btn-main" id="start-btn">Iniciar partida</button>
-        </div>
-      </div>
+      <button class="btn-main" id="start-btn">Iniciar partida</button>
     </div>
   </div>
 
@@ -152,27 +62,24 @@
       <h2>Cómo se juega</h2>
 
       <h3>Objetivo</h3>
-      <p>Un juego para romper el hielo, sin ganadores de verdad. En cada ronda aparece una pregunta tipo "¿Quién es más probable que...?". Leedla en voz alta, discutid entre todos y decidid quién encaja mejor.</p>
+      <p>Un juego para romper el hielo, sin ganadores ni puntos. Aparece una pregunta tipo "¿Quién es más probable que...?". Leedla en voz alta, discutid entre todos y señalad a quien encaja mejor.</p>
 
       <h3>Usar la app</h3>
       <ol>
-        <li>Añade a los jugadores y elige las categorías de preguntas que queráis usar.</li>
-        <li>En cada ronda, todos ven la misma pregunta a la vez — no hay nada que ocultar.</li>
-        <li>Cuando el grupo se decida, toca el nombre de esa persona en la rejilla y pulsa "Siguiente".</li>
-        <li>Al final se muestra un marcador con quién fue el más votado durante toda la partida — solo por curiosidad.</li>
+        <li>Elige las categorías de preguntas que queráis usar.</li>
+        <li>En cada pregunta, todos la ven a la vez — no hay nada que ocultar.</li>
+        <li>Cuando el grupo se decida, pulsa "Siguiente" para pasar a la próxima.</li>
       </ol>
     </div>
   </div>
 
-  <!-- ROUND SCREEN -->
+  <!-- PROMPT SCREEN -->
   <div class="screen hidden" id="screen-game">
     <div class="card">
-      <div class="player-badge" id="round-badge">RONDA</div>
       <div class="qp-phrase" id="qp-phrase"></div>
+      <p class="subtitle">Discutid en voz alta y señalad quién encaja mejor.</p>
 
-      <div class="qp-roster" id="qp-roster"></div>
-
-      <button class="btn-main" id="next-btn" disabled>Siguiente</button>
+      <button class="btn-main" id="next-btn">Siguiente</button>
 
       <div class="progress-dots" id="progress-dots"></div>
     </div>
@@ -182,9 +89,8 @@
   <div class="screen hidden" id="screen-end">
     <div class="card">
       <div class="end-icon">🤷</div>
-      <h1 style="font-size:1.5rem;">RESULTADOS</h1>
-      <p class="subtitle">Quién fue elegido más veces durante la partida:</p>
-      <div id="end-scoreboard"></div>
+      <h1 style="font-size:1.5rem;">¡SE ACABARON LAS PREGUNTAS!</h1>
+      <p class="subtitle">Volved a jugar cuando queráis.</p>
       <button class="btn-main" id="new-round-btn">Nueva partida</button>
     </div>
   </div>
@@ -196,17 +102,11 @@
 (function(){
   "use strict";
 
-  var MIN_PLAYERS = 3, MAX_PLAYERS = 30;
-  var DECK_SIZE = 20; // rounds per match, capped so a big category selection doesn't drag on forever
+  var DECK_SIZE = 20; // prompts per sitting, capped so a big category selection doesn't drag on forever
 
   var config = {
-    selectedCategories: [],
-    rows: loadSavedPlayerNames().slice(0, MAX_PLAYERS).map(function(n){ return { name: n }; }).concat([{ name: "" }])
+    selectedCategories: []
   };
-
-  function persistPlayers(){
-    savePlayerNames(config.rows.map(function(r){ return r.name.trim(); }).filter(function(n){ return n !== ""; }));
-  }
 
   var CATEGORIAS = null;
   var QUIEN_FALLBACK = [
@@ -229,12 +129,8 @@
   }
 
   var state = {
-    playerNames: [],
-    tallies: [],
     deck: [],
-    round: 0,
-    totalRounds: 0,
-    chosenIdx: null
+    round: 0
   };
 
   var screenSetup = document.getElementById('screen-setup');
@@ -247,115 +143,11 @@
     target.classList.remove('hidden');
   }
 
-  // ---------- players ----------
-  var rowsContainer = document.getElementById('players-list');
-
-  function effectivePlayerCount(rows){
-    var n = rows.length;
-    if (n > 0 && !rows[n - 1].name.trim()) n--; // trailing empty slot isn't a player yet
-    return n;
-  }
-
-  function rowHtml(row, idx, rows){
-    var isTrailingSlot = idx === rows.length - 1 && !row.name.trim();
-    if (isTrailingSlot){
-      return (
-        '<div class="player-row">' +
-          '<input type="text" class="player-name-input" data-index="' + idx + '" ' +
-            'placeholder="Jugador ' + (idx + 1) + '" maxlength="20" value="' + escapeHtml(row.name) + '">' +
-        '</div>'
-      );
-    }
-    return (
-      '<div class="player-row">' +
-        '<input type="text" class="player-name-input" data-index="' + idx + '" ' +
-          'placeholder="Jugador ' + (idx + 1) + '" maxlength="20" value="' + escapeHtml(row.name) + '">' +
-        '<button type="button" class="row-remove-btn" data-index="' + idx + '"' +
-          (effectivePlayerCount(rows) <= MIN_PLAYERS ? ' disabled' : '') + '>✕</button>' +
-      '</div>'
-    );
-  }
-
-  function renderRows(){
-    var rows = config.rows;
-    rowsContainer.innerHTML = rows.map(function(row, idx){
-      return rowHtml(row, idx, rows);
-    }).join('');
-  }
-
-  // keeps exactly one empty row at the end, ready for the next player
-  function normalizeTrailingSlot(){
-    var rows = config.rows;
-    while (rows.length > 1 && !rows[rows.length - 1].name.trim() && !rows[rows.length - 2].name.trim()){
-      rows.pop();
-    }
-    if (rows.length < MAX_PLAYERS && (rows.length === 0 || rows[rows.length - 1].name.trim())){
-      rows.push({ name: "" });
-    }
-  }
-
-  rowsContainer.addEventListener('input', function(e){
-    var target = e.target;
-    if (!target.classList.contains('player-name-input')) return;
-    var idx = parseInt(target.getAttribute('data-index'), 10);
-    config.rows[idx].name = target.value;
-    normalizeTrailingSlot();
-    persistPlayers();
-
-    var selStart = target.selectionStart, selEnd = target.selectionEnd;
-    renderRows();
-    var restored = rowsContainer.querySelector('.player-name-input[data-index="' + idx + '"]');
-    if (restored){
-      restored.focus();
-      restored.setSelectionRange(selStart, selEnd);
-    }
-    validateSetup();
-  });
-
-  rowsContainer.addEventListener('click', function(e){
-    var removeBtn = e.target.closest('.row-remove-btn');
-    if (!removeBtn || removeBtn.disabled) return;
-    var rIdx = parseInt(removeBtn.getAttribute('data-index'), 10);
-    config.rows.splice(rIdx, 1);
-    normalizeTrailingSlot();
-    renderRows();
-    persistPlayers();
-    validateSetup();
-  });
-
   // ---------- categories ----------
   var categoryListEl = document.getElementById('category-list');
   var categoryToggleAllBtn = document.getElementById('category-toggle-all-btn');
   var setupError = document.getElementById('setup-error');
-  var playersErrorEl = document.getElementById('players-error');
   var startBtn = document.getElementById('start-btn');
-  var setupStepPlayersEl = document.getElementById('setup-step-players');
-  var setupStepSettingsEl = document.getElementById('setup-step-settings');
-  var setupNavEl = document.getElementById('setup-nav');
-  var setupPrevBtn = document.getElementById('setup-prev-btn');
-  var setupNextBtn = document.getElementById('setup-next-btn');
-  var setupFinalBackBtn = document.getElementById('setup-final-back-btn');
-
-  // 0 = jugadores, 1 = categorías — separate steps with explicit forward/back nav
-  var setupStep = 0;
-  function renderSetupStep(){
-    setupStepPlayersEl.classList.toggle('hidden', setupStep !== 0);
-    setupStepSettingsEl.classList.toggle('hidden', setupStep !== 1);
-    setupNavEl.classList.toggle('hidden', setupStep === 1);
-    setupPrevBtn.classList.toggle('hidden', setupStep === 0);
-  }
-  setupPrevBtn.addEventListener('click', function(){
-    if (setupStep > 0){ setupStep--; renderSetupStep(); validateSetup(); }
-  });
-  setupNextBtn.addEventListener('click', function(){
-    if (setupStep < 1 && !setupNextBtn.disabled){ setupStep++; renderSetupStep(); validateSetup(); }
-  });
-  setupFinalBackBtn.addEventListener('click', function(){
-    setupStep = 0;
-    renderSetupStep();
-    validateSetup();
-  });
-  renderSetupStep();
 
   function renderToggleAllLabel(){
     if (!CATEGORIAS){ categoryToggleAllBtn.textContent = 'Seleccionar todas'; return; }
@@ -409,99 +201,41 @@
   }
 
   function validateSetup(){
-    var rows = config.rows;
-    var playerMsgs = [];
-    var hasEmptyName = rows.some(function(r, idx){ return idx !== rows.length - 1 && !r.name.trim(); });
-    if (hasEmptyName) playerMsgs.push("Todos los jugadores necesitan un nombre.");
-    if (effectivePlayerCount(rows) < MIN_PLAYERS) playerMsgs.push("Necesitas al menos " + MIN_PLAYERS + " jugadores.");
-
-    var settingsMsgs = [];
-    if (!CATEGORIAS) settingsMsgs.push("Cargando categorías…");
-    else if (config.selectedCategories.length === 0) settingsMsgs.push("Selecciona al menos una categoría.");
-
-    var playersValid = playerMsgs.length === 0;
-    var settingsValid = settingsMsgs.length === 0;
-    playersErrorEl.textContent = playerMsgs[0] || "";
-    setupError.textContent = settingsMsgs[0] || "";
-    setupNextBtn.disabled = setupStep === 0 && !playersValid;
-    startBtn.disabled = !(playersValid && settingsValid);
-    return playersValid && settingsValid;
+    var msgs = [];
+    if (!CATEGORIAS) msgs.push("Cargando categorías…");
+    else if (config.selectedCategories.length === 0) msgs.push("Selecciona al menos una categoría.");
+    setupError.textContent = msgs[0] || "";
+    startBtn.disabled = msgs.length !== 0;
+    return msgs.length === 0;
   }
 
   function enterSetup(){
-    renderRows();
     renderCategoryList();
-    setupStep = 0;
-    renderSetupStep();
     validateSetup();
     switchScreen(screenSetup);
   }
 
-  // ---------- round screen ----------
-  var roundBadge = document.getElementById('round-badge');
+  // ---------- prompt screen ----------
   var phraseEl = document.getElementById('qp-phrase');
-  var rosterEl = document.getElementById('qp-roster');
   var nextBtn = document.getElementById('next-btn');
   var progressDots = document.getElementById('progress-dots');
   var newRoundBtn = document.getElementById('new-round-btn');
 
   var dots = createDots(progressDots);
 
-  function renderRoster(){
-    rosterEl.innerHTML = state.playerNames.map(function(name, idx){
-      var selected = state.chosenIdx === idx;
-      return '<button type="button" class="roster-row' + (selected ? ' selected' : '') + '" data-index="' + idx + '">' +
-        '<span class="roster-row-name">' + escapeHtml(name) + '</span>' +
-      '</button>';
-    }).join('');
-    nextBtn.disabled = state.chosenIdx === null;
-  }
-
-  rosterEl.addEventListener('click', function(e){
-    var row = e.target.closest('.roster-row');
-    if (!row) return;
-    state.chosenIdx = parseInt(row.getAttribute('data-index'), 10);
-    renderRoster();
-  });
-
   function showRound(i){
-    roundBadge.textContent = "RONDA " + (i + 1) + " / " + state.totalRounds;
     phraseEl.textContent = state.deck[i];
-    state.chosenIdx = null;
-    renderRoster();
     dots.update(i);
   }
 
   nextBtn.addEventListener('click', function(){
-    if (nextBtn.disabled) return;
-    state.tallies[state.chosenIdx]++;
     state.round++;
-    if (state.round >= state.totalRounds){
-      showEnd();
+    if (state.round >= state.deck.length){
+      switchScreen(screenEnd);
     } else {
       showRound(state.round);
     }
   });
-
-  // ---------- end screen ----------
-  var endScoreboardEl = document.getElementById('end-scoreboard');
-
-  function showEnd(){
-    var ranked = state.playerNames.map(function(name, idx){
-      return { name: name, count: state.tallies[idx] };
-    }).sort(function(a, b){ return b.count - a.count; });
-    var maxCount = ranked.length ? ranked[0].count : 0;
-
-    endScoreboardEl.innerHTML = ranked.map(function(p){
-      var isTop = maxCount > 0 && p.count === maxCount;
-      return '<div class="qp-score-row' + (isTop ? ' winner' : '') + '">' +
-        '<span class="qp-score-name"><span class="qp-score-pill">' + (isTop ? '🏆' : '') + '</span>' + escapeHtml(p.name) + '</span>' +
-        '<span class="qp-score-value">' + p.count + '</span>' +
-      '</div>';
-    }).join('');
-
-    switchScreen(screenEnd);
-  }
 
   newRoundBtn.addEventListener('click', function(){
     enterSetup();
@@ -509,15 +243,11 @@
 
   startBtn.addEventListener('click', function(){
     if (!validateSetup()) return;
-    config.rows.forEach(function(r){ r.name = r.name.trim(); });
 
-    state.playerNames = config.rows.map(function(r){ return r.name; }).filter(function(n){ return n !== ""; });
-    state.tallies = state.playerNames.map(function(){ return 0; });
     state.deck = buildDeck();
-    state.totalRounds = state.deck.length;
     state.round = 0;
 
-    dots.build(state.totalRounds);
+    dots.build(state.deck.length);
     showRound(0);
     switchScreen(screenGame);
   });
@@ -530,7 +260,6 @@
   );
 
   // ---------- init ----------
-  renderRows();
   loadCategories();
 })();
 </script>

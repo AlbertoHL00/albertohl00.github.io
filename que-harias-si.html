@@ -23,14 +23,14 @@
     background-color:var(--bg2);
   }
   /* no tap-to-reveal gesture here: the scenario is meant to be read aloud
-     the instant it's this player's turn, so reveal-wrap starts "revealed" */
+     the instant it's shown, so reveal-wrap starts "revealed" */
   #reveal-wrap{cursor:default;}
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- SETUP -->
+  <!-- SETUP: no players — this is a read-it-aloud icebreaker, whoever wants answers -->
   <div class="screen" id="screen-setup">
     <div class="card">
       <div class="setup-header">
@@ -39,29 +39,13 @@
       </div>
       <h1>¿QUÉ HARÍAS SI...?</h1>
 
-      <div id="setup-step-players">
-        <label><span class="label-icon">👥</span>Jugadores</label>
-        <div id="players-list"></div>
-        <div class="error-msg" id="players-error"></div>
-      </div>
+      <label><span class="label-icon">🏷️</span>Categorías</label>
+      <button type="button" class="chip-toggle-all" id="category-toggle-all-btn">Seleccionar todas</button>
+      <div class="chip-list" id="category-list"></div>
 
-      <div class="night-nav" id="setup-nav">
-        <button type="button" class="night-nav-btn icon-only" id="setup-prev-btn" aria-label="Anterior"><span class="back-icon"></span></button>
-        <button type="button" class="night-nav-btn" id="setup-next-btn">Siguiente</button>
-      </div>
+      <div class="error-msg" id="setup-error"></div>
 
-      <div id="setup-step-settings" class="hidden">
-        <label><span class="label-icon">🏷️</span>Categorías</label>
-        <button type="button" class="chip-toggle-all" id="category-toggle-all-btn">Seleccionar todas</button>
-        <div class="chip-list" id="category-list"></div>
-
-        <div class="error-msg" id="setup-error"></div>
-
-        <div class="final-nav">
-          <button type="button" class="night-nav-btn icon-only" id="setup-final-back-btn" aria-label="Anterior"><span class="back-icon"></span></button>
-          <button class="btn-main" id="start-btn">Iniciar partida</button>
-        </div>
-      </div>
+      <button class="btn-main" id="start-btn">Iniciar partida</button>
     </div>
   </div>
 
@@ -72,13 +56,13 @@
       <h2>Cómo se juega</h2>
 
       <h3>Objetivo</h3>
-      <p>Un juego para generar debate y risas: en cada turno, la app plantea un escenario hipotético en voz alta y ese jugador cuenta qué haría. El resto puede opinar, rebatir o rematar con lo que haría en su lugar.</p>
+      <p>Un juego para generar debate y risas: aparece un escenario hipotético, se lee en voz alta y quien quiera responde qué haría. El resto puede opinar, rebatir o rematar con lo que haría en su lugar.</p>
 
       <h3>Usar la app</h3>
       <ol>
-        <li>Añade a los jugadores y elige las categorías de escenarios que queráis usar.</li>
-        <li>En cada turno se muestra directamente el escenario en pantalla, para que todo el grupo lo lea o lo escuche.</li>
-        <li>Ese jugador responde qué haría; cuando terminéis de comentarlo, pasad al siguiente.</li>
+        <li>Elige las categorías de escenarios que queráis usar.</li>
+        <li>Se muestra un escenario en pantalla, para que todo el grupo lo lea o lo escuche.</li>
+        <li>Cuando terminéis de comentarlo, pulsad "Siguiente" para pasar al próximo.</li>
       </ol>
 
       <h3>Categorías</h3>
@@ -91,18 +75,16 @@
     </div>
   </div>
 
-  <!-- TURN SCREEN: scenario shown immediately, no privacy needed -->
+  <!-- PROMPT SCREEN: scenario shown immediately, no privacy needed -->
   <div class="screen hidden" id="screen-game">
     <div class="card">
-      <div class="player-badge" id="player-badge">TURNO</div>
-      <div class="player-name" id="player-name">Nombre</div>
       <div class="pass-hint">Responde qué harías. El resto puede opinar o rebatir.</div>
 
       <div class="reveal-wrap revealed" id="reveal-wrap">
         <div class="reveal-content wild" id="reveal-content"></div>
       </div>
 
-      <button class="btn-main" id="next-btn">Siguiente jugador</button>
+      <button class="btn-main" id="next-btn">Siguiente</button>
 
       <div class="progress-dots" id="progress-dots"></div>
     </div>
@@ -112,9 +94,9 @@
   <div class="screen hidden" id="screen-end">
     <div class="card">
       <div class="end-icon">🤔</div>
-      <h1 style="font-size:1.6rem;">RONDA TERMINADA</h1>
-      <p class="subtitle">¡Que empiece la próxima tanda de dilemas!</p>
-      <button class="btn-main" id="new-round-btn">Iniciar nueva ronda</button>
+      <h1 style="font-size:1.6rem;">¡SE ACABARON LOS ESCENARIOS!</h1>
+      <p class="subtitle">Volved a jugar cuando queráis.</p>
+      <button class="btn-main" id="new-round-btn">Nueva partida</button>
     </div>
   </div>
 
@@ -125,16 +107,11 @@
 (function(){
   "use strict";
 
-  var MIN_PLAYERS = 2, MAX_PLAYERS = 30;
+  var DECK_SIZE = 20; // scenarios per sitting, capped so a big category selection doesn't drag on forever
 
   var config = {
-    selectedCategories: [],
-    rows: loadSavedPlayerNames().slice(0, MAX_PLAYERS).map(function(n){ return { name: n }; }).concat([{ name: "" }])
+    selectedCategories: []
   };
-
-  function persistPlayers(){
-    savePlayerNames(config.rows.map(function(r){ return r.name.trim(); }).filter(function(n){ return n !== ""; }));
-  }
 
   var CATEGORIES = null;
   var CATEGORIES_FALLBACK = [
@@ -157,8 +134,8 @@
   }
 
   var state = {
-    playerNames: [],
-    current: 0
+    deck: [],
+    round: 0
   };
 
   var screenSetup = document.getElementById('screen-setup');
@@ -171,118 +148,11 @@
     target.classList.remove('hidden');
   }
 
-  // ---------- players ----------
-  // No "add player" button: the last row is always an empty slot, and
-  // filling it grows the list automatically (see normalizeTrailingSlot).
-  var rowsContainer = document.getElementById('players-list');
-
-  function effectivePlayerCount(rows){
-    var n = rows.length;
-    if (n > 0 && !rows[n - 1].name.trim()) n--; // trailing empty slot isn't a player yet
-    return n;
-  }
-
-  function rowHtml(row, idx, rows){
-    var isTrailingSlot = idx === rows.length - 1 && !row.name.trim();
-    if (isTrailingSlot){
-      return (
-        '<div class="player-row">' +
-          '<input type="text" class="player-name-input" data-index="' + idx + '" ' +
-            'placeholder="Jugador ' + (idx + 1) + '" maxlength="20" value="' + escapeHtml(row.name) + '">' +
-        '</div>'
-      );
-    }
-    return (
-      '<div class="player-row">' +
-        '<input type="text" class="player-name-input" data-index="' + idx + '" ' +
-          'placeholder="Jugador ' + (idx + 1) + '" maxlength="20" value="' + escapeHtml(row.name) + '">' +
-        '<button type="button" class="row-remove-btn" data-index="' + idx + '"' +
-          (effectivePlayerCount(rows) <= MIN_PLAYERS ? ' disabled' : '') + '>✕</button>' +
-      '</div>'
-    );
-  }
-
-  function renderRows(){
-    var rows = config.rows;
-    rowsContainer.innerHTML = rows.map(function(row, idx){
-      return rowHtml(row, idx, rows);
-    }).join('');
-  }
-
-  // keeps exactly one empty row at the end, ready for the next player
-  function normalizeTrailingSlot(){
-    var rows = config.rows;
-    while (rows.length > 1 && !rows[rows.length - 1].name.trim() && !rows[rows.length - 2].name.trim()){
-      rows.pop();
-    }
-    if (rows.length < MAX_PLAYERS && (rows.length === 0 || rows[rows.length - 1].name.trim())){
-      rows.push({ name: "" });
-    }
-  }
-
-  rowsContainer.addEventListener('input', function(e){
-    var target = e.target;
-    if (!target.classList.contains('player-name-input')) return;
-    var idx = parseInt(target.getAttribute('data-index'), 10);
-    config.rows[idx].name = target.value;
-    normalizeTrailingSlot();
-    persistPlayers();
-
-    var selStart = target.selectionStart, selEnd = target.selectionEnd;
-    renderRows();
-    var restored = rowsContainer.querySelector('.player-name-input[data-index="' + idx + '"]');
-    if (restored){
-      restored.focus();
-      restored.setSelectionRange(selStart, selEnd);
-    }
-    validateSetup();
-  });
-
-  rowsContainer.addEventListener('click', function(e){
-    var removeBtn = e.target.closest('.row-remove-btn');
-    if (!removeBtn || removeBtn.disabled) return;
-    var rIdx = parseInt(removeBtn.getAttribute('data-index'), 10);
-    config.rows.splice(rIdx, 1);
-    normalizeTrailingSlot();
-    renderRows();
-    persistPlayers();
-    validateSetup();
-  });
-
   // ---------- categories ----------
   var categoryListEl = document.getElementById('category-list');
   var categoryToggleAllBtn = document.getElementById('category-toggle-all-btn');
   var setupError = document.getElementById('setup-error');
-  var playersErrorEl = document.getElementById('players-error');
   var startBtn = document.getElementById('start-btn');
-  var setupStepPlayersEl = document.getElementById('setup-step-players');
-  var setupStepSettingsEl = document.getElementById('setup-step-settings');
-  var setupNavEl = document.getElementById('setup-nav');
-  var setupPrevBtn = document.getElementById('setup-prev-btn');
-  var setupNextBtn = document.getElementById('setup-next-btn');
-  var setupFinalBackBtn = document.getElementById('setup-final-back-btn');
-
-  // 0 = jugadores, 1 = resto de ajustes — separate steps with explicit
-  // forward/back navigation instead of one long scrolling form
-  var setupStep = 0;
-  function renderSetupStep(){
-    setupStepPlayersEl.classList.toggle('hidden', setupStep !== 0);
-    setupStepSettingsEl.classList.toggle('hidden', setupStep !== 1);
-    setupNavEl.classList.toggle('hidden', setupStep === 1);
-    setupPrevBtn.classList.toggle('hidden', setupStep === 0);
-  }
-  setupPrevBtn.addEventListener('click', function(){
-    if (setupStep > 0){ setupStep--; renderSetupStep(); validateSetup(); }
-  });
-  setupNextBtn.addEventListener('click', function(){
-    if (setupStep < 1 && !setupNextBtn.disabled){ setupStep++; renderSetupStep(); validateSetup(); }
-  });
-  setupFinalBackBtn.addEventListener('click', function(){
-    setupStep = 0;
-    renderSetupStep();
-    validateSetup();
-  });
-  renderSetupStep(); // sync nav buttons to setupStep's initial value on page load
 
   function renderToggleAllLabel(){
     if (!CATEGORIES){ categoryToggleAllBtn.textContent = 'Seleccionar todas'; return; }
@@ -327,46 +197,30 @@
     validateSetup();
   });
 
-  function pickScenario(){
+  function buildDeck(){
     var pool = [];
     CATEGORIES.forEach(function(c){
       if (config.selectedCategories.indexOf(c.id) !== -1) pool = pool.concat(c.escenarios);
     });
-    return pool[Math.floor(Math.random() * pool.length)];
+    return shuffle(pool.slice()).slice(0, DECK_SIZE);
   }
 
   function validateSetup(){
-    var rows = config.rows;
-    var playerMsgs = [];
-    var hasEmptyName = rows.some(function(r, idx){ return idx !== rows.length - 1 && !r.name.trim(); });
-    if (hasEmptyName) playerMsgs.push("Todos los jugadores necesitan un nombre.");
-    if (effectivePlayerCount(rows) < MIN_PLAYERS) playerMsgs.push("Necesitas al menos " + MIN_PLAYERS + " jugadores.");
-
-    var settingsMsgs = [];
-    if (!CATEGORIES) settingsMsgs.push("Cargando categorías…");
-    else if (config.selectedCategories.length === 0) settingsMsgs.push("Selecciona al menos una categoría.");
-
-    var playersValid = playerMsgs.length === 0;
-    var settingsValid = settingsMsgs.length === 0;
-    playersErrorEl.textContent = playerMsgs[0] || "";
-    setupError.textContent = settingsMsgs[0] || "";
-    setupNextBtn.disabled = setupStep === 0 && !playersValid;
-    startBtn.disabled = !(playersValid && settingsValid);
-    return playersValid && settingsValid;
+    var msgs = [];
+    if (!CATEGORIES) msgs.push("Cargando categorías…");
+    else if (config.selectedCategories.length === 0) msgs.push("Selecciona al menos una categoría.");
+    setupError.textContent = msgs[0] || "";
+    startBtn.disabled = msgs.length !== 0;
+    return msgs.length === 0;
   }
 
   function enterSetup(){
-    renderRows();
     renderCategoryList();
-    setupStep = 0;
-    renderSetupStep();
     validateSetup();
     switchScreen(screenSetup);
   }
 
-  // ---------- game screen (scenario shown immediately, no privacy) ----------
-  var playerBadge = document.getElementById('player-badge');
-  var playerName = document.getElementById('player-name');
+  // ---------- prompt screen (scenario shown immediately, no privacy) ----------
   var revealWrap = document.getElementById('reveal-wrap');
   var revealContent = document.getElementById('reveal-content');
   var nextBtn = document.getElementById('next-btn');
@@ -390,15 +244,13 @@
     }
   }
 
-  function showPlayer(idx){
-    playerBadge.textContent = "TURNO " + (idx + 1) + " / " + state.players;
-    playerName.textContent = state.playerNames[idx];
-    dots.update(idx);
+  function showRound(i){
+    dots.update(i);
 
-    // no tap-to-reveal here: re-trigger the fade-in transition every turn by
-    // toggling the class off/on around a forced reflow (no flash of old text)
+    // re-trigger the fade-in transition every round by toggling the class
+    // off/on around a forced reflow (no flash of the old scenario)
     revealWrap.classList.remove('revealed');
-    revealContent.textContent = pickScenario();
+    revealContent.textContent = state.deck[i];
     revealContent.style.fontSize = '';
     void revealWrap.offsetWidth;
     revealWrap.classList.add('revealed');
@@ -406,24 +258,22 @@
   }
 
   nextBtn.addEventListener('click', function(){
-    state.current++;
-    if (state.current >= state.players){
+    state.round++;
+    if (state.round >= state.deck.length){
       switchScreen(screenEnd);
     } else {
-      showPlayer(state.current);
+      showRound(state.round);
     }
   });
 
   startBtn.addEventListener('click', function(){
     if (!validateSetup()) return;
-    config.rows.forEach(function(r){ r.name = r.name.trim(); });
 
-    state.playerNames = config.rows.map(function(r){ return r.name; }).filter(function(n){ return n !== ""; });
-    state.players = state.playerNames.length;
-    state.current = 0;
+    state.deck = buildDeck();
+    state.round = 0;
 
-    dots.build(state.players);
-    showPlayer(0);
+    dots.build(state.deck.length);
+    showRound(0);
     switchScreen(screenGame);
   });
 
@@ -439,7 +289,6 @@
   );
 
   // ---------- init ----------
-  renderRows();
   loadCategories();
 })();
 </script>

@@ -271,6 +271,7 @@
     <div class="card">
       <div class="setup-header">
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn" id="advanced-btn" aria-label="Más ajustes">⚙️</button>
         <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
       </div>
       <h1>MÍMICA</h1>
@@ -312,27 +313,6 @@
           <div class="chip-list" id="package-list"></div>
         </div>
 
-        <label><span class="label-icon">🔁</span>Rondas por equipo</label>
-        <div class="stepper">
-          <button type="button" id="rounds-minus">−</button>
-          <div class="value" id="rounds-value">3</div>
-          <button type="button" id="rounds-plus">+</button>
-        </div>
-
-        <label><span class="label-icon">⏱️</span>Tiempo por turno</label>
-        <div class="stepper">
-          <button type="button" id="turn-seconds-minus">−</button>
-          <div class="value" id="turn-seconds-value">1:00</div>
-          <button type="button" id="turn-seconds-plus">+</button>
-        </div>
-
-        <label><span class="label-icon">⏭️</span>Segundos que resta saltar palabra</label>
-        <div class="stepper">
-          <button type="button" id="skip-seconds-minus">−</button>
-          <div class="value" id="skip-seconds-value">5</div>
-          <button type="button" id="skip-seconds-plus">+</button>
-        </div>
-
         <div class="error-msg" id="setup-error"></div>
 
         <div class="final-nav">
@@ -360,6 +340,35 @@
         <li>Cada palabra acertada suma un punto para el equipo y se guarda en la lista de aciertos del turno. Si os atascáis, saltadla: pasar palabra resta algunos segundos al cronómetro (configurable).</li>
         <li>Al acabar el tiempo, pasa el turno al siguiente equipo. Gana quien más puntos tenga al terminar todos los turnos; al final verás también quién acertó más y menos palabras.</li>
       </ol>
+    </div>
+  </div>
+
+  <!-- MORE SETTINGS: rounds/timer knobs that are almost always left at default -->
+  <div class="guide-modal-backdrop hidden" id="advanced-modal-backdrop">
+    <div class="guide-modal">
+      <button type="button" class="guide-modal-close" id="advanced-modal-close">✕</button>
+      <h2>Más ajustes</h2>
+
+      <label><span class="label-icon">🔁</span>Rondas por equipo</label>
+      <div class="stepper">
+        <button type="button" id="rounds-minus">−</button>
+        <div class="value" id="rounds-value">3</div>
+        <button type="button" id="rounds-plus">+</button>
+      </div>
+
+      <label><span class="label-icon">⏱️</span>Tiempo por turno</label>
+      <div class="stepper">
+        <button type="button" id="turn-seconds-minus">−</button>
+        <div class="value" id="turn-seconds-value">1:00</div>
+        <button type="button" id="turn-seconds-plus">+</button>
+      </div>
+
+      <label><span class="label-icon">⏭️</span>Segundos que resta saltar palabra</label>
+      <div class="stepper">
+        <button type="button" id="skip-seconds-minus">−</button>
+        <div class="value" id="skip-seconds-value">5</div>
+        <button type="button" id="skip-seconds-plus">+</button>
+      </div>
     </div>
   </div>
 
@@ -1229,6 +1238,13 @@
     document.getElementById('guide-btn'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
+  );
+
+  // ---------- more settings (rounds/timer) ----------
+  setupModal(
+    document.getElementById('advanced-btn'),
+    document.getElementById('advanced-modal-backdrop'),
+    document.getElementById('advanced-modal-close')
   );
 
   // ---------- init ----------

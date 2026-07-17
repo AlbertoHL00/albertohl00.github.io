@@ -122,7 +122,6 @@
   <!-- PASS / REVEAL SCREEN -->
   <div class="screen hidden" id="screen-game">
     <div class="card">
-      <div class="player-badge" id="player-badge">JUGADOR</div>
       <div class="player-name" id="player-name">1</div>
       <div class="pass-hint">Elige verdad o reto. Nadie más debe elegir por ti.</div>
 
@@ -404,7 +403,6 @@
   }
 
   // ---------- game screen (custom dual-button reveal) ----------
-  var playerBadge = document.getElementById('player-badge');
   var playerName = document.getElementById('player-name');
   var revealWrap = document.getElementById('reveal-wrap');
   var revealContent = document.getElementById('reveal-content');
@@ -456,7 +454,6 @@
   dareBtn.addEventListener('click', function(){ reveal('reto'); });
 
   function showPlayer(idx){
-    playerBadge.textContent = "TURNO " + (idx + 1) + " / " + state.players;
     playerName.textContent = state.playerNames[idx];
     dots.update(idx);
     resetReveal();

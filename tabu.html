@@ -258,6 +258,7 @@
     <div class="card">
       <div class="setup-header">
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn" id="advanced-btn" aria-label="Más ajustes">⚙️</button>
         <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
       </div>
       <h1>TABOO</h1>
@@ -300,20 +301,6 @@
         </div>
         <p class="count-info">Se toman 30 cartas al azar de las categorías elegidas.</p>
 
-        <label><span class="label-icon">⏱️</span>Duración de turno</label>
-        <div class="stepper">
-          <button type="button" id="turn-seconds-minus">−</button>
-          <div class="value" id="turn-seconds-value">0:30</div>
-          <button type="button" id="turn-seconds-plus">+</button>
-        </div>
-
-        <label><span class="label-icon">⏭️</span>Segundos que resta pasar o decir palabra prohibida</label>
-        <div class="stepper">
-          <button type="button" id="skip-seconds-minus">−</button>
-          <div class="value" id="skip-seconds-value">5</div>
-          <button type="button" id="skip-seconds-plus">+</button>
-        </div>
-
         <div class="error-msg" id="setup-error"></div>
 
         <div class="final-nav">
@@ -348,6 +335,28 @@
 
       <h3>Puntuación</h3>
       <p>Cada acierto suma un punto para el equipo. Gana quien más puntos tenga al agotarse el mazo. En caso de empate, la victoria se comparte.</p>
+    </div>
+  </div>
+
+  <!-- ADVANCED SETTINGS: knobs most groups leave at their default -->
+  <div class="guide-modal-backdrop hidden" id="advanced-modal-backdrop">
+    <div class="guide-modal">
+      <button type="button" class="guide-modal-close" id="advanced-modal-close">✕</button>
+      <h2>Más ajustes</h2>
+
+      <label><span class="label-icon">⏱️</span>Duración de turno</label>
+      <div class="stepper">
+        <button type="button" id="turn-seconds-minus">−</button>
+        <div class="value" id="turn-seconds-value">0:30</div>
+        <button type="button" id="turn-seconds-plus">+</button>
+      </div>
+
+      <label><span class="label-icon">⏭️</span>Segundos que resta pasar o decir palabra prohibida</label>
+      <div class="stepper">
+        <button type="button" id="skip-seconds-minus">−</button>
+        <div class="value" id="skip-seconds-value">5</div>
+        <button type="button" id="skip-seconds-plus">+</button>
+      </div>
     </div>
   </div>
 
@@ -1167,6 +1176,13 @@
     document.getElementById('guide-btn'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
+  );
+
+  // ---------- advanced settings ----------
+  setupModal(
+    document.getElementById('advanced-btn'),
+    document.getElementById('advanced-modal-backdrop'),
+    document.getElementById('advanced-modal-close')
   );
 
   // ---------- init ----------

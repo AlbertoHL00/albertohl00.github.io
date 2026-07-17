@@ -301,19 +301,7 @@
         </div>
         <p class="count-info">Se toman 40 cartas al azar de las categorías elegidas, las mismas en las 3 fases.</p>
 
-        <label><span class="label-icon">⏱️</span>Duración de turno</label>
-        <div class="stepper">
-          <button type="button" id="turn-seconds-minus">−</button>
-          <div class="value" id="turn-seconds-value">0:30</div>
-          <button type="button" id="turn-seconds-plus">+</button>
-        </div>
-
-        <label><span class="label-icon">⏭️</span>Segundos que resta saltar carta</label>
-        <div class="stepper">
-          <button type="button" id="skip-seconds-minus">−</button>
-          <div class="value" id="skip-seconds-value">5</div>
-          <button type="button" id="skip-seconds-plus">+</button>
-        </div>
+        <button type="button" class="guide-btn" id="advanced-settings-btn" aria-label="Más ajustes" style="margin:2px 0 16px;">⚙️</button>
 
         <div class="error-msg" id="setup-error"></div>
 
@@ -321,6 +309,28 @@
           <button type="button" class="night-nav-btn icon-only" id="setup-final-back-btn" aria-label="Anterior"><span class="back-icon"></span></button>
           <button class="btn-main" id="start-btn">Iniciar partida</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADVANCED SETTINGS: knobs most groups leave at their default -->
+  <div class="guide-modal-backdrop hidden" id="advanced-modal-backdrop">
+    <div class="guide-modal">
+      <button type="button" class="guide-modal-close" id="advanced-modal-close">✕</button>
+      <h2>Más ajustes</h2>
+
+      <label><span class="label-icon">⏱️</span>Duración de turno</label>
+      <div class="stepper">
+        <button type="button" id="turn-seconds-minus">−</button>
+        <div class="value" id="turn-seconds-value">0:30</div>
+        <button type="button" id="turn-seconds-plus">+</button>
+      </div>
+
+      <label><span class="label-icon">⏭️</span>Segundos que resta saltar carta</label>
+      <div class="stepper">
+        <button type="button" id="skip-seconds-minus">−</button>
+        <div class="value" id="skip-seconds-value">5</div>
+        <button type="button" id="skip-seconds-plus">+</button>
       </div>
     </div>
   </div>
@@ -1211,6 +1221,13 @@
     document.getElementById('guide-btn'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
+  );
+
+  // ---------- advanced settings (turn duration, skip penalty) ----------
+  setupModal(
+    document.getElementById('advanced-settings-btn'),
+    document.getElementById('advanced-modal-backdrop'),
+    document.getElementById('advanced-modal-close')
   );
 
   // ---------- init ----------

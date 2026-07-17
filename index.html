@@ -53,6 +53,7 @@
   .mode-grid .mode-card:nth-child(10){animation-delay:.5s;}
   .mode-grid .mode-card:nth-child(11){animation-delay:.55s;}
   .mode-grid .mode-card:nth-child(12){animation-delay:.6s;}
+  .mode-grid .mode-card:nth-child(13){animation-delay:.65s;}
   @keyframes modeIn{
     from{opacity:0; transform:translateY(10px) scale(0.98);}
     to{opacity:1; transform:translateY(0) scale(1);}
@@ -82,6 +83,8 @@
   .mode-card.theme-indigo:active{background:rgba(143,159,250,0.12);}
   .mode-card.theme-lime{border-color:rgba(168,217,106,0.4);}
   .mode-card.theme-lime:active{background:rgba(168,217,106,0.12);}
+  .mode-card.theme-steel{border-color:rgba(125,148,171,0.4);}
+  .mode-card.theme-steel:active{background:rgba(125,148,171,0.12);}
   .mode-card.disabled{cursor:default;}
   .mode-card.disabled:active{transform:none;}
   .mode-card.disabled.theme-rose:active{background:rgba(255,255,255,0.05);}
@@ -112,6 +115,18 @@
     -webkit-mask-size:contain;
     filter:drop-shadow(0 4px 10px rgba(0,0,0,0.3));
   }
+  /* placeholder for modes without a custom logo yet — swap for .mode-icon-badge once one exists */
+  .mode-icon-emoji{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:1;
+    min-height:0;
+    font-size:2.4rem;
+    line-height:1;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+  }
+  .mode-card.disabled .mode-icon-emoji{opacity:0.55;}
   .mode-card-link{
     display:flex;
     flex-direction:column;
@@ -134,6 +149,7 @@
   .theme-green .mode-icon-badge{background-color:#8fd9ac;}
   .theme-purple .mode-icon-badge{background-color:#a970e0;}
   .theme-lime .mode-icon-badge{background-color:#a8d96a;}
+  .theme-steel .mode-icon-badge{background-color:#7d94ab;}
   .theme-yellow .mode-icon-badge{background-color:#e8d66b;}
   .theme-gold .mode-icon-badge{background-color:#f2c94c;}
   .theme-indigo .mode-icon-badge{background-color:#8f9ffa;}
@@ -267,6 +283,13 @@
           <span class="mode-icon-badge" style="mask-image:url('images/hub/hitster-logo.svg');-webkit-mask-image:url('images/hub/hitster-logo.svg');"></span>
           <span class="coming-soon-badge">Próximamente</span>
         </span>
+      </div>
+
+      <div class="card mode-card theme-steel">
+        <button type="button" class="mode-info-btn" aria-label="Descripción" data-emoji="🔑" data-title="Código Secreto" data-desc="Dos equipos, un tablero de 25 palabras y una clave secreta. Da pistas de una palabra para que tu equipo adivine las suyas sin decir la del asesino.">ⓘ</button>
+        <a href="codigo-secreto.html" class="mode-card-link" aria-label="Código Secreto">
+          <span class="mode-icon-emoji">🔑</span>
+        </a>
       </div>
 
       <div class="card mode-card theme-green">

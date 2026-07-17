@@ -163,6 +163,7 @@
     <div class="card">
       <div class="setup-header">
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn" id="advanced-btn" aria-label="Más ajustes">⚙️</button>
         <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
       </div>
       <h1>IMPOSTOR</h1>
@@ -215,13 +216,6 @@
             <button type="button" class="chip-toggle-all" id="package-toggle-all-btn">Seleccionar todos</button>
             <div class="chip-list" id="package-list"></div>
           </div>
-        </div>
-
-        <label><span class="label-icon">⏱️</span>Tiempo para debatir</label>
-        <div class="stepper">
-          <button type="button" id="debate-minutes-minus">−</button>
-          <div class="value" id="debate-minutes-value">Sin límite</div>
-          <button type="button" id="debate-minutes-plus">+</button>
         </div>
 
         <div id="random-impostors-wrap" class="hidden">
@@ -283,6 +277,21 @@
         <li>Votad a quien creáis impostor: se elimina y se revela si acertasteis.</li>
         <li>Si quedan impostores en minoría, se juega otra ronda de palabras y votación con los jugadores vivos. Ganan los civiles si se descubren todos los impostores; ganan los impostores si superan en número a los civiles, o si solo queda 1 impostor contra 1 civil.</li>
       </ol>
+    </div>
+  </div>
+
+  <!-- ADVANCED SETTINGS: usually-left-at-default knobs, tucked out of the main setup flow -->
+  <div class="guide-modal-backdrop hidden" id="advanced-modal-backdrop">
+    <div class="guide-modal">
+      <button type="button" class="guide-modal-close" id="advanced-modal-close">✕</button>
+      <h2>Más ajustes</h2>
+
+      <label><span class="label-icon">⏱️</span>Tiempo para debatir</label>
+      <div class="stepper">
+        <button type="button" id="debate-minutes-minus">−</button>
+        <div class="value" id="debate-minutes-value">Sin límite</div>
+        <button type="button" id="debate-minutes-plus">+</button>
+      </div>
     </div>
   </div>
 
@@ -1140,6 +1149,12 @@
     document.getElementById('guide-btn'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
+  );
+
+  setupModal(
+    document.getElementById('advanced-btn'),
+    document.getElementById('advanced-modal-backdrop'),
+    document.getElementById('advanced-modal-close')
   );
 
   // ---------- init ----------
