@@ -56,15 +56,6 @@
   .packages-dropdown-panel{
     margin-top:10px;
   }
-  .player-row.is-impostor{
-    background:rgba(156,63,71,0.12);
-    border-color:rgba(156,63,71,0.4);
-  }
-  .player-row.is-impostor .row-toggle-btn{
-    background:linear-gradient(135deg, var(--accent), var(--accent2));
-    border-color:transparent;
-  }
-
   /* ---- debate / vote screen ---- */
   .start-player-line{
     text-align:center;
@@ -163,7 +154,6 @@
     <div class="card">
       <div class="setup-header">
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
-        <button type="button" class="guide-btn" id="advanced-btn" aria-label="Más ajustes">⚙️</button>
         <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
       </div>
       <h1>IMPOSTOR</h1>
@@ -181,20 +171,14 @@
 
       <div id="setup-step-settings" class="hidden">
         <div class="submode-toggle">
-          <button type="button" class="submode-btn" id="submode-custom-btn">Personalizada</button>
           <button type="button" class="submode-btn" id="submode-random-btn">Aleatoria</button>
+          <button type="button" class="submode-btn" id="submode-custom-btn">Personalizada</button>
         </div>
 
         <div id="custom-word-wrap">
           <label for="word-input-imp"><span class="label-icon">🗣️</span>Palabra secreta</label>
           <input type="text" id="word-input-imp" placeholder="Ej: Playa, Pizza, Batman..." maxlength="40">
-
-          <label class="switch-toggle">
-            <input type="checkbox" id="custom-random-assign-toggle">
-            <span class="switch-track"><span class="switch-thumb"></span></span>
-            🎲 Asignar el impostor al azar
-          </label>
-          <p class="count-info" id="custom-random-assign-desc"></p>
+          <p class="count-info">🎲 La app asigna el impostor al azar entre los jugadores.</p>
 
           <div id="custom-random-count-wrap" class="hidden">
             <label><span class="label-icon">🎭</span>Número de impostores</label>
@@ -238,6 +222,8 @@
         <div class="count-info" id="impostor-count-info"></div>
         <div class="error-msg" id="impostor-setup-error"></div>
 
+        <button type="button" class="guide-btn" id="advanced-btn" aria-label="Más ajustes" style="margin:2px 0 16px;">⚙️</button>
+
         <div class="final-nav">
           <button type="button" class="night-nav-btn icon-only" id="setup-final-back-btn" aria-label="Anterior"><span class="back-icon"></span></button>
           <button class="btn-main" id="impostor-start-btn">Iniciar partida</button>
@@ -258,7 +244,7 @@
       <h3>Modo personalizado</h3>
       <ul>
         <li>Escribe tú la palabra secreta.</li>
-        <li>Marca manualmente quién es el impostor tocando su icono 👤/🎭, o activa "Asignar el impostor al azar" para que la app lo elija por ti.</li>
+        <li>Elige cuántos impostores habrá; la app los asigna al azar entre los jugadores.</li>
       </ul>
 
       <h3>Modo aleatorio</h3>
@@ -364,12 +350,11 @@
     subMode: "random", // 'custom' | 'random'
     word: "",
     randomImpostors: 1,
-    customRandomAssign: false, // custom mode: assign the impostor(s) at random instead of tapping who it is
     customImpostorCount: 1,
     impostorMode: "none", // 'none' | 'hint' | 'mrblanco'
     debateMinutes: 0, // 0 = sin límite
     selectedPackages: [],
-    rows: loadSavedPlayerNames().slice(0, MAX_PLAYERS).map(function(n){ return { name: n, isImpostor: false }; }).concat([{ name: "", isImpostor: false }])
+    rows: loadSavedPlayerNames().slice(0, MAX_PLAYERS).map(function(n){ return { name: n }; }).concat([{ name: "" }])
   };
 
   function persistPlayers(){
@@ -447,8 +432,6 @@
   }
 
   var impWordInput = document.getElementById('word-input-imp');
-  var customRandomAssignToggle = document.getElementById('custom-random-assign-toggle');
-  var customRandomAssignDesc = document.getElementById('custom-random-assign-desc');
   var customRandomCountWrap = document.getElementById('custom-random-count-wrap');
   var customImpostorsMinus = document.getElementById('custom-impostors-minus');
   var customImpostorsPlus = document.getElementById('custom-impostors-plus');
@@ -507,12 +490,6 @@
   var debateMinutesPlus = document.getElementById('debate-minutes-plus');
   var debateMinutesValue = document.getElementById('debate-minutes-value');
 
-  function renderCustomRandomAssignDesc(){
-    customRandomAssignDesc.textContent = config.customRandomAssign ?
-      'La app elige en secreto quién es el impostor al iniciar la partida.' :
-      'Marca manualmente al impostor tocando su icono 👤 → 🎭 en la lista de jugadores (paso anterior).';
-  }
-
   var IMPOSTOR_MODE_DESC = {
     none: 'Los impostores no reciben ninguna palabra.',
     hint: 'Los impostores ven que lo son y reciben una palabra relacionada como pista.',
@@ -552,7 +529,7 @@
     return n;
   }
 
-  function rowHtml(row, idx, rows, showToggle){
+  function rowHtml(row, idx, rows){
     var isTrailingSlot = idx === rows.length - 1 && !row.name.trim();
     if (isTrailingSlot){
       return (
@@ -562,16 +539,10 @@
         '</div>'
       );
     }
-    var impClass = (showToggle && row.isImpostor) ? ' is-impostor' : '';
     return (
-      '<div class="player-row' + impClass + '">' +
+      '<div class="player-row">' +
         '<input type="text" class="player-name-input" data-index="' + idx + '" ' +
           'placeholder="Jugador ' + (idx + 1) + '" maxlength="20" value="' + escapeHtml(row.name) + '">' +
-        (showToggle ?
-          '<button type="button" class="row-toggle-btn" data-index="' + idx + '" title="Marcar como impostor">' +
-            (row.isImpostor ? '🎭' : '👤') +
-          '</button>'
-        : '') +
         '<button type="button" class="row-remove-btn" data-index="' + idx + '"' +
           (effectivePlayerCount(rows) <= MIN_PLAYERS ? ' disabled' : '') + '>✕</button>' +
       '</div>'
@@ -580,9 +551,8 @@
 
   function renderRows(){
     var rows = config.rows;
-    var showToggle = config.subMode === 'custom' && !config.customRandomAssign;
     rowsContainer.innerHTML = rows.map(function(row, idx){
-      return rowHtml(row, idx, rows, showToggle);
+      return rowHtml(row, idx, rows);
     }).join('');
   }
 
@@ -593,7 +563,7 @@
       rows.pop();
     }
     if (rows.length < MAX_PLAYERS && (rows.length === 0 || rows[rows.length - 1].name.trim())){
-      rows.push({ name: "", isImpostor: false });
+      rows.push({ name: "" });
     }
   }
 
@@ -618,14 +588,8 @@
   });
 
   rowsContainer.addEventListener('click', function(e){
-    var toggleBtn = e.target.closest('.row-toggle-btn');
     var removeBtn = e.target.closest('.row-remove-btn');
-    if (toggleBtn){
-      var tIdx = parseInt(toggleBtn.getAttribute('data-index'), 10);
-      config.rows[tIdx].isImpostor = !config.rows[tIdx].isImpostor;
-      renderRows();
-      validateSetup();
-    } else if (removeBtn && !removeBtn.disabled){
+    if (removeBtn && !removeBtn.disabled){
       var rIdx = parseInt(removeBtn.getAttribute('data-index'), 10);
       config.rows.splice(rIdx, 1);
       normalizeTrailingSlot();
@@ -645,12 +609,10 @@
     submodeCustomBtn.classList.toggle('active', isCustom);
     submodeRandomBtn.classList.toggle('active', !isCustom);
     customWordWrap.classList.toggle('hidden', !isCustom);
-    customRandomAssignToggle.checked = config.customRandomAssign;
-    customRandomCountWrap.classList.toggle('hidden', !(isCustom && config.customRandomAssign));
+    customRandomCountWrap.classList.toggle('hidden', !isCustom);
     randomConfigWrap.classList.toggle('hidden', isCustom);
     randomImpostorsWrap.classList.toggle('hidden', isCustom);
     impostorCountInfo.classList.toggle('hidden', !isCustom);
-    renderCustomRandomAssignDesc();
     setImpostorMode(config.impostorMode);
     refreshRandomImpostorBounds();
     refreshCustomImpostorBounds();
@@ -661,15 +623,6 @@
 
   submodeCustomBtn.addEventListener('click', function(){ setSubMode('custom'); });
   submodeRandomBtn.addEventListener('click', function(){ setSubMode('random'); });
-
-  customRandomAssignToggle.addEventListener('change', function(){
-    config.customRandomAssign = customRandomAssignToggle.checked;
-    customRandomCountWrap.classList.toggle('hidden', !config.customRandomAssign);
-    renderCustomRandomAssignDesc();
-    refreshCustomImpostorBounds();
-    renderRows();
-    validateSetup();
-  });
 
   function refreshCustomImpostorBounds(){
     var maxImp = effectivePlayerCount(config.rows) - 1;
@@ -808,15 +761,8 @@
     if (config.subMode === 'custom'){
       var word = impWordInput.value.trim();
       if (!word) settingsMsgs.push("Escribe una palabra secreta.");
-      if (config.customRandomAssign){
-        if (config.customImpostorCount >= players) settingsMsgs.push("Debe haber menos impostores que jugadores.");
-        impostorCountInfo.textContent = config.customImpostorCount + (config.customImpostorCount === 1 ? " impostor" : " impostores") + " al azar de " + players + " jugadores";
-      } else {
-        var impCount = rows.filter(function(r){ return r.isImpostor; }).length;
-        if (impCount < MIN_IMPOSTORS) settingsMsgs.push("Selecciona al menos un impostor.");
-        if (impCount >= players) settingsMsgs.push("No todos los jugadores pueden ser impostores.");
-        impostorCountInfo.textContent = impCount + (impCount === 1 ? " impostor" : " impostores") + " de " + players + " jugadores";
-      }
+      if (config.customImpostorCount >= players) settingsMsgs.push("Debe haber menos impostores que jugadores.");
+      impostorCountInfo.textContent = config.customImpostorCount + (config.customImpostorCount === 1 ? " impostor" : " impostores") + " al azar de " + players + " jugadores";
     } else {
       if (!PACKAGES) settingsMsgs.push("Cargando paquetes…");
       else if (config.selectedPackages.length === 0) settingsMsgs.push("Selecciona al menos un paquete.");
@@ -1116,9 +1062,7 @@
       config.word = impWordInput.value.trim();
       chosenWord = config.word;
       config.word = '';
-      roles = config.customRandomAssign ?
-        buildRandomRoles(realRows.length, config.customImpostorCount) :
-        realRows.map(function(r){ return r.isImpostor; });
+      roles = buildRandomRoles(realRows.length, config.customImpostorCount);
     } else {
       var picked = pickRandomWordWithHint();
       chosenWord = picked.word;

@@ -113,6 +113,10 @@ h1{
   color:transparent;
   letter-spacing:0.5px;
 }
+/* extra breathing room between the game title and the setup form below it */
+#screen-setup h1{
+  margin-bottom:20px;
+}
 .subtitle{
   text-align:center;
   color:var(--text-dim);
