@@ -409,6 +409,53 @@
         { "pregunta": "¿En qué deporte se utiliza un disco llamado \"puck\"?", "opciones": ["Hockey sobre hielo", "Curling", "Bobsleigh", "Patinaje de velocidad"], "correcta": 0 },
         { "pregunta": "¿Qué prueba atlética consiste en superar vallas mientras se corre a máxima velocidad?", "opciones": ["Los relevos", "Las vallas", "El salto de longitud", "La marcha"], "correcta": 1 }
       ]
+    },
+    {
+      "id": "arte_y_literatura",
+      "nombre": "Arte y literatura",
+      "icono": "🎨",
+      "preguntas": [
+        { "pregunta": "¿Quién pintó \"La noche estrellada\"?", "opciones": ["Vincent van Gogh", "Claude Monet", "Pablo Picasso", "Salvador Dalí"], "correcta": 0 },
+        { "pregunta": "¿Quién escribió \"Don Quijote de la Mancha\"?", "opciones": ["Lope de Vega", "Miguel de Cervantes", "Federico García Lorca", "Calderón de la Barca"], "correcta": 1 },
+        { "pregunta": "¿Quién pintó \"La Gioconda\" (Mona Lisa)?", "opciones": ["Rafael", "Miguel Ángel", "Leonardo da Vinci", "Botticelli"], "correcta": 2 },
+        { "pregunta": "¿En qué museo se encuentra \"Las Meninas\" de Velázquez?", "opciones": ["El Louvre", "El Prado", "El Hermitage", "La Uffizi"], "correcta": 1 },
+        { "pregunta": "¿Quién esculpió el \"David\"?", "opciones": ["Donatello", "Rodin", "Miguel Ángel", "Bernini"], "correcta": 2 },
+        { "pregunta": "¿Quién escribió \"Cien años de soledad\"?", "opciones": ["Mario Vargas Llosa", "Gabriel García Márquez", "Julio Cortázar", "Jorge Luis Borges"], "correcta": 1 },
+        { "pregunta": "¿Qué pintor se cortó parte de su propia oreja?", "opciones": ["Paul Gauguin", "Vincent van Gogh", "Edvard Munch", "Henri Matisse"], "correcta": 1 },
+        { "pregunta": "¿Quién escribió \"Romeo y Julieta\"?", "opciones": ["Christopher Marlowe", "Charles Dickens", "William Shakespeare", "Oscar Wilde"], "correcta": 2 },
+        { "pregunta": "¿A qué movimiento artístico pertenece Salvador Dalí?", "opciones": ["Cubismo", "Surrealismo", "Impresionismo", "Fauvismo"], "correcta": 1 },
+        { "pregunta": "¿Quién pintó \"El grito\"?", "opciones": ["Edvard Munch", "Gustav Klimt", "Egon Schiele", "Wassily Kandinsky"], "correcta": 0 },
+        { "pregunta": "¿Quién escribió \"1984\"?", "opciones": ["Aldous Huxley", "Ray Bradbury", "George Orwell", "H.G. Wells"], "correcta": 2 },
+        { "pregunta": "¿Cuál es el verdadero nombre del pintor conocido como \"El Greco\"?", "opciones": ["Doménikos Theotokópoulos", "Diego Velázquez", "Francisco de Goya", "José de Ribera"], "correcta": 0 },
+        { "pregunta": "¿Quién escribió \"Hamlet\"?", "opciones": ["William Shakespeare", "Christopher Marlowe", "Ben Jonson", "John Milton"], "correcta": 0 },
+        { "pregunta": "¿Qué autor escribió \"El principito\"?", "opciones": ["Jules Verne", "Antoine de Saint-Exupéry", "Victor Hugo", "Albert Camus"], "correcta": 1 },
+        { "pregunta": "¿Quién pintó el techo de la Capilla Sixtina?", "opciones": ["Rafael", "Miguel Ángel", "Leonardo da Vinci", "Donatello"], "correcta": 1 },
+        { "pregunta": "¿Quién escribió \"La Odisea\"?", "opciones": ["Sófocles", "Homero", "Platón", "Eurípides"], "correcta": 1 },
+        { "pregunta": "¿A qué movimiento pertenecen Pablo Picasso y Georges Braque?", "opciones": ["Cubismo", "Surrealismo", "Dadaísmo", "Expresionismo"], "correcta": 0 },
+        { "pregunta": "¿Quién escribió \"Crimen y castigo\"?", "opciones": ["León Tolstói", "Antón Chéjov", "Fiódor Dostoyevski", "Iván Turguénev"], "correcta": 2 },
+        { "pregunta": "¿Qué escultura griega representa a una mujer sin brazos?", "opciones": ["La Venus de Milo", "La Victoria de Samotracia", "El Discóbolo", "El Laocoonte"], "correcta": 0 },
+        { "pregunta": "¿Quién escribió \"Rayuela\"?", "opciones": ["Julio Cortázar", "Jorge Luis Borges", "Mario Vargas Llosa", "Pablo Neruda"], "correcta": 0 },
+        { "pregunta": "¿Quién pintó \"Guernica\"?", "opciones": ["Joan Miró", "Pablo Picasso", "Salvador Dalí", "Diego Rivera"], "correcta": 1 },
+        { "pregunta": "¿Quién escribió \"Los miserables\"?", "opciones": ["Victor Hugo", "Alexandre Dumas", "Gustave Flaubert", "Émile Zola"], "correcta": 0 },
+        { "pregunta": "¿Qué escritor creó a Sherlock Holmes?", "opciones": ["Agatha Christie", "Arthur Conan Doyle", "Edgar Allan Poe", "Wilkie Collins"], "correcta": 1 },
+        { "pregunta": "¿Quién pintó \"Las señoritas de Avignon\"?", "opciones": ["Henri Matisse", "Georges Braque", "Pablo Picasso", "Amedeo Modigliani"], "correcta": 2 },
+        { "pregunta": "¿Quién escribió \"Orgullo y prejuicio\"?", "opciones": ["Charlotte Brontë", "Jane Austen", "Emily Brontë", "Virginia Woolf"], "correcta": 1 },
+        { "pregunta": "¿A qué corriente pertenece Claude Monet?", "opciones": ["Impresionismo", "Postimpresionismo", "Realismo", "Barroco"], "correcta": 0 },
+        { "pregunta": "¿Quién escribió \"La metamorfosis\"?", "opciones": ["Thomas Mann", "Franz Kafka", "Hermann Hesse", "Bertolt Brecht"], "correcta": 1 },
+        { "pregunta": "¿Quién pintó \"El nacimiento de Venus\"?", "opciones": ["Rafael", "Tiziano", "Sandro Botticelli", "Caravaggio"], "correcta": 2 },
+        { "pregunta": "¿Quién escribió la saga \"Harry Potter\"?", "opciones": ["J.R.R. Tolkien", "C.S. Lewis", "J.K. Rowling", "Roald Dahl"], "correcta": 2 },
+        { "pregunta": "¿Qué pintor es famoso por el cuadro \"Esto no es una pipa\" (\"La traición de las imágenes\")?", "opciones": ["Salvador Dalí", "René Magritte", "Joan Miró", "Max Ernst"], "correcta": 1 },
+        { "pregunta": "¿Quién escribió \"Fortunata y Jacinta\"?", "opciones": ["Benito Pérez Galdós", "Leopoldo Alas \"Clarín\"", "Emilia Pardo Bazán", "Vicente Blasco Ibáñez"], "correcta": 0 },
+        { "pregunta": "¿Qué escultor creó \"El pensador\"?", "opciones": ["Auguste Rodin", "Camille Claudel", "Antonio Canova", "Constantin Brâncuși"], "correcta": 0 },
+        { "pregunta": "¿Quién escribió \"El retrato de Dorian Gray\"?", "opciones": ["Oscar Wilde", "Bram Stoker", "H.G. Wells", "Robert Louis Stevenson"], "correcta": 0 },
+        { "pregunta": "¿Qué pintor holandés pintó \"La joven de la perla\"?", "opciones": ["Rembrandt", "Johannes Vermeer", "Frans Hals", "Jan van Eyck"], "correcta": 1 },
+        { "pregunta": "¿Quién escribió \"La Divina Comedia\"?", "opciones": ["Petrarca", "Dante Alighieri", "Boccaccio", "Maquiavelo"], "correcta": 1 },
+        { "pregunta": "¿Quién pintó \"La persistencia de la memoria\" (los relojes blandos)?", "opciones": ["Pablo Picasso", "Joan Miró", "Salvador Dalí", "Frida Kahlo"], "correcta": 2 },
+        { "pregunta": "¿Quién escribió \"Matar a un ruiseñor\"?", "opciones": ["Truman Capote", "Harper Lee", "John Steinbeck", "F. Scott Fitzgerald"], "correcta": 1 },
+        { "pregunta": "¿Qué artista mexicana es famosa por sus autorretratos?", "opciones": ["Remedios Varo", "Frida Kahlo", "Tina Modotti", "María Izquierdo"], "correcta": 1 },
+        { "pregunta": "¿Quién escribió \"Ulises\"?", "opciones": ["James Joyce", "Samuel Beckett", "Oscar Wilde", "Bram Stoker"], "correcta": 0 },
+        { "pregunta": "¿Quién pintó \"La última cena\"?", "opciones": ["Miguel Ángel", "Rafael", "Leonardo da Vinci", "Donatello"], "correcta": 2 }
+      ]
     }
   ]
 }

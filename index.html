@@ -55,6 +55,7 @@
   .mode-grid .mode-card:nth-child(12){animation-delay:.6s;}
   .mode-grid .mode-card:nth-child(13){animation-delay:.65s;}
   .mode-grid .mode-card:nth-child(14){animation-delay:.7s;}
+  .mode-grid .mode-card:nth-child(15){animation-delay:.75s;}
   @keyframes modeIn{
     from{opacity:0; transform:translateY(10px) scale(0.98);}
     to{opacity:1; transform:translateY(0) scale(1);}
@@ -88,6 +89,8 @@
   .mode-card.theme-steel:active{background:rgba(125,148,171,0.12);}
   .mode-card.theme-orange{border-color:rgba(240,149,79,0.4);}
   .mode-card.theme-orange:active{background:rgba(240,149,79,0.12);}
+  .mode-card.theme-cyan{border-color:rgba(79,195,217,0.4);}
+  .mode-card.theme-cyan:active{background:rgba(79,195,217,0.12);}
   .mode-card.disabled{cursor:default;}
   .mode-card.disabled:active{transform:none;}
   .mode-card.disabled.theme-rose:active{background:rgba(255,255,255,0.05);}
@@ -157,6 +160,7 @@
   .theme-gold .mode-icon-badge{background-color:#f2c94c;}
   .theme-indigo .mode-icon-badge{background-color:#8f9ffa;}
   .theme-orange .mode-icon-badge{background-color:#f0954f;}
+  .theme-cyan .mode-icon-badge{background-color:#4fc3d9;}
   .mode-info-btn{
     position:absolute;
     top:10px;
@@ -349,6 +353,13 @@
         <a href="que-harias-si.html" class="mode-card-link" aria-label="¿Qué Harías Si...?">
           <span class="mode-icon-badge" style="mask-image:url('images/hub/que-haria-si-logo.svg');-webkit-mask-image:url('images/hub/que-haria-si-logo.svg');"></span>
           </a>
+      </div>
+
+      <div class="card mode-card theme-cyan">
+        <button type="button" class="mode-info-btn" aria-label="Descripción" data-emoji="⚖️" data-title="¿Qué Preferirías?" data-desc="Dos opciones al azar de una gran pila de posibilidades — casi nunca sale la misma pareja dos veces. Elige y debatid por qué.">ⓘ</button>
+        <a href="que-preferirias.html" class="mode-card-link" aria-label="¿Qué Preferirías?">
+          <span class="mode-icon-emoji">⚖️</span>
+        </a>
       </div>
 
       <div class="card mode-card theme-blue">

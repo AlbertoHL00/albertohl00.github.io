@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<script src="analytics.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>¿Qué Preferirías? · Game Hub</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="78" font-size="72" text-anchor="middle">%E2%9A%96%EF%B8%8F</text></svg>'>
+<link rel="stylesheet" href="shared.css">
+<style>
+  :root{
+    --accent:#4fc3d9;
+    --accent2:#9ee8f0;
+    --reveal-b:#9ee8f0;
+  }
+  html,body{
+    /* flat solid fill — a multi-layer gradient here used to leave gaps of
+       the raw background color showing on some viewports/scroll ranges */
+    background-color:var(--bg2);
+  }
+
+  .qpref-option{
+    padding:18px 16px;
+    border-radius:16px;
+    border:1px solid var(--glass-border);
+    text-align:center;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:1.1rem;
+    line-height:1.3;
+    word-break:break-word;
+  }
+  .qpref-option-a{border-color:rgba(91,143,224,0.5); background:rgba(91,143,224,0.12); color:#9dc9ff;}
+  .qpref-option-b{border-color:rgba(224,102,63,0.5); background:rgba(224,102,63,0.12); color:#f5a875;}
+  .qpref-divider{
+    text-align:center;
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:0.85rem;
+    color:var(--text-dim);
+    margin:10px 0;
+    letter-spacing:1px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SETUP: nothing to configure — no players, no categories -->
+  <div class="screen" id="screen-setup">
+    <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
+      </div>
+      <h1>¿QUÉ PREFERIRÍAS?</h1>
+      <p class="subtitle">Dos opciones al azar, sin ganadores ni puntos. Elige una en voz alta y debatid por qué.</p>
+
+      <button class="btn-main" id="start-btn">Iniciar partida</button>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY GUIDE -->
+  <div class="guide-modal-backdrop hidden" id="guide-modal-backdrop">
+    <div class="guide-modal">
+      <button type="button" class="guide-modal-close" id="guide-modal-close">✕</button>
+      <h2>Cómo se juega</h2>
+
+      <h3>Objetivo</h3>
+      <p>Un juego para romper el hielo, sin ganadores ni puntos. Aparecen dos opciones — elige cuál preferirías y debatid por qué en voz alta.</p>
+
+      <h3>Usar la app</h3>
+      <ol>
+        <li>Pulsa "Iniciar partida".</li>
+        <li>Cada ronda combina dos opciones al azar de una gran pila de posibilidades, así que casi nunca sale la misma pareja dos veces.</li>
+        <li>Cuando el grupo termine de decidir y debatir, pulsa "Siguiente" para pasar a la próxima. No hay rondas ni final: jugad tanto como queráis.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- CARD SCREEN: infinite, no round counter -->
+  <div class="screen hidden" id="screen-game">
+    <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+      </div>
+      <p class="subtitle" style="margin-top:0;">¿Qué preferirías...?</p>
+
+      <div class="qpref-option qpref-option-a" id="qpref-option-a"></div>
+      <div class="qpref-divider">O</div>
+      <div class="qpref-option qpref-option-b" id="qpref-option-b"></div>
+
+      <button class="btn-main" id="next-btn">Siguiente</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="shared.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var OPTIONS = null;
+  // smaller offline fallback (used only if que-preferirias.json can't be fetched, e.g. file:// testing)
+  var OPTIONS_FALLBACK = [
+    "Poder volar",
+    "Ser invisible a voluntad",
+    "Leer la mente de los demás",
+    "Tener memoria fotográfica",
+    "No necesitar dormir nunca",
+    "Ser millonario pero no poder contárselo a nadie",
+    "Vivir 200 años con buena salud",
+    "No volver a probar el alcohol nunca más"
+  ];
+
+  function loadOptions(){
+    return fetch('que-preferirias.json')
+      .then(function(r){ if (!r.ok) throw new Error('bad response'); return r.json(); })
+      .then(function(data){ OPTIONS = data.opciones; })
+      .catch(function(){ OPTIONS = OPTIONS_FALLBACK; })
+      .then(function(){
+        startBtn.disabled = !OPTIONS || OPTIONS.length < 2;
+      });
+  }
+
+  var screenSetup = document.getElementById('screen-setup');
+  var screenGame = document.getElementById('screen-game');
+  var ALL_SCREENS = [screenSetup, screenGame];
+
+  function switchScreen(target){
+    ALL_SCREENS.forEach(function(s){ s.classList.add('hidden'); });
+    target.classList.remove('hidden');
+  }
+
+  var startBtn = document.getElementById('start-btn');
+  var optionAEl = document.getElementById('qpref-option-a');
+  var optionBEl = document.getElementById('qpref-option-b');
+  var nextBtn = document.getElementById('next-btn');
+
+  // picks 2 distinct options at random from the whole pool — with 70+ options
+  // that's thousands of possible pairings, so the same combo almost never repeats
+  function pickPair(){
+    var pool = OPTIONS.slice();
+    var idxA = Math.floor(Math.random() * pool.length);
+    var optionA = pool[idxA];
+    pool.splice(idxA, 1);
+    var idxB = Math.floor(Math.random() * pool.length);
+    var optionB = pool[idxB];
+    return [optionA, optionB];
+  }
+
+  function showPair(){
+    var pair = pickPair();
+    optionAEl.textContent = pair[0];
+    optionBEl.textContent = pair[1];
+  }
+
+  nextBtn.addEventListener('click', showPair);
+
+  startBtn.addEventListener('click', function(){
+    if (!OPTIONS || OPTIONS.length < 2) return;
+    showPair();
+    switchScreen(screenGame);
+  });
+
+  // ---------- how-to-play guide ----------
+  setupModal(
+    document.getElementById('guide-btn'),
+    document.getElementById('guide-modal-backdrop'),
+    document.getElementById('guide-modal-close')
+  );
+
+  // ---------- init ----------
+  loadOptions();
+})();
+</script>
+</body>
+</html>

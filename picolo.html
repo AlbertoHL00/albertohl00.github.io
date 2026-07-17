@@ -25,7 +25,23 @@
   /* no tap-to-reveal gesture here: the card is meant to be read aloud
      the instant it's shown, so reveal-wrap starts "revealed" */
   #reveal-wrap{cursor:default;}
-  .reveal-content.picolo{color:var(--accent2);}
+  .reveal-content.picolo{color:var(--accent2); gap:10px;}
+  .picolo-badge{
+    font-family:var(--font-body);
+    font-size:0.68rem;
+    font-weight:800;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    padding:4px 12px;
+    border-radius:999px;
+    color:#fff;
+  }
+  .picolo-text{font-size:1em;}
+  @keyframes picoloRevealPulse{
+    0%, 100%{ transform:scale(1); }
+    50%{ transform:scale(1.06); }
+  }
+  .picolo-text.pulse{animation:picoloRevealPulse 0.4s ease-in-out 2;}
 </style>
 </head>
 <body>
@@ -65,11 +81,15 @@
       </ol>
 
       <h3>Tipos de carta</h3>
+      <p>Cada carta muestra su temática arriba con un color, para saber de un vistazo qué tipo de carta es:</p>
       <ul>
-        <li><strong>Tragos directos:</strong> alguien bebe, o reparte tragos entre el resto.</li>
-        <li><strong>Retos:</strong> cumple el reto o bebes.</li>
-        <li><strong>Preguntas:</strong> responde con sinceridad o bebes.</li>
-        <li><strong>Interacciones:</strong> dos jugadores hacen algo juntos (un gesto, un pulso, beber a la vez...) o ambos beben.</li>
+        <li><strong>🥃 Trago:</strong> alguien bebe directamente.</li>
+        <li><strong>🍹 Reparte:</strong> alguien reparte tragos entre el resto.</li>
+        <li><strong>😈 Reto:</strong> cumple el reto o bebes.</li>
+        <li><strong>🤔 Pregunta:</strong> responde con sinceridad o bebes.</li>
+        <li><strong>🤝 Interacción:</strong> dos jugadores hacen algo juntos (un gesto, un pulso, beber a la vez...) o ambos beben.</li>
+        <li><strong>👥 Grupo:</strong> quien cumpla una condición bebe (llevar cierto color, nombre con cierta letra, ser el más joven...).</li>
+        <li><strong>🙋 Decisión:</strong> todos eligen en secreto entre dos opciones (mano arriba o abajo, por ejemplo) y luego se revela cuál de las dos bebe.</li>
       </ul>
 
       <h3>Honestidad</h3>
@@ -85,9 +105,13 @@
       </div>
 
       <div class="reveal-wrap revealed" id="reveal-wrap">
-        <div class="reveal-content picolo" id="reveal-content"></div>
+        <div class="reveal-content picolo" id="reveal-content">
+          <span class="picolo-badge" id="picolo-badge"></span>
+          <span class="picolo-text" id="picolo-text"></span>
+        </div>
       </div>
 
+      <button class="btn-main hidden" id="reveal-decision-btn">👀 Revelar quién bebe</button>
       <button class="btn-main" id="next-btn">🥃 Siguiente carta</button>
     </div>
   </div>
@@ -109,17 +133,27 @@
     savePlayerNames(config.rows.map(function(r){ return r.name.trim(); }).filter(function(n){ return n !== ""; }));
   }
 
+  var CATEGORY_META = {
+    trago: { label: 'Trago', icon: '🥃', color: '#e0663f' },
+    reparte: { label: 'Reparte', icon: '🍹', color: '#f2c94c' },
+    reto: { label: 'Reto', icon: '😈', color: '#a970e0' },
+    pregunta: { label: 'Pregunta', icon: '🤔', color: '#5b8fe0' },
+    interaccion: { label: 'Interacción', icon: '🤝', color: '#e05d9c' },
+    grupo: { label: 'Grupo', icon: '👥', color: '#52c77a' },
+    decision: { label: 'Decisión', icon: '🙋', color: '#4fc3d9' }
+  };
+
   var CARDS = null;
   // smaller offline fallback (used only if picolo.json can't be fetched, e.g. file:// testing)
   var CARDS_FALLBACK = [
-    "{P} bebe 2 tragos.",
-    "{P} reparte 3 tragos entre quien quiera.",
-    "Todos brindan y beben un trago.",
-    "{P1} le da un trago de su bebida a {P2}.",
-    "Reto para {P}: imitar a un animal durante 30 segundos o beber.",
-    "{P1} se sube a los hombros de {P2} durante 1 minuto o ambos beben.",
-    "El último en tocarse la nariz bebe.",
-    "{P1} le da un beso en la mejilla a {P2} o ambos beben."
+    { tipo: 'trago', texto: "{P} bebe 2 tragos." },
+    { tipo: 'reparte', texto: "{P} reparte 3 tragos entre quien quiera." },
+    { tipo: 'grupo', texto: "Todos brindan y beben un trago." },
+    { tipo: 'interaccion', texto: "{P1} le da un trago de su bebida a {P2}." },
+    { tipo: 'reto', texto: "Reto para {P}: imitar a un animal durante 30 segundos o beber." },
+    { tipo: 'interaccion', texto: "{P1} se sube a los hombros de {P2} durante 1 minuto o ambos beben." },
+    { tipo: 'grupo', texto: "El último en tocarse la nariz bebe." },
+    { tipo: 'decision', prompt: "🙋 Contad hasta 3 en voz alta y decidid en secreto, sin miraros: ¿mano arriba o mano abajo?", opciones: ["Mano arriba", "Mano abajo"] }
   ];
 
   function loadCards(){
@@ -135,7 +169,8 @@
   var state = {
     playerNames: [],
     deck: [],
-    index: 0
+    index: 0,
+    currentCard: null
   };
 
   var screenSetup = document.getElementById('screen-setup');
@@ -264,8 +299,12 @@
   }
 
   // ---------- card screen (infinite: reshuffles and keeps going, no round count) ----------
+  var revealWrap = document.getElementById('reveal-wrap');
   var revealContent = document.getElementById('reveal-content');
+  var picoloBadgeEl = document.getElementById('picolo-badge');
+  var picoloTextEl = document.getElementById('picolo-text');
   var nextBtn = document.getElementById('next-btn');
+  var revealDecisionBtn = document.getElementById('reveal-decision-btn');
 
   var REVEAL_MAX_FONT_REM = 1.4;
   var REVEAL_MIN_FONT_REM = 0.85;
@@ -283,10 +322,37 @@
   }
 
   function showRound(i){
-    revealContent.textContent = fillTemplate(state.deck[i], state.playerNames);
+    var card = state.deck[i];
+    state.currentCard = card;
+    var meta = CATEGORY_META[card.tipo] || CATEGORY_META.trago;
+
+    picoloBadgeEl.textContent = meta.icon + ' ' + meta.label;
+    picoloBadgeEl.style.background = meta.color;
+    picoloTextEl.classList.remove('pulse');
+
+    if (card.tipo === 'decision'){
+      picoloTextEl.textContent = card.prompt;
+      revealDecisionBtn.classList.remove('hidden');
+      nextBtn.classList.add('hidden');
+    } else {
+      picoloTextEl.textContent = fillTemplate(card.texto, state.playerNames);
+      revealDecisionBtn.classList.add('hidden');
+      nextBtn.classList.remove('hidden');
+    }
+
     revealContent.style.fontSize = '';
     fitRevealText();
   }
+
+  revealDecisionBtn.addEventListener('click', function(){
+    var card = state.currentCard;
+    var chosen = card.opciones[Math.floor(Math.random() * card.opciones.length)];
+    picoloTextEl.textContent = '¡Beben los que eligieron «' + chosen + '»!';
+    picoloTextEl.classList.add('pulse');
+    fitRevealText();
+    revealDecisionBtn.classList.add('hidden');
+    nextBtn.classList.remove('hidden');
+  });
 
   var revealResizeTimer = null;
   window.addEventListener('resize', function(){
