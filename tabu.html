@@ -328,7 +328,7 @@
       <ul>
         <li><strong>✅ Acierto:</strong> el equipo suma un punto y pasáis a la siguiente carta.</li>
         <li><strong>⏭️ Pasar:</strong> si os atascáis, la carta vuelve al final del mazo y resta unos segundos al cronómetro (configurable).</li>
-        <li><strong>❌ Prohibida:</strong> la carta se descarta sin puntos para nadie y resta los mismos segundos que pasar.</li>
+        <li><strong>❌ Prohibida:</strong> la carta vuelve al final del mazo sin puntos para nadie y resta los mismos segundos que pasar.</li>
       </ul>
 
       <h3>Fin del turno y de la partida</h3>
@@ -1090,14 +1090,12 @@
   tbFoulBtn.addEventListener('click', function(){
     if (state.deck.length === 0) return;
     playFoulSound();
-    state.deck.shift(); // foul: discarded for good, no point for anyone, no requeue
+    state.deck.push(state.deck.shift()); // foul: no point for anyone, but back of the deck, resurfaces later this match
     state.timeRemaining = Math.max(0, state.timeRemaining - config.skipPenaltySeconds);
     updateTimerDisplay(state.timeRemaining);
     tbTimerEl.classList.remove('skip-pulse');
     void tbTimerEl.offsetWidth;
     tbTimerEl.classList.add('skip-pulse');
-    renderCardsRemaining();
-    if (state.deck.length === 0){ endTurn(true); return; }
     if (state.timeRemaining <= 0){ endTurn(false); return; }
     renderCurrentCard();
   });
