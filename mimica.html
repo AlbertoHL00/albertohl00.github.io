@@ -360,7 +360,10 @@
   <div class="screen hidden" id="screen-game">
     <div class="card">
       <div class="setup-header">
-        <span class="back-btn" style="cursor:default;" id="turn-status">Ronda 1 / 3</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+          <span class="back-btn" style="cursor:default;" id="turn-status">Ronda 1 / 3</span>
+        </div>
       </div>
 
       <!-- TURN INTRO: gate before the minute starts -->
@@ -398,6 +401,9 @@
   <!-- END SCREEN: final results -->
   <div class="screen hidden" id="screen-end">
     <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+      </div>
       <div class="end-icon">🏆</div>
       <h1 style="font-size:1.6rem;" id="end-title">RESULTADOS</h1>
       <p class="subtitle" id="end-subtitle"></p>

@@ -353,6 +353,9 @@
   <!-- PHASE INTRO: rule reminder before each phase starts -->
   <div class="screen hidden" id="screen-phase-intro">
     <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+      </div>
       <div class="end-icon" id="phase-intro-icon">🗣️</div>
       <h1 style="font-size:1.6rem;" id="phase-intro-title">FASE I</h1>
       <div class="phase-rule-box" id="phase-intro-rule"></div>
@@ -366,7 +369,10 @@
   <div class="screen hidden" id="screen-game">
     <div class="card">
       <div class="setup-header">
-        <span class="back-btn" style="cursor:default;" id="phase-status">Fase 1 / 3</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+          <span class="back-btn" style="cursor:default;" id="phase-status">Fase 1 / 3</span>
+        </div>
         <div class="tu-cards-remaining" id="tu-cards-remaining"><span class="tu-cards-icon">🂠</span><span id="tu-cards-remaining-value">x40</span></div>
       </div>
 
@@ -405,6 +411,9 @@
   <!-- PHASE END: scores recap before the next phase -->
   <div class="screen hidden" id="screen-phase-end">
     <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+      </div>
       <div class="end-icon">🏁</div>
       <h1 style="font-size:1.5rem;" id="phase-end-title">FASE I TERMINADA</h1>
       <div id="phase-end-scoreboard"></div>
@@ -415,6 +424,9 @@
   <!-- END SCREEN: final results -->
   <div class="screen hidden" id="screen-end">
     <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+      </div>
       <div class="end-icon">🏆</div>
       <h1 style="font-size:1.6rem;" id="end-title">RESULTADOS</h1>
       <p class="subtitle" id="end-subtitle"></p>

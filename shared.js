@@ -115,6 +115,56 @@ function createDots(container){
   };
 }
 
+/* "back to hub" (home icon) needs a confirmation once a match is in progress —
+   only the setup screen's home link is a plain, no-confirm navigation since
+   there's no progress to lose there yet. Applies to every mode automatically:
+   any a[aria-label="Inicio"] outside #screen-setup gets intercepted. */
+function initHomeExitConfirm(){
+  var links = document.querySelectorAll('a[aria-label="Inicio"]');
+  if (!links.length) return;
+
+  var backdrop = null, pendingHref = 'index.html';
+
+  function buildModal(){
+    if (backdrop) return;
+    backdrop = document.createElement('div');
+    backdrop.className = 'guide-modal-backdrop hidden';
+    backdrop.id = 'home-confirm-backdrop';
+    backdrop.innerHTML =
+      '<div class="guide-modal">' +
+        '<h2>¿Salir al inicio?</h2>' +
+        '<p>Se perderá el progreso de la partida actual.</p>' +
+        '<button type="button" class="btn-main" id="home-confirm-cancel-btn" style="margin-top:14px;">Seguir jugando</button>' +
+        '<button type="button" class="night-nav-btn" id="home-confirm-exit-btn" style="width:100%; margin-top:10px;">Salir al inicio</button>' +
+      '</div>';
+    document.body.appendChild(backdrop);
+    document.getElementById('home-confirm-cancel-btn').addEventListener('click', function(){
+      backdrop.classList.add('hidden');
+    });
+    document.getElementById('home-confirm-exit-btn').addEventListener('click', function(){
+      window.location.href = pendingHref;
+    });
+    backdrop.addEventListener('click', function(e){
+      if (e.target === backdrop) backdrop.classList.add('hidden');
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') backdrop.classList.add('hidden');
+    });
+  }
+
+  Array.prototype.forEach.call(links, function(link){
+    var screen = link.closest('.screen');
+    if (!screen || screen.id === 'screen-setup') return;
+    link.addEventListener('click', function(e){
+      e.preventDefault();
+      buildModal();
+      pendingHref = link.getAttribute('href') || 'index.html';
+      backdrop.classList.remove('hidden');
+    });
+  });
+}
+initHomeExitConfirm();
+
 /* tap-to-reveal card: covers reveal-content with reveal-btn until tapped.
    showFor(isAlarm) re-covers instantly (no flash) and arms the optional
    danger-pulse border for the upcoming reveal; call it once per player,

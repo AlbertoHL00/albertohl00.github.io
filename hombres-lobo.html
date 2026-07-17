@@ -731,6 +731,9 @@
   <!-- ROLE REVEAL ROSTER: tap your own name to show your card in private -->
   <div class="screen hidden" id="screen-game">
     <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+      </div>
       <p class="subtitle">Toca tu nombre para ver tu carta. Nadie más debe mirar.</p>
 
       <div class="roster-list" id="reveal-roster"></div>
@@ -760,7 +763,10 @@
   <div class="screen hidden" id="screen-narrator">
     <div class="card">
       <div class="setup-header">
-        <span class="back-btn" style="cursor:default;" id="day-night-status">🌙 Noche</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+          <span class="back-btn" style="cursor:default; margin-bottom:0;" id="day-night-status">🌙 Noche</span>
+        </div>
         <div class="round-stepper">
           <span id="round-value">Ronda 1</span>
           <button type="button" class="guide-btn" id="tab-deaths-btn" aria-label="Personajes"><span class="people-icon"></span></button>
@@ -848,7 +854,10 @@
   <div class="screen hidden" id="screen-roster">
     <div class="card">
       <div class="setup-header">
-        <span class="back-btn" style="cursor:default;">📋 Sin guía</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+          <span class="back-btn" style="cursor:default;">📋 Sin guía</span>
+        </div>
       </div>
       <h1 style="font-size:1.5rem;">JUGADORES Y ROLES</h1>
       <p class="subtitle" id="roster-subtitle">Modo no guiado: toca a un jugador para marcarlo como eliminado o revivirlo.</p>
