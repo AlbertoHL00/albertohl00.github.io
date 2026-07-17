@@ -811,6 +811,7 @@ button:focus-visible, input:focus-visible{
 .switch-toggle{
   display:flex;
   align-items:center;
+  justify-content:center;
   gap:10px;
   margin-top:16px;
   cursor:pointer;

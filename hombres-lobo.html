@@ -632,10 +632,15 @@
         <label class="switch-toggle">
           <input type="checkbox" id="unguided-mode-toggle">
           <span class="switch-track"><span class="switch-thumb"></span></span>
-          🙈 Modo no guiado (solo lista de jugadores y roles)
+          Modo no guiado
         </label>
 
-        <button type="button" class="guide-btn" id="advanced-btn" aria-label="Más ajustes" style="margin:2px 0 16px;">⚙️</button>
+        <label><span class="label-icon">⏱️</span>Tiempo para votar</label>
+        <div class="stepper">
+          <button type="button" id="vote-minutes-minus">−</button>
+          <div class="value" id="vote-minutes-value">Sin límite</div>
+          <button type="button" id="vote-minutes-plus">+</button>
+        </div>
 
         <div class="final-nav">
           <button type="button" class="night-nav-btn icon-only" id="setup-final-back-btn" aria-label="Anterior"><span class="back-icon"></span></button>
@@ -691,21 +696,6 @@
 
       <h3>Roles disponibles</h3>
       <div class="guide-roles-catalog" id="guide-roles-catalog"><p class="chip-loading">Cargando roles…</p></div>
-    </div>
-  </div>
-
-  <!-- ADVANCED SETTINGS: time knobs that are usually left at their default -->
-  <div class="guide-modal-backdrop hidden" id="advanced-modal-backdrop">
-    <div class="guide-modal">
-      <button type="button" class="guide-modal-close" id="advanced-modal-close">✕</button>
-      <h2>Más ajustes</h2>
-
-      <label><span class="label-icon">⏱️</span>Tiempo para votar</label>
-      <div class="stepper">
-        <button type="button" id="vote-minutes-minus">−</button>
-        <div class="value" id="vote-minutes-value">Sin límite</div>
-        <button type="button" id="vote-minutes-plus">+</button>
-      </div>
     </div>
   </div>
 
@@ -1356,13 +1346,6 @@
     document.getElementById('guide-btn'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
-  );
-
-  // ---------- advanced settings (vote timer — usually left at default) ----------
-  setupModal(
-    document.getElementById('advanced-btn'),
-    document.getElementById('advanced-modal-backdrop'),
-    document.getElementById('advanced-modal-close')
   );
 
   // ---------- role picker tip (explains the long-press-for-details gesture) ----------

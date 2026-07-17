@@ -72,6 +72,14 @@
     cursor:grabbing;
     pointer-events:none;
   }
+  .team-box.team-color-0{border-color:rgba(201,82,92,0.5); background:rgba(201,82,92,0.14);}
+  .team-box.team-color-1{border-color:rgba(91,143,224,0.5); background:rgba(91,143,224,0.14);}
+  .team-box.team-color-2{border-color:rgba(139,109,214,0.5); background:rgba(139,109,214,0.14);}
+  .team-box.team-color-3{border-color:rgba(217,151,79,0.5); background:rgba(217,151,79,0.14);}
+  .team-box-chip.team-color-0{background:#c9525c; border-color:#c9525c; color:#fff;}
+  .team-box-chip.team-color-1{background:#5b8fe0; border-color:#5b8fe0; color:#fff;}
+  .team-box-chip.team-color-2{background:#8b6dd6; border-color:#8b6dd6; color:#fff;}
+  .team-box-chip.team-color-3{background:#d9974f; border-color:#d9974f; color:#fff;}
   .team-box.drag-over{
     border-color:var(--accent);
     background:rgba(255,255,255,0.1);
@@ -288,7 +296,19 @@
 
         <div class="error-msg" id="setup-error"></div>
 
-        <button type="button" class="guide-btn" id="advanced-btn" aria-label="Más ajustes" style="margin:2px 0 16px;">⚙️</button>
+        <label><span class="label-icon">⏱️</span>Duración de turno</label>
+        <div class="stepper">
+          <button type="button" id="turn-seconds-minus">−</button>
+          <div class="value" id="turn-seconds-value">1:00</div>
+          <button type="button" id="turn-seconds-plus">+</button>
+        </div>
+
+        <label><span class="label-icon">⏭️</span>Segundos que resta pasar o decir palabra prohibida</label>
+        <div class="stepper">
+          <button type="button" id="skip-seconds-minus">−</button>
+          <div class="value" id="skip-seconds-value">5</div>
+          <button type="button" id="skip-seconds-plus">+</button>
+        </div>
 
         <div class="final-nav">
           <button type="button" class="night-nav-btn icon-only" id="setup-final-back-btn" aria-label="Anterior"><span class="back-icon"></span></button>
@@ -325,27 +345,6 @@
     </div>
   </div>
 
-  <!-- ADVANCED SETTINGS: knobs most groups leave at their default -->
-  <div class="guide-modal-backdrop hidden" id="advanced-modal-backdrop">
-    <div class="guide-modal">
-      <button type="button" class="guide-modal-close" id="advanced-modal-close">✕</button>
-      <h2>Más ajustes</h2>
-
-      <label><span class="label-icon">⏱️</span>Duración de turno</label>
-      <div class="stepper">
-        <button type="button" id="turn-seconds-minus">−</button>
-        <div class="value" id="turn-seconds-value">1:00</div>
-        <button type="button" id="turn-seconds-plus">+</button>
-      </div>
-
-      <label><span class="label-icon">⏭️</span>Segundos que resta pasar o decir palabra prohibida</label>
-      <div class="stepper">
-        <button type="button" id="skip-seconds-minus">−</button>
-        <div class="value" id="skip-seconds-value">5</div>
-        <button type="button" id="skip-seconds-plus">+</button>
-      </div>
-    </div>
-  </div>
 
   <!-- GAME SCREEN: team turn, timer, correct/skip/foul -->
   <div class="screen hidden" id="screen-game">
@@ -658,11 +657,11 @@
         if (r.name.trim() && clamp(r.team || 0, 0, config.numTeams - 1) === t) members.push({ idx: idx, name: r.name });
       });
       html +=
-        '<div class="team-box" data-team="' + t + '">' +
+        '<div class="team-box team-color-' + t + '" data-team="' + t + '">' +
           '<div class="team-box-header"><span class="team-box-dot team-color-' + t + '"></span>' + escapeHtml(TEAM_NAMES[t]) + '</div>' +
           '<div class="team-box-chips">' +
             (members.length ?
-              members.map(function(m){ return '<button type="button" class="team-box-chip" data-index="' + m.idx + '">' + escapeHtml(m.name) + '</button>'; }).join('') :
+              members.map(function(m){ return '<button type="button" class="team-box-chip team-color-' + t + '" data-index="' + m.idx + '">' + escapeHtml(m.name) + '</button>'; }).join('') :
               '<span class="team-box-empty">Sin jugadores</span>') +
           '</div>' +
         '</div>';
@@ -1167,13 +1166,6 @@
     document.getElementById('guide-btn'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
-  );
-
-  // ---------- advanced settings ----------
-  setupModal(
-    document.getElementById('advanced-btn'),
-    document.getElementById('advanced-modal-backdrop'),
-    document.getElementById('advanced-modal-close')
   );
 
   // ---------- init ----------

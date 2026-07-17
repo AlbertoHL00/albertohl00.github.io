@@ -160,7 +160,13 @@
       <div class="count-info" id="dc-count-info"></div>
       <div class="warn-note hidden" id="dc-players-warn">Se recomiendan hasta 8 jugadores para partidas más dinámicas.</div>
 
-      <button type="button" class="guide-btn" id="advanced-btn" aria-label="Más ajustes" style="margin:2px 0 16px;">⚙️</button>
+      <label><span class="label-icon">🔁</span>Vueltas</label>
+      <div class="stepper">
+        <button type="button" id="laps-minus">−</button>
+        <div class="value" id="laps-value">1</div>
+        <button type="button" id="laps-plus">+</button>
+      </div>
+      <p class="count-info">Cuántas veces es cada jugador el jugador activo.</p>
 
       <button class="btn-main" id="dc-start-btn" disabled>Iniciar partida</button>
     </div>
@@ -200,22 +206,6 @@
 
       <h3>Duración</h3>
       <p>El primer jugador activo se elige al azar; a partir de ahí el turno pasa en el orden de la lista, de forma cíclica, tantas vueltas como elijas en el ajuste "Vueltas" (por defecto 1). La app reparte los turnos y suma los puntos automáticamente.</p>
-    </div>
-  </div>
-
-  <!-- MORE SETTINGS: advanced options usually left at their default -->
-  <div class="guide-modal-backdrop hidden" id="advanced-modal-backdrop">
-    <div class="guide-modal">
-      <button type="button" class="guide-modal-close" id="advanced-modal-close">✕</button>
-      <h2>Más ajustes</h2>
-
-      <label><span class="label-icon">🔁</span>Vueltas</label>
-      <div class="stepper">
-        <button type="button" id="laps-minus">−</button>
-        <div class="value" id="laps-value">1</div>
-        <button type="button" id="laps-plus">+</button>
-      </div>
-      <p class="count-info">Cuántas veces es cada jugador el jugador activo.</p>
     </div>
   </div>
 
@@ -791,13 +781,6 @@
     document.getElementById('guide-btn'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
-  );
-
-  // ---------- more settings (advanced, usually left at default) ----------
-  setupModal(
-    document.getElementById('advanced-btn'),
-    document.getElementById('advanced-modal-backdrop'),
-    document.getElementById('advanced-modal-close')
   );
 
   // ---------- init ----------

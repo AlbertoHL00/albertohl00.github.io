@@ -138,6 +138,32 @@
   }
   .vote-result-title.reveal-civil{color:var(--safe);}
   .vote-result-title.reveal-impostor{color:var(--danger);}
+  .vote-result-title.suspense{
+    color:var(--text-dim);
+    animation:voteSuspenseFade 0.6s ease-in-out infinite;
+  }
+  @keyframes voteSuspenseFade{
+    0%, 100%{ opacity:1; }
+    50%{ opacity:0.35; }
+  }
+  @keyframes voteRevealPulse{
+    0%, 100%{ transform:scale(1); }
+    50%{ transform:scale(1.1); }
+  }
+  @keyframes voteGlowImpostor{
+    0%, 100%{ text-shadow:0 0 0 rgba(156,63,71,0); }
+    50%{ text-shadow:0 0 22px rgba(156,63,71,1); }
+  }
+  @keyframes voteGlowCivil{
+    0%, 100%{ text-shadow:0 0 0 rgba(157,201,255,0); }
+    50%{ text-shadow:0 0 22px rgba(157,201,255,1); }
+  }
+  .vote-result-title.pulse-impostor{
+    animation:voteRevealPulse 0.5s ease-in-out 3, voteGlowImpostor 0.5s ease-in-out 3;
+  }
+  .vote-result-title.pulse-civil{
+    animation:voteRevealPulse 0.5s ease-in-out 3, voteGlowCivil 0.5s ease-in-out 3;
+  }
   .vote-result-detail-continue{
     text-align:center;
     color:var(--text-dim);
@@ -222,7 +248,12 @@
         <div class="count-info" id="impostor-count-info"></div>
         <div class="error-msg" id="impostor-setup-error"></div>
 
-        <button type="button" class="guide-btn" id="advanced-btn" aria-label="Más ajustes" style="margin:2px 0 16px;">⚙️</button>
+        <label><span class="label-icon">⏱️</span>Tiempo para debatir</label>
+        <div class="stepper">
+          <button type="button" id="debate-minutes-minus">−</button>
+          <div class="value" id="debate-minutes-value">Sin límite</div>
+          <button type="button" id="debate-minutes-plus">+</button>
+        </div>
 
         <div class="final-nav">
           <button type="button" class="night-nav-btn icon-only" id="setup-final-back-btn" aria-label="Anterior"><span class="back-icon"></span></button>
@@ -263,21 +294,6 @@
         <li>Votad a quien creáis impostor: se elimina y se revela si acertasteis.</li>
         <li>Si quedan impostores en minoría, se juega otra ronda de palabras y votación con los jugadores vivos. Ganan los civiles si se descubren todos los impostores; ganan los impostores si superan en número a los civiles, o si solo queda 1 impostor contra 1 civil.</li>
       </ol>
-    </div>
-  </div>
-
-  <!-- ADVANCED SETTINGS: usually-left-at-default knobs, tucked out of the main setup flow -->
-  <div class="guide-modal-backdrop hidden" id="advanced-modal-backdrop">
-    <div class="guide-modal">
-      <button type="button" class="guide-modal-close" id="advanced-modal-close">✕</button>
-      <h2>Más ajustes</h2>
-
-      <label><span class="label-icon">⏱️</span>Tiempo para debatir</label>
-      <div class="stepper">
-        <button type="button" id="debate-minutes-minus">−</button>
-        <div class="value" id="debate-minutes-value">Sin límite</div>
-        <button type="button" id="debate-minutes-plus">+</button>
-      </div>
     </div>
   </div>
 
@@ -1024,29 +1040,40 @@
       if (isImp) impostorsAlive++; else civiliansAlive++;
     });
 
-    voteResultIcon.textContent = wasImpostor ? '🎭' : '😇';
-    voteResultTitle.textContent = state.playerNames[idx] + (wasImpostor ? ' era IMPOSTOR' : ' era CIVIL');
-    voteResultTitle.className = 'vote-result-title ' + (wasImpostor ? 'reveal-impostor' : 'reveal-civil');
-
     // impostors win on a strict majority, or on the final 1-vs-1 standoff
     // (a tie at 2-vs-2 or larger still lets the game continue)
     var impostorsWin = impostorsAlive > civiliansAlive ||
       (impostorsAlive === 1 && civiliansAlive === 1);
 
+    var detailText;
     if (impostorsAlive === 0){
-      voteResultDetail.textContent = 'Todos los impostores han sido descubiertos.';
+      detailText = 'Todos los impostores han sido descubiertos.';
       endGame('civiles');
     } else if (impostorsWin){
-      voteResultDetail.textContent = civiliansAlive === 1 ?
+      detailText = civiliansAlive === 1 ?
         'Solo queda un civil frente al impostor.' : 'Los impostores ya son mayoría.';
       endGame('impostores');
     } else {
-      voteResultDetail.textContent = 'Quedan ' + impostorsAlive + (impostorsAlive === 1 ? ' impostor' : ' impostores') +
+      detailText = 'Quedan ' + impostorsAlive + (impostorsAlive === 1 ? ' impostor' : ' impostores') +
         ' y ' + civiliansAlive + (civiliansAlive === 1 ? ' civil' : ' civiles') + '. Otra ronda de palabras y votación.';
       voteNextBtn.textContent = 'Siguiente ronda';
     }
 
+    // suspenseful two-stage reveal: "<Nombre> era..." first, then the verdict pulses in color
+    voteResultIcon.textContent = '🤔';
+    voteResultTitle.textContent = state.playerNames[idx] + ' era...';
+    voteResultTitle.className = 'vote-result-title suspense';
+    voteResultDetail.textContent = '';
+    voteNextBtn.classList.add('hidden');
     voteResult.classList.remove('hidden');
+
+    setTimeout(function(){
+      voteResultIcon.textContent = wasImpostor ? '🎭' : '😇';
+      voteResultTitle.textContent = wasImpostor ? '¡IMPOSTOR!' : '¡CIVIL!';
+      voteResultTitle.className = 'vote-result-title ' + (wasImpostor ? 'reveal-impostor pulse-impostor' : 'reveal-civil pulse-civil');
+      voteResultDetail.textContent = detailText;
+      voteNextBtn.classList.remove('hidden');
+    }, 1100);
   });
 
   voteNextBtn.addEventListener('click', function(){
@@ -1099,12 +1126,6 @@
     document.getElementById('guide-btn'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
-  );
-
-  setupModal(
-    document.getElementById('advanced-btn'),
-    document.getElementById('advanced-modal-backdrop'),
-    document.getElementById('advanced-modal-close')
   );
 
   // ---------- init ----------

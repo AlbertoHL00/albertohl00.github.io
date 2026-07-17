@@ -72,6 +72,14 @@
     cursor:grabbing;
     pointer-events:none;
   }
+  .team-box.team-color-0{border-color:rgba(201,82,92,0.5); background:rgba(201,82,92,0.14);}
+  .team-box.team-color-1{border-color:rgba(91,143,224,0.5); background:rgba(91,143,224,0.14);}
+  .team-box.team-color-2{border-color:rgba(139,109,214,0.5); background:rgba(139,109,214,0.14);}
+  .team-box.team-color-3{border-color:rgba(217,151,79,0.5); background:rgba(217,151,79,0.14);}
+  .team-box-chip.team-color-0{background:#c9525c; border-color:#c9525c; color:#fff;}
+  .team-box-chip.team-color-1{background:#5b8fe0; border-color:#5b8fe0; color:#fff;}
+  .team-box-chip.team-color-2{background:#8b6dd6; border-color:#8b6dd6; color:#fff;}
+  .team-box-chip.team-color-3{background:#d9974f; border-color:#d9974f; color:#fff;}
   .team-box.drag-over{
     border-color:var(--accent);
     background:rgba(255,255,255,0.1);
@@ -188,6 +196,71 @@
   .tv-result.correct-text{color:var(--safe);}
   .tv-result.incorrect-text{color:var(--danger);}
 
+  .tv-wedge-tracker{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin:0 0 14px;
+  }
+  .tv-wedge{
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1rem;
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--glass-border);
+    opacity:0.35;
+    filter:grayscale(1);
+  }
+  .tv-wedge.won{
+    opacity:1;
+    filter:none;
+    background:rgba(255,255,255,0.12);
+    border-color:var(--accent);
+  }
+  .tv-wedge-banner{
+    text-align:center;
+    font-weight:700;
+    font-size:0.9rem;
+    color:var(--accent2);
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--accent);
+    border-radius:14px;
+    padding:10px 12px;
+    margin-bottom:14px;
+  }
+  .tv-category-options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .tv-category-option{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:16px;
+    border-radius:14px;
+    border:1px solid var(--glass-border);
+    background:rgba(255,255,255,0.06);
+    color:var(--text);
+    font-size:1rem;
+    font-weight:700;
+    cursor:pointer;
+    transition:background .15s, border-color .15s, transform .1s;
+  }
+  .tv-category-option:active{transform:scale(0.97);}
+  .tv-category-option-icon{font-size:1.4rem; line-height:1;}
+  .tv-category-current{
+    text-align:center;
+    font-weight:700;
+    font-size:0.85rem;
+    color:var(--text-dim);
+    margin-bottom:4px;
+  }
+
   .team-score-row{
     display:flex;
     justify-content:space-between;
@@ -250,24 +323,8 @@
         </div>
         <div id="team-boxes"></div>
         <div class="error-msg" id="teams-error"></div>
-      </div>
 
-      <div class="night-nav" id="setup-nav">
-        <button type="button" class="night-nav-btn icon-only" id="setup-prev-btn" aria-label="Anterior"><span class="back-icon"></span></button>
-        <button type="button" class="night-nav-btn" id="setup-next-btn">Siguiente</button>
-      </div>
-
-      <div id="setup-step-settings" class="hidden">
-        <label><span class="label-icon">🏷️</span>Categorías</label>
-        <button type="button" class="packages-dropdown-btn" id="packages-dropdown-btn" aria-expanded="false">
-          <span class="packages-dropdown-summary" id="packages-dropdown-summary">Selecciona categorías</span>
-          <span class="packages-dropdown-chevron">▾</span>
-        </button>
-        <div class="packages-dropdown-panel hidden" id="packages-dropdown-panel">
-          <button type="button" class="chip-toggle-all" id="package-toggle-all-btn">Seleccionar todas</button>
-          <div class="chip-list" id="package-list"></div>
-        </div>
-        <p class="count-info">Se toman 30 preguntas al azar de las categorías elegidas.</p>
+        <p class="count-info">🏛️ Historia · 🔬 Ciencia · 🌍 Geografía · 🎬 Cine y música · 🏅 Deportes. En cada pregunta elegís entre 2 categorías.</p>
 
         <div class="error-msg" id="setup-error"></div>
 
@@ -275,6 +332,11 @@
           <button type="button" class="night-nav-btn icon-only" id="setup-final-back-btn" aria-label="Anterior"><span class="back-icon"></span></button>
           <button class="btn-main" id="start-btn">Iniciar partida</button>
         </div>
+      </div>
+
+      <div class="night-nav" id="setup-nav">
+        <button type="button" class="night-nav-btn icon-only" id="setup-prev-btn" aria-label="Anterior"><span class="back-icon"></span></button>
+        <button type="button" class="night-nav-btn" id="setup-next-btn">Siguiente</button>
       </div>
     </div>
   </div>
@@ -286,16 +348,19 @@
       <h2>Cómo se juega</h2>
 
       <h3>Objetivo</h3>
-      <p>Formad equipos. Por turnos, cada equipo recibe una pregunta con 4 respuestas posibles. Entre todos los miembros del equipo, decidid en voz alta cuál creéis que es la correcta y tocad esa opción en el móvil.</p>
+      <p>Formad equipos. Las categorías son siempre las mismas: 🏛️ Historia, 🔬 Ciencia, 🌍 Geografía, 🎬 Cine y música y 🏅 Deportes. Gana el primer equipo que consiga un quesito de cada categoría.</p>
 
       <h3>Turno</h3>
-      <p>En cada turno, un miembro distinto del equipo (rotando por orden) sostiene el móvil y lee la pregunta en voz alta para que todo el equipo la escuche y decida la respuesta.</p>
+      <p>En cada turno, un miembro distinto del equipo (rotando por orden) sostiene el móvil. Antes de ver la pregunta, el equipo elige entre 2 categorías propuestas al azar. Luego lee la pregunta en voz alta para que todo el equipo decida la respuesta.</p>
 
-      <h3>Puntuación</h3>
-      <p>Si acertáis, sumáis un punto. Si falláis, no pasa nada más: el turno pasa al siguiente equipo. La app siempre muestra cuál era la respuesta correcta después de contestar.</p>
+      <h3>Rachas</h3>
+      <p>Si acertáis, seguís jugando: os toca otra vez, con otras 2 categorías para elegir. Si falláis, el turno pasa al equipo siguiente. La app siempre muestra cuál era la respuesta correcta después de contestar.</p>
+
+      <h3>Quesitos</h3>
+      <p>Cada 3-5 rondas se desbloquea un quesito: si acertáis esa pregunta, os lleváis el queso de la categoría elegida (una vez por categoría). El marcador de tu equipo muestra qué quesitos lleváis ya.</p>
 
       <h3>Fin de la partida</h3>
-      <p>La partida termina cuando se agotan las preguntas del mazo (30 por defecto). Gana el equipo con más puntos; en caso de empate, la victoria se comparte.</p>
+      <p>Gana el primer equipo en completar los 5 quesitos. Si la partida se alarga demasiado sin que nadie los complete, gana quien tenga más quesitos; en caso de empate, decide la puntuación.</p>
     </div>
   </div>
 
@@ -307,19 +372,28 @@
           <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
           <span class="back-btn" style="cursor:default;">TRIVIAL PURSUIT</span>
         </div>
-        <div class="tv-questions-remaining" id="tv-questions-remaining"><span class="tv-questions-icon">❓</span><span id="tv-questions-remaining-value">x30</span></div>
+        <div class="tv-questions-remaining" id="tv-round-indicator"><span class="tv-questions-icon">🎲</span><span id="tv-round-value">Ronda 1</span></div>
       </div>
 
-      <!-- TURN INTRO: gate before the question is shown -->
+      <!-- TURN INTRO: gate before the category choice -->
       <div id="turn-intro">
         <div class="team-turn-badge" id="turn-team-badge">ROJO</div>
         <div class="player-name" id="turn-player-name">Nombre</div>
-        <p class="pass-hint">Lee la pregunta en voz alta para tu equipo.</p>
-        <button class="btn-main" id="turn-start-btn">Ver pregunta ▶</button>
+        <div class="tv-wedge-tracker" id="turn-wedge-tracker"></div>
+        <p class="pass-hint">Elige una categoría para la siguiente pregunta.</p>
+        <button class="btn-main" id="turn-start-btn">Elegir categoría ▶</button>
+      </div>
+
+      <!-- CATEGORY CHOICE: pick one of 2 categories offered for this question -->
+      <div id="category-choice" class="hidden">
+        <div class="tv-wedge-banner hidden" id="wedge-banner">🧀 ¡Ronda con quesito! Acierta y te llevas la categoría elegida.</div>
+        <p class="pass-hint">¿Sobre qué categoría queréis la pregunta?</p>
+        <div class="tv-category-options" id="category-options"></div>
       </div>
 
       <!-- ACTIVE PLAY: question + options -->
       <div id="turn-play" class="hidden">
+        <div class="tv-category-current" id="tv-category-current"></div>
         <div class="tv-question" id="tv-question">Pregunta</div>
         <div class="tv-options" id="tv-options"></div>
         <div class="tv-result hidden" id="tv-result"></div>
@@ -351,13 +425,13 @@
 
   var MIN_PLAYERS = 2, MAX_PLAYERS = 30;
   var MIN_TEAMS = 2, MAX_TEAMS = 4;
-  var DECK_SIZE = 30;
+  var MAX_ROUNDS = 60; // safety cap so a match always ends even if wedges are unlucky
+  var MIN_WEDGE_GAP = 3, MAX_WEDGE_GAP = 5; // a wedge round every 3-5 questions
   var TEAM_NAMES = ['Rojo', 'Azul', 'Morado', 'Naranja'];
   var TEAM_HEX = ['#c9525c', '#5b8fe0', '#8b6dd6', '#d9974f'];
 
   var config = {
     numTeams: 2,
-    selectedCategories: [],
     rows: loadSavedPlayerNames().slice(0, MAX_PLAYERS).map(function(n){ return { name: n, team: 0 }; })
   };
 
@@ -391,10 +465,6 @@
       .then(function(data){ CATEGORIES = data.categorias; })
       .catch(function(){ CATEGORIES = CATEGORIES_FALLBACK; })
       .then(function(){
-        if (config.selectedCategories.length === 0){
-          config.selectedCategories = CATEGORIES.map(function(c){ return c.id; });
-        }
-        renderPackageList();
         validateSetup();
       });
   }
@@ -406,12 +476,18 @@
   var state = {
     playerNames: [],
     playerTeams: [],
-    teams: [], // { score, memberIdxs, nextMemberPointer }
-    deck: [], // queue of question objects for this match: shift() = draw/consume the next one
+    teams: [], // { score, memberIdxs, nextMemberPointer, wedges: [categoryId, ...] }
+    categoryQueues: {}, // categoryId -> shuffled queue of question objects, refilled when emptied
+    round: 0, // questions resolved so far this match
+    nextWedgeRound: 0, // round number (1-based) at which the next wedge opportunity happens
     turnTeamPointer: 0,
     currentActorIdx: null,
+    currentCategoryChoices: [], // [categoryId, categoryId] offered this question
+    currentCategoryId: null, // the one the team picked
+    isWedgeRound: false, // whether the CURRENT question is a wedge opportunity
     currentOptions: [], // [{ text, isCorrect }], shuffled for display
-    answered: false
+    answered: false,
+    winnerTeamIdx: null // set once a team completes all wedges
   };
 
   var screenSetup = document.getElementById('screen-setup');
@@ -432,19 +508,17 @@
   var startBtn = document.getElementById('start-btn');
   var setupStepPlayersEl = document.getElementById('setup-step-players');
   var setupStepTeamsEl = document.getElementById('setup-step-teams');
-  var setupStepSettingsEl = document.getElementById('setup-step-settings');
   var setupNavEl = document.getElementById('setup-nav');
   var setupPrevBtn = document.getElementById('setup-prev-btn');
   var setupNextBtn = document.getElementById('setup-next-btn');
   var setupFinalBackBtn = document.getElementById('setup-final-back-btn');
 
-  // 0 = jugadores, 1 = equipos, 2 = resto de ajustes
+  // 0 = jugadores, 1 = equipos (última: incluye el botón de iniciar partida)
   var setupStep = 0;
   function renderSetupStep(){
     setupStepPlayersEl.classList.toggle('hidden', setupStep !== 0);
     setupStepTeamsEl.classList.toggle('hidden', setupStep !== 1);
-    setupStepSettingsEl.classList.toggle('hidden', setupStep !== 2);
-    setupNavEl.classList.toggle('hidden', setupStep === 2);
+    setupNavEl.classList.toggle('hidden', setupStep === 1);
     setupPrevBtn.classList.toggle('hidden', setupStep === 0);
     if (setupStep === 1) renderTeamBoxes();
   }
@@ -452,10 +526,10 @@
     if (setupStep > 0){ setupStep--; renderSetupStep(); validateSetup(); }
   });
   setupNextBtn.addEventListener('click', function(){
-    if (setupStep < 2 && !setupNextBtn.disabled){ setupStep++; renderSetupStep(); validateSetup(); }
+    if (setupStep < 1 && !setupNextBtn.disabled){ setupStep++; renderSetupStep(); validateSetup(); }
   });
   setupFinalBackBtn.addEventListener('click', function(){
-    setupStep = 1;
+    setupStep = 0;
     renderSetupStep();
     validateSetup();
   });
@@ -577,11 +651,11 @@
         if (r.name.trim() && clamp(r.team || 0, 0, config.numTeams - 1) === t) members.push({ idx: idx, name: r.name });
       });
       html +=
-        '<div class="team-box" data-team="' + t + '">' +
+        '<div class="team-box team-color-' + t + '" data-team="' + t + '">' +
           '<div class="team-box-header"><span class="team-box-dot team-color-' + t + '"></span>' + escapeHtml(TEAM_NAMES[t]) + '</div>' +
           '<div class="team-box-chips">' +
             (members.length ?
-              members.map(function(m){ return '<button type="button" class="team-box-chip" data-index="' + m.idx + '">' + escapeHtml(m.name) + '</button>'; }).join('') :
+              members.map(function(m){ return '<button type="button" class="team-box-chip team-color-' + t + '" data-index="' + m.idx + '">' + escapeHtml(m.name) + '</button>'; }).join('') :
               '<span class="team-box-empty">Sin jugadores</span>') +
           '</div>' +
         '</div>';
@@ -665,78 +739,19 @@
     reassignTeamsAfterCountChange();
   });
 
-  // ---------- categories ----------
-  var packageListEl = document.getElementById('package-list');
-  var packageToggleAllBtn = document.getElementById('package-toggle-all-btn');
-  var packagesDropdownBtn = document.getElementById('packages-dropdown-btn');
-  var packagesDropdownPanel = document.getElementById('packages-dropdown-panel');
-  var packagesDropdownSummary = document.getElementById('packages-dropdown-summary');
-
-  function renderToggleAllLabel(){
-    if (!CATEGORIES){ packageToggleAllBtn.textContent = 'Seleccionar todas'; return; }
-    packageToggleAllBtn.textContent = config.selectedCategories.length === CATEGORIES.length ? 'Quitar todas' : 'Seleccionar todas';
-  }
-
-  function renderPackagesSummary(){
-    if (!CATEGORIES){ packagesDropdownSummary.textContent = 'Cargando categorías…'; return; }
-    var total = CATEGORIES.length;
-    var selected = config.selectedCategories.length;
-    if (selected === 0) packagesDropdownSummary.textContent = 'Ninguna categoría seleccionada';
-    else if (selected === total) packagesDropdownSummary.textContent = 'Todas las categorías (' + total + ')';
-    else packagesDropdownSummary.textContent = selected + ' de ' + total + ' categorías';
-  }
-
-  function renderPackageList(){
-    renderPackagesSummary();
-    if (!CATEGORIES || CATEGORIES.length === 0){
-      packageListEl.innerHTML = '<p class="chip-loading">Cargando categorías…</p>';
-      renderToggleAllLabel();
-      return;
+  // ---------- categories: fixed set, no selection — always all of them ----------
+  function drawQuestion(categoryId){
+    var queue = state.categoryQueues[categoryId];
+    if (!queue || queue.length === 0){
+      var category = CATEGORIES.filter(function(c){ return c.id === categoryId; })[0];
+      queue = shuffle(category.preguntas.slice());
+      state.categoryQueues[categoryId] = queue;
     }
-    packageListEl.innerHTML = CATEGORIES.map(function(c){
-      var selected = config.selectedCategories.indexOf(c.id) !== -1;
-      return '<button type="button" class="chip' + (selected ? ' selected' : '') + '" data-category-id="' + c.id + '">' +
-        '<span class="chip-icon">' + escapeHtml(c.icono || '📦') + '</span>' +
-        '<span class="chip-name">' + escapeHtml(c.nombre) + '</span>' +
-      '</button>';
-    }).join('');
-    renderToggleAllLabel();
+    return queue.shift();
   }
 
-  packageListEl.addEventListener('click', function(e){
-    var chip = e.target.closest('.chip');
-    if (!chip) return;
-    var id = chip.getAttribute('data-category-id');
-    var idx = config.selectedCategories.indexOf(id);
-    if (idx === -1) config.selectedCategories.push(id);
-    else config.selectedCategories.splice(idx, 1);
-    renderPackageList();
-    validateSetup();
-  });
-
-  packageToggleAllBtn.addEventListener('click', function(){
-    if (!CATEGORIES) return;
-    if (config.selectedCategories.length === CATEGORIES.length){
-      config.selectedCategories = [];
-    } else {
-      config.selectedCategories = CATEGORIES.map(function(c){ return c.id; });
-    }
-    renderPackageList();
-    validateSetup();
-  });
-
-  packagesDropdownBtn.addEventListener('click', function(){
-    var isOpen = !packagesDropdownPanel.classList.contains('hidden');
-    packagesDropdownPanel.classList.toggle('hidden', isOpen);
-    packagesDropdownBtn.setAttribute('aria-expanded', String(!isOpen));
-  });
-
-  function buildQuestionPool(){
-    var pool = [];
-    CATEGORIES.forEach(function(c){
-      if (config.selectedCategories.indexOf(c.id) !== -1) pool = pool.concat(c.preguntas);
-    });
-    return pool;
+  function categoryById(id){
+    return CATEGORIES.filter(function(c){ return c.id === id; })[0];
   }
 
   function validateSetup(){
@@ -760,20 +775,18 @@
 
     var settingsMsgs = [];
     if (!CATEGORIES) settingsMsgs.push("Cargando categorías…");
-    else if (config.selectedCategories.length === 0) settingsMsgs.push("Selecciona al menos una categoría.");
     var settingsValid = settingsMsgs.length === 0;
 
     playersErrorEl.textContent = playerMsgs[0] || "";
     teamsErrorEl.textContent = teamMsgs[0] || "";
     setupError.textContent = settingsMsgs[0] || "";
-    setupNextBtn.disabled = (setupStep === 0 && !playersValid) || (setupStep === 1 && !teamsValid);
+    setupNextBtn.disabled = (setupStep === 0 && !playersValid);
     startBtn.disabled = !(playersValid && teamsValid && settingsValid);
     if (setupStep === 1) renderTeamBoxes();
     return playersValid && teamsValid && settingsValid;
   }
 
   function enterSetup(){
-    renderPackageList();
     renderTeamCount();
     renderPlayerRows();
     renderTeamBoxes();
@@ -790,27 +803,46 @@
     container.innerHTML = state.teams.map(function(team, t){
       var isTop = highlightWinner && team.score === maxScore;
       var pillLabel = showRank ? (scoresDesc.indexOf(team.score) + 1) + 'º' : (t + 1);
-      return '<div class="team-score-row' + (isTop ? ' winner' : '') + '">' +
-        '<span class="team-score-name"><span class="mini-score-pill team-color-' + t + '">' + pillLabel + '</span>' + escapeHtml(TEAM_NAMES[t]) + '</span>' +
-        '<span class="team-score-value">' + team.score + '</span>' +
+      var wedgesHtml = CATEGORIES.map(function(c){
+        var won = team.wedges.indexOf(c.id) !== -1;
+        return '<span class="tv-wedge' + (won ? ' won' : '') + '" title="' + escapeHtml(c.nombre) + '">' + c.icono + '</span>';
+      }).join('');
+      return '<div class="team-score-row' + (isTop ? ' winner' : '') + '" style="flex-direction:column; align-items:stretch; gap:8px;">' +
+        '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+          '<span class="team-score-name"><span class="mini-score-pill team-color-' + t + '">' + pillLabel + '</span>' + escapeHtml(TEAM_NAMES[t]) + '</span>' +
+          '<span class="team-score-value">' + team.score + '</span>' +
+        '</div>' +
+        '<div class="tv-wedge-tracker" style="margin:0; justify-content:flex-start;">' + wedgesHtml + '</div>' +
       '</div>';
     }).join('');
   }
 
   // ---------- game screen ----------
-  var questionsRemainingValueEl = document.getElementById('tv-questions-remaining-value');
+  var tvRoundValueEl = document.getElementById('tv-round-value');
   var turnIntroEl = document.getElementById('turn-intro');
   var turnTeamBadgeEl = document.getElementById('turn-team-badge');
   var turnPlayerNameEl = document.getElementById('turn-player-name');
+  var turnWedgeTrackerEl = document.getElementById('turn-wedge-tracker');
   var turnStartBtn = document.getElementById('turn-start-btn');
+  var categoryChoiceEl = document.getElementById('category-choice');
+  var wedgeBannerEl = document.getElementById('wedge-banner');
+  var categoryOptionsEl = document.getElementById('category-options');
   var turnPlayEl = document.getElementById('turn-play');
+  var tvCategoryCurrentEl = document.getElementById('tv-category-current');
   var tvQuestionEl = document.getElementById('tv-question');
   var tvOptionsEl = document.getElementById('tv-options');
   var tvResultEl = document.getElementById('tv-result');
   var turnContinueBtn = document.getElementById('turn-continue-btn');
 
-  function renderQuestionsRemaining(){
-    questionsRemainingValueEl.textContent = 'x' + state.deck.length;
+  function randomInt(min, max){
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+
+  function renderWedgeTracker(container, team){
+    container.innerHTML = CATEGORIES.map(function(c){
+      var won = team.wedges.indexOf(c.id) !== -1;
+      return '<span class="tv-wedge' + (won ? ' won' : '') + '" title="' + escapeHtml(c.nombre) + '">' + c.icono + '</span>';
+    }).join('');
   }
 
   function startTurn(){
@@ -821,17 +853,58 @@
     state.currentActorIdx = actorIdx;
     state.answered = false;
 
-    renderQuestionsRemaining();
+    tvRoundValueEl.textContent = 'Ronda ' + (state.round + 1);
     turnTeamBadgeEl.textContent = TEAM_NAMES[teamIdx].toUpperCase();
     turnTeamBadgeEl.className = 'team-turn-badge team-color-' + teamIdx;
     turnPlayerNameEl.textContent = state.playerNames[actorIdx];
+    renderWedgeTracker(turnWedgeTrackerEl, team);
 
     turnIntroEl.classList.remove('hidden');
+    categoryChoiceEl.classList.add('hidden');
     turnPlayEl.classList.add('hidden');
   }
 
-  function showQuestion(){
-    var q = state.deck[0];
+  function showCategoryChoice(){
+    var team = state.teams[state.turnTeamPointer];
+    state.isWedgeRound = (state.round + 1) === state.nextWedgeRound;
+
+    var pool = CATEGORIES.slice();
+    shuffle(pool);
+    var choices;
+    if (state.isWedgeRound){
+      var missing = pool.filter(function(c){ return team.wedges.indexOf(c.id) === -1; });
+      choices = missing.slice(0, 2);
+      if (choices.length < 2){
+        pool.forEach(function(c){
+          if (choices.length < 2 && choices.indexOf(c) === -1) choices.push(c);
+        });
+      }
+    } else {
+      choices = pool.slice(0, 2);
+    }
+    state.currentCategoryChoices = choices.map(function(c){ return c.id; });
+
+    wedgeBannerEl.classList.toggle('hidden', !state.isWedgeRound);
+    categoryOptionsEl.innerHTML = choices.map(function(c){
+      var alreadyWon = team.wedges.indexOf(c.id) !== -1;
+      return '<button type="button" class="tv-category-option" data-category-id="' + c.id + '">' +
+        '<span class="tv-category-option-icon">' + c.icono + '</span>' +
+        '<span>' + escapeHtml(c.nombre) + (state.isWedgeRound && !alreadyWon ? ' 🧀' : '') + '</span>' +
+      '</button>';
+    }).join('');
+
+    turnIntroEl.classList.add('hidden');
+    categoryChoiceEl.classList.remove('hidden');
+  }
+
+  turnStartBtn.addEventListener('click', showCategoryChoice);
+
+  function showQuestion(categoryId){
+    var category = categoryById(categoryId);
+    var q = drawQuestion(categoryId);
+    state.currentQuestion = q;
+
+    tvCategoryCurrentEl.textContent = category.icono + ' ' + category.nombre;
     tvQuestionEl.textContent = q.pregunta;
 
     state.currentOptions = q.opciones.map(function(text, i){
@@ -845,12 +918,17 @@
     tvResultEl.classList.add('hidden');
     tvResultEl.textContent = '';
     turnContinueBtn.classList.add('hidden');
+    state.answered = false;
+
+    categoryChoiceEl.classList.add('hidden');
+    turnPlayEl.classList.remove('hidden');
   }
 
-  turnStartBtn.addEventListener('click', function(){
-    turnIntroEl.classList.add('hidden');
-    turnPlayEl.classList.remove('hidden');
-    showQuestion();
+  categoryOptionsEl.addEventListener('click', function(e){
+    var btn = e.target.closest('.tv-category-option');
+    if (!btn) return;
+    state.currentCategoryId = btn.getAttribute('data-category-id');
+    showQuestion(state.currentCategoryId);
   });
 
   tvOptionsEl.addEventListener('click', function(e){
@@ -862,8 +940,17 @@
     var idx = parseInt(btn.getAttribute('data-index'), 10);
     var picked = state.currentOptions[idx];
     var teamIdx = state.turnTeamPointer;
+    var team = state.teams[teamIdx];
 
-    if (picked.isCorrect) state.teams[teamIdx].score++;
+    var wedgeWon = false;
+    if (picked.isCorrect){
+      team.score++;
+      if (state.isWedgeRound && team.wedges.indexOf(state.currentCategoryId) === -1){
+        team.wedges.push(state.currentCategoryId);
+        wedgeWon = true;
+        if (team.wedges.length === CATEGORIES.length) state.winnerTeamIdx = teamIdx;
+      }
+    }
 
     var optionBtns = tvOptionsEl.querySelectorAll('.tv-option');
     optionBtns.forEach(function(b, i){
@@ -874,15 +961,28 @@
 
     tvResultEl.classList.remove('hidden');
     tvResultEl.className = 'tv-result ' + (picked.isCorrect ? 'correct-text' : 'incorrect-text');
-    tvResultEl.textContent = picked.isCorrect ? '¡Correcto! +1 punto' : 'Incorrecto';
+    if (wedgeWon){
+      var wonCategory = categoryById(state.currentCategoryId);
+      tvResultEl.textContent = '¡Correcto! 🧀 Consigues el quesito de ' + wonCategory.nombre;
+    } else {
+      tvResultEl.textContent = picked.isCorrect ? '¡Correcto! Sigues jugando' : 'Incorrecto';
+    }
 
+    state.round++;
+    if (state.isWedgeRound){
+      state.nextWedgeRound = state.round + randomInt(MIN_WEDGE_GAP, MAX_WEDGE_GAP);
+    }
+    state.lastAnswerCorrect = picked.isCorrect;
+
+    turnContinueBtn.textContent = state.winnerTeamIdx !== null ? 'Ver resultado' : 'Continuar';
     turnContinueBtn.classList.remove('hidden');
   });
 
   turnContinueBtn.addEventListener('click', function(){
-    state.deck.shift(); // this question is consumed for the rest of the match
-    state.turnTeamPointer = (state.turnTeamPointer + 1) % state.teams.length;
-    if (state.deck.length === 0){ showGameEnd(); return; }
+    if (state.winnerTeamIdx !== null || state.round >= MAX_ROUNDS){ showGameEnd(); return; }
+    if (!state.lastAnswerCorrect){
+      state.turnTeamPointer = (state.turnTeamPointer + 1) % state.teams.length;
+    }
     startTurn();
   });
 
@@ -893,12 +993,21 @@
   var newRoundBtn = document.getElementById('new-round-btn');
 
   function showGameEnd(){
-    var maxScore = Math.max.apply(null, state.teams.map(function(t){ return t.score; }));
-    var winners = state.teams.map(function(t, i){ return i; }).filter(function(i){ return state.teams[i].score === maxScore; });
-    endTitleEl.textContent = winners.length > 1 ? '¡VICTORIA COMPARTIDA!' : '¡' + TEAM_NAMES[winners[0]].toUpperCase() + ' GANA!';
-    endSubtitleEl.textContent = winners.length > 1 ?
-      'Empate a ' + maxScore + (maxScore === 1 ? ' punto.' : ' puntos.') :
-      'Con ' + maxScore + (maxScore === 1 ? ' punto.' : ' puntos.');
+    if (state.winnerTeamIdx !== null){
+      endTitleEl.textContent = '¡' + TEAM_NAMES[state.winnerTeamIdx].toUpperCase() + ' GANA!';
+      endSubtitleEl.textContent = 'Ha conseguido los ' + CATEGORIES.length + ' quesitos.';
+    } else {
+      // safety-cap ending: most wedges wins, score breaks the tie
+      var maxWedges = Math.max.apply(null, state.teams.map(function(t){ return t.wedges.length; }));
+      var contenders = state.teams.map(function(t, i){ return i; }).filter(function(i){ return state.teams[i].wedges.length === maxWedges; });
+      var winners = contenders;
+      if (contenders.length > 1){
+        var maxScoreAmongContenders = Math.max.apply(null, contenders.map(function(i){ return state.teams[i].score; }));
+        winners = contenders.filter(function(i){ return state.teams[i].score === maxScoreAmongContenders; });
+      }
+      endTitleEl.textContent = winners.length > 1 ? '¡VICTORIA COMPARTIDA!' : '¡' + TEAM_NAMES[winners[0]].toUpperCase() + ' GANA!';
+      endSubtitleEl.textContent = 'La partida se alargó demasiado — gana quien más quesitos consiguió.';
+    }
     renderScoreboardRows(endScoreboardEl, true, true);
     switchScreen(screenEnd);
   }
@@ -918,11 +1027,14 @@
       var memberIdxs = [];
       state.playerTeams.forEach(function(teamIdx, idx){ if (teamIdx === t) memberIdxs.push(idx); });
       shuffle(memberIdxs); // who within the team goes first is random too
-      state.teams.push({ score: 0, memberIdxs: memberIdxs, nextMemberPointer: 0 });
+      state.teams.push({ score: 0, memberIdxs: memberIdxs, nextMemberPointer: 0, wedges: [] });
     }
     state.turnTeamPointer = Math.floor(Math.random() * state.teams.length); // random starting team
 
-    state.deck = shuffle(buildQuestionPool()).slice(0, DECK_SIZE);
+    state.categoryQueues = {};
+    state.round = 0;
+    state.nextWedgeRound = randomInt(MIN_WEDGE_GAP, MAX_WEDGE_GAP);
+    state.winnerTeamIdx = null;
 
     switchScreen(screenGame);
     startTurn();
