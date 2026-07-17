@@ -200,20 +200,6 @@
   }
   .tb-taboo-icon{flex-shrink:0; font-size:0.8rem;}
 
-  .tb-play-btns{display:flex; gap:8px;}
-  .tb-skip-btn, .tb-correct-btn, .tb-foul-btn{
-    flex:1;
-    padding:14px;
-    border-radius:14px;
-    border:1px solid var(--glass-border);
-    background:rgba(255,255,255,0.06);
-    color:var(--text);
-    font-size:1.6rem;
-    line-height:1;
-    cursor:pointer;
-    filter:grayscale(1);
-  }
-  .tb-skip-btn:active, .tb-correct-btn:active, .tb-foul-btn:active{transform:scale(0.96);}
 
   .team-score-row{
     display:flex;
@@ -384,10 +370,10 @@
         </div>
         <div class="tb-word" id="tb-word">Palabra</div>
         <div class="tb-taboo-list" id="tb-taboo-list"></div>
-        <div class="tb-play-btns" id="tb-play-btns">
-          <button type="button" class="tb-skip-btn" id="tb-skip-btn" aria-label="Pasar">⏭️</button>
-          <button type="button" class="tb-correct-btn" id="tb-correct-btn" aria-label="Acierto">✅</button>
-          <button type="button" class="tb-foul-btn" id="tb-foul-btn" aria-label="Prohibida">❌</button>
+        <div class="icon-action-row">
+          <button type="button" class="icon-action-btn icon-action-skip" id="tb-skip-btn" aria-label="Pasar"><span class="icon-action-icon"></span></button>
+          <button type="button" class="icon-action-btn icon-action-correct" id="tb-correct-btn" aria-label="Acierto"><span class="icon-action-icon"></span></button>
+          <button type="button" class="icon-action-btn icon-action-error" id="tb-foul-btn" aria-label="Prohibida"><span class="icon-action-icon"></span></button>
         </div>
       </div>
 

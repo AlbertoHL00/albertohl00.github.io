@@ -869,6 +869,50 @@ button:focus-visible, input:focus-visible{
 }
 .suggestion-link:active{opacity:0.6;}
 
+/* ---- bare icon action buttons (correct/skip/foul: Taboo, Time's Up, Mímica)
+   — the svg itself is the tappable button, no boxed background around it ---- */
+.icon-action-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:32px;
+}
+.icon-action-btn{
+  border:none;
+  background:none;
+  padding:10px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.icon-action-btn:active{transform:scale(0.86);}
+.icon-action-icon{
+  display:block;
+  width:52px;
+  height:52px;
+  mask-repeat:no-repeat;
+  mask-position:center;
+  mask-size:contain;
+  -webkit-mask-repeat:no-repeat;
+  -webkit-mask-position:center;
+  -webkit-mask-size:contain;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,0.35));
+}
+.icon-action-correct .icon-action-icon{
+  background-color:#8fd9ac;
+  mask-image:url('images/common/check.svg');
+  -webkit-mask-image:url('images/common/check.svg');
+}
+.icon-action-error .icon-action-icon{
+  background-color:#e8929c;
+  mask-image:url('images/common/error.svg');
+  -webkit-mask-image:url('images/common/error.svg');
+}
+.icon-action-skip .icon-action-icon{
+  background-color:#f2c94c;
+  mask-image:url('images/common/next.svg');
+  -webkit-mask-image:url('images/common/next.svg');
+}
+
 @media (max-width:380px){
   .card{padding:24px 18px;}
   h1{font-size:1.7rem;}

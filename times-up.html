@@ -190,20 +190,6 @@
     justify-content:center;
     word-break:break-word;
   }
-  .tu-play-btns{display:flex; gap:10px;}
-  .tu-skip-btn, .tu-correct-btn{
-    flex:1;
-    padding:16px;
-    border-radius:14px;
-    border:1px solid var(--glass-border);
-    background:rgba(255,255,255,0.06);
-    color:var(--text);
-    font-size:1.8rem;
-    line-height:1;
-    cursor:pointer;
-    filter:grayscale(1);
-  }
-  .tu-skip-btn:active, .tu-correct-btn:active{transform:scale(0.96);}
 
   .team-score-row{
     display:flex;
@@ -322,7 +308,7 @@
       <label><span class="label-icon">⏱️</span>Duración de turno</label>
       <div class="stepper">
         <button type="button" id="turn-seconds-minus">−</button>
-        <div class="value" id="turn-seconds-value">0:30</div>
+        <div class="value" id="turn-seconds-value">1:00</div>
         <button type="button" id="turn-seconds-plus">+</button>
       </div>
 
@@ -395,12 +381,12 @@
       <!-- ACTIVE PLAY: character + timer + correct/skip -->
       <div id="turn-play" class="hidden">
         <div class="tu-timer-wrap" id="tu-timer-wrap">
-          <div class="tu-timer" id="tu-timer">0:30</div>
+          <div class="tu-timer" id="tu-timer">1:00</div>
         </div>
         <div class="tu-word" id="tu-word">Carta</div>
-        <div class="tu-play-btns" id="tu-play-btns">
-          <button type="button" class="tu-skip-btn" id="tu-skip-btn" aria-label="Pasar">⏭️</button>
-          <button type="button" class="tu-correct-btn" id="tu-correct-btn" aria-label="Acierto">✅</button>
+        <div class="icon-action-row">
+          <button type="button" class="icon-action-btn icon-action-skip" id="tu-skip-btn" aria-label="Pasar"><span class="icon-action-icon"></span></button>
+          <button type="button" class="icon-action-btn icon-action-correct" id="tu-correct-btn" aria-label="Acierto"><span class="icon-action-icon"></span></button>
         </div>
       </div>
 
@@ -460,7 +446,7 @@
 
   var config = {
     numTeams: 2,
-    turnSeconds: 30,
+    turnSeconds: 60,
     skipPenaltySeconds: 5,
     selectedPackages: [],
     rows: loadSavedPlayerNames().slice(0, MAX_PLAYERS).map(function(n){ return { name: n, team: 0 }; })

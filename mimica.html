@@ -142,23 +142,6 @@
     font-size:0.85rem;
     margin-bottom:16px;
   }
-  .mimica-play-btns{
-    display:flex;
-    gap:10px;
-  }
-  .mimica-skip-btn, .mimica-correct-btn{
-    flex:1;
-    padding:16px;
-    border-radius:14px;
-    border:1px solid var(--glass-border);
-    font-weight:700;
-    font-size:1rem;
-    cursor:pointer;
-  }
-  .mimica-skip-btn{background:rgba(255,255,255,0.06); color:var(--text);}
-  .mimica-skip-btn:active{transform:scale(0.96);}
-  .mimica-correct-btn{background:linear-gradient(135deg, var(--safe), #6fb6ff); color:#04121f;}
-  .mimica-correct-btn:active{transform:scale(0.96);}
   .mimica-scoreboard-mini{
     display:flex;
     gap:6px;
@@ -394,9 +377,9 @@
           <div class="mimica-timer" id="mimica-timer">1:00</div>
         </div>
         <div class="mimica-word" id="mimica-word">Palabra</div>
-        <div class="mimica-play-btns">
-          <button type="button" class="mimica-skip-btn" id="mimica-skip-btn">⏭️ Saltar</button>
-          <button type="button" class="mimica-correct-btn" id="mimica-correct-btn">✅ Acierto</button>
+        <div class="icon-action-row">
+          <button type="button" class="icon-action-btn icon-action-skip" id="mimica-skip-btn" aria-label="Saltar"><span class="icon-action-icon"></span></button>
+          <button type="button" class="icon-action-btn icon-action-correct" id="mimica-correct-btn" aria-label="Acierto"><span class="icon-action-icon"></span></button>
         </div>
       </div>
 
