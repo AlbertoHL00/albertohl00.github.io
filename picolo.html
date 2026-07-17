@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<script src="analytics.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Picolo · Game Hub</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="78" font-size="72" text-anchor="middle">%F0%9F%8D%BB</text></svg>'>
+<link rel="stylesheet" href="shared.css">
+<style>
+  :root{
+    --accent:#e0663f;
+    --accent2:#f5a875;
+    --reveal-b:#f5a875;
+  }
+  html,body{
+    /* flat solid fill — a multi-layer gradient here used to leave gaps of
+       the raw background color showing on some viewports/scroll ranges */
+    background-color:var(--bg2);
+  }
+  /* no tap-to-reveal gesture here: the card is meant to be read aloud
+     the instant it's shown, so reveal-wrap starts "revealed" */
+  #reveal-wrap{cursor:default;}
+  .reveal-content.picolo{color:var(--accent2);}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SETUP: just the player list — no categories, no rounds to configure -->
+  <div class="screen" id="screen-setup">
+    <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
+      </div>
+      <h1>PICOLO</h1>
+
+      <label><span class="label-icon">👥</span>Jugadores</label>
+      <div id="players-list"></div>
+      <div class="error-msg" id="players-error"></div>
+
+      <button class="btn-main" id="start-btn">Iniciar partida</button>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY GUIDE -->
+  <div class="guide-modal-backdrop hidden" id="guide-modal-backdrop">
+    <div class="guide-modal">
+      <button type="button" class="guide-modal-close" id="guide-modal-close">✕</button>
+      <h2>Cómo se juega</h2>
+
+      <h3>Objetivo</h3>
+      <p>El clásico juego de beber. Van saliendo cartas al azar con retos, preguntas, tragos que repartir e interacciones entre jugadores. Vosotros decidís y gestionáis quién bebe qué — la app no lleva la cuenta de nada.</p>
+
+      <h3>Usar la app</h3>
+      <ol>
+        <li>Añade a los jugadores por su nombre.</li>
+        <li>Pulsa "Iniciar partida" y lee cada carta en voz alta para todo el grupo.</li>
+        <li>Pulsa "Siguiente carta" para pasar a la próxima. No hay rondas ni final: jugad tanto como queráis y parad cuando queráis.</li>
+      </ol>
+
+      <h3>Tipos de carta</h3>
+      <ul>
+        <li><strong>Tragos directos:</strong> alguien bebe, o reparte tragos entre el resto.</li>
+        <li><strong>Retos:</strong> cumple el reto o bebes.</li>
+        <li><strong>Preguntas:</strong> responde con sinceridad o bebes.</li>
+        <li><strong>Interacciones:</strong> dos jugadores hacen algo juntos (un gesto, un pulso, beber a la vez...) o ambos beben.</li>
+      </ul>
+
+      <h3>Honestidad</h3>
+      <p>Como en cualquier juego de beber, todo se basa en la sinceridad y las ganas de jugar de cada uno. Bebed con responsabilidad.</p>
+    </div>
+  </div>
+
+  <!-- CARD SCREEN: infinite, no round counter -->
+  <div class="screen hidden" id="screen-game">
+    <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+      </div>
+
+      <div class="reveal-wrap revealed" id="reveal-wrap">
+        <div class="reveal-content picolo" id="reveal-content"></div>
+      </div>
+
+      <button class="btn-main" id="next-btn">🥃 Siguiente carta</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="shared.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var MIN_PLAYERS = 2, MAX_PLAYERS = 30;
+
+  var config = {
+    rows: loadSavedPlayerNames().slice(0, MAX_PLAYERS).map(function(n){ return { name: n }; }).concat([{ name: "" }])
+  };
+
+  function persistPlayers(){
+    savePlayerNames(config.rows.map(function(r){ return r.name.trim(); }).filter(function(n){ return n !== ""; }));
+  }
+
+  var CARDS = null;
+  // smaller offline fallback (used only if picolo.json can't be fetched, e.g. file:// testing)
+  var CARDS_FALLBACK = [
+    "{P} bebe 2 tragos.",
+    "{P} reparte 3 tragos entre quien quiera.",
+    "Todos brindan y beben un trago.",
+    "{P1} le da un trago de su bebida a {P2}.",
+    "Reto para {P}: imitar a un animal durante 30 segundos o beber.",
+    "{P1} se sube a los hombros de {P2} durante 1 minuto o ambos beben.",
+    "El último en tocarse la nariz bebe.",
+    "{P1} le da un beso en la mejilla a {P2} o ambos beben."
+  ];
+
+  function loadCards(){
+    return fetch('picolo.json')
+      .then(function(r){ if (!r.ok) throw new Error('bad response'); return r.json(); })
+      .then(function(data){ CARDS = data.cartas; })
+      .catch(function(){ CARDS = CARDS_FALLBACK; })
+      .then(function(){
+        validateSetup();
+      });
+  }
+
+  var state = {
+    playerNames: [],
+    deck: [],
+    index: 0
+  };
+
+  var screenSetup = document.getElementById('screen-setup');
+  var screenGame = document.getElementById('screen-game');
+  var ALL_SCREENS = [screenSetup, screenGame];
+
+  function switchScreen(target){
+    ALL_SCREENS.forEach(function(s){ s.classList.add('hidden'); });
+    target.classList.remove('hidden');
+  }
+
+  // ---------- players ----------
+  // No "add player" button: the last row is always an empty slot, and
+  // filling it grows the list automatically (see normalizeTrailingSlot).
+  var rowsContainer = document.getElementById('players-list');
+  var playersErrorEl = document.getElementById('players-error');
+  var startBtn = document.getElementById('start-btn');
+
+  function effectivePlayerCount(rows){
+    var n = rows.length;
+    if (n > 0 && !rows[n - 1].name.trim()) n--; // trailing empty slot isn't a player yet
+    return n;
+  }
+
+  function rowHtml(row, idx, rows){
+    var isTrailingSlot = idx === rows.length - 1 && !row.name.trim();
+    if (isTrailingSlot){
+      return (
+        '<div class="player-row">' +
+          '<input type="text" class="player-name-input" data-index="' + idx + '" ' +
+            'placeholder="Jugador ' + (idx + 1) + '" maxlength="20" value="">' +
+        '</div>'
+      );
+    }
+    return (
+      '<div class="player-row">' +
+        '<input type="text" class="player-name-input" data-index="' + idx + '" maxlength="20" value="' + escapeHtml(row.name) + '">' +
+        '<button type="button" class="row-remove-btn" data-index="' + idx + '"' +
+          (effectivePlayerCount(rows) <= MIN_PLAYERS ? ' disabled' : '') + '>✕</button>' +
+      '</div>'
+    );
+  }
+
+  function renderRows(){
+    var rows = config.rows;
+    rowsContainer.innerHTML = rows.map(function(row, idx){ return rowHtml(row, idx, rows); }).join('');
+  }
+
+  function normalizeTrailingSlot(){
+    var rows = config.rows;
+    while (rows.length > 1 && !rows[rows.length - 1].name.trim() && !rows[rows.length - 2].name.trim()){
+      rows.pop();
+    }
+    if (rows.length < MAX_PLAYERS && (rows.length === 0 || rows[rows.length - 1].name.trim())){
+      rows.push({ name: "" });
+    }
+  }
+
+  rowsContainer.addEventListener('input', function(e){
+    var target = e.target;
+    if (!target.classList.contains('player-name-input')) return;
+    var idx = parseInt(target.getAttribute('data-index'), 10);
+    config.rows[idx].name = target.value;
+    normalizeTrailingSlot();
+    persistPlayers();
+
+    var selStart = target.selectionStart, selEnd = target.selectionEnd;
+    renderRows();
+    var restored = rowsContainer.querySelector('.player-name-input[data-index="' + idx + '"]');
+    if (restored){
+      restored.focus();
+      restored.setSelectionRange(selStart, selEnd);
+    }
+    validateSetup();
+  });
+
+  rowsContainer.addEventListener('click', function(e){
+    var removeBtn = e.target.closest('.row-remove-btn');
+    if (!removeBtn || removeBtn.disabled) return;
+    var rIdx = parseInt(removeBtn.getAttribute('data-index'), 10);
+    config.rows.splice(rIdx, 1);
+    normalizeTrailingSlot();
+    renderRows();
+    persistPlayers();
+    validateSetup();
+  });
+
+  function validateSetup(){
+    var rows = config.rows;
+    var msgs = [];
+    var hasEmptyName = rows.some(function(r, idx){ return idx !== rows.length - 1 && !r.name.trim(); });
+    if (hasEmptyName) msgs.push("Todos los jugadores necesitan un nombre.");
+    else if (effectivePlayerCount(rows) < MIN_PLAYERS) msgs.push("Necesitas al menos " + MIN_PLAYERS + " jugadores.");
+    if (!CARDS) msgs.push("Cargando cartas…");
+
+    playersErrorEl.textContent = msgs[0] || "";
+    startBtn.disabled = msgs.length !== 0;
+    return msgs.length === 0;
+  }
+
+  function enterSetup(){
+    renderRows();
+    validateSetup();
+    switchScreen(screenSetup);
+  }
+
+  // ---------- card templating: {P} = one random player, {P1}/{P2} = two distinct ones ----------
+  function fillTemplate(tpl, playerNames){
+    if (tpl.indexOf('{P1}') !== -1 || tpl.indexOf('{P2}') !== -1){
+      var idx1 = Math.floor(Math.random() * playerNames.length);
+      var idx2 = idx1;
+      while (idx2 === idx1 && playerNames.length > 1){
+        idx2 = Math.floor(Math.random() * playerNames.length);
+      }
+      return tpl.replace(/\{P1\}/g, playerNames[idx1]).replace(/\{P2\}/g, playerNames[idx2]);
+    }
+    if (tpl.indexOf('{P}') !== -1){
+      var idx = Math.floor(Math.random() * playerNames.length);
+      return tpl.replace(/\{P\}/g, playerNames[idx]);
+    }
+    return tpl;
+  }
+
+  function buildDeck(){
+    return shuffle(CARDS.slice());
+  }
+
+  // ---------- card screen (infinite: reshuffles and keeps going, no round count) ----------
+  var revealContent = document.getElementById('reveal-content');
+  var nextBtn = document.getElementById('next-btn');
+
+  var REVEAL_MAX_FONT_REM = 1.4;
+  var REVEAL_MIN_FONT_REM = 0.85;
+
+  function fitRevealText(){
+    revealContent.style.fontSize = '';
+    var size = REVEAL_MAX_FONT_REM;
+    revealContent.style.fontSize = size + 'rem';
+    while (size > REVEAL_MIN_FONT_REM &&
+      (revealContent.scrollHeight > revealContent.clientHeight ||
+       revealContent.scrollWidth > revealContent.clientWidth)){
+      size -= 0.1;
+      revealContent.style.fontSize = size.toFixed(2) + 'rem';
+    }
+  }
+
+  function showRound(i){
+    revealContent.textContent = fillTemplate(state.deck[i], state.playerNames);
+    revealContent.style.fontSize = '';
+    fitRevealText();
+  }
+
+  var revealResizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(revealResizeTimer);
+    revealResizeTimer = setTimeout(fitRevealText, 150);
+  });
+
+  nextBtn.addEventListener('click', function(){
+    state.index++;
+    if (state.index >= state.deck.length){
+      state.deck = buildDeck(); // reshuffle and keep going — the deck never runs out
+      state.index = 0;
+    }
+    showRound(state.index);
+  });
+
+  startBtn.addEventListener('click', function(){
+    if (!validateSetup()) return;
+    config.rows.forEach(function(r){ r.name = r.name.trim(); });
+
+    state.playerNames = config.rows.map(function(r){ return r.name; }).filter(function(n){ return n !== ""; });
+    state.deck = buildDeck();
+    state.index = 0;
+
+    showRound(0);
+    switchScreen(screenGame);
+  });
+
+  // ---------- how-to-play guide ----------
+  setupModal(
+    document.getElementById('guide-btn'),
+    document.getElementById('guide-modal-backdrop'),
+    document.getElementById('guide-modal-close')
+  );
+
+  // ---------- init ----------
+  renderRows();
+  loadCards();
+})();
+</script>
+</body>
+</html>

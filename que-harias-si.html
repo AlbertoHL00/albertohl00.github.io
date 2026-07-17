@@ -88,21 +88,6 @@
       </div>
 
       <button class="btn-main" id="next-btn">Siguiente</button>
-
-      <div class="progress-dots" id="progress-dots"></div>
-    </div>
-  </div>
-
-  <!-- END SCREEN -->
-  <div class="screen hidden" id="screen-end">
-    <div class="card">
-      <div class="setup-header">
-        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
-      </div>
-      <div class="end-icon">🤔</div>
-      <h1 style="font-size:1.6rem;">¡SE ACABARON LOS ESCENARIOS!</h1>
-      <p class="subtitle">Volved a jugar cuando queráis.</p>
-      <button class="btn-main" id="new-round-btn">Nueva partida</button>
     </div>
   </div>
 
@@ -112,8 +97,6 @@
 <script>
 (function(){
   "use strict";
-
-  var DECK_SIZE = 20; // scenarios per sitting, capped so a big category selection doesn't drag on forever
 
   var config = {
     selectedCategories: []
@@ -141,13 +124,12 @@
 
   var state = {
     deck: [],
-    round: 0
+    index: 0
   };
 
   var screenSetup = document.getElementById('screen-setup');
   var screenGame = document.getElementById('screen-game');
-  var screenEnd = document.getElementById('screen-end');
-  var ALL_SCREENS = [screenSetup, screenGame, screenEnd];
+  var ALL_SCREENS = [screenSetup, screenGame];
 
   function switchScreen(target){
     ALL_SCREENS.forEach(function(s){ s.classList.add('hidden'); });
@@ -208,7 +190,7 @@
     CATEGORIES.forEach(function(c){
       if (config.selectedCategories.indexOf(c.id) !== -1) pool = pool.concat(c.escenarios);
     });
-    return shuffle(pool.slice()).slice(0, DECK_SIZE);
+    return shuffle(pool.slice());
   }
 
   function validateSetup(){
@@ -230,10 +212,6 @@
   var revealWrap = document.getElementById('reveal-wrap');
   var revealContent = document.getElementById('reveal-content');
   var nextBtn = document.getElementById('next-btn');
-  var progressDots = document.getElementById('progress-dots');
-  var newRoundBtn = document.getElementById('new-round-btn');
-
-  var dots = createDots(progressDots);
 
   var REVEAL_MAX_FONT_REM = 1.4;
   var REVEAL_MIN_FONT_REM = 0.85;
@@ -251,8 +229,6 @@
   }
 
   function showRound(i){
-    dots.update(i);
-
     // re-trigger the fade-in transition every round by toggling the class
     // off/on around a forced reflow (no flash of the old scenario)
     revealWrap.classList.remove('revealed');
@@ -264,27 +240,22 @@
   }
 
   nextBtn.addEventListener('click', function(){
-    state.round++;
-    if (state.round >= state.deck.length){
-      switchScreen(screenEnd);
-    } else {
-      showRound(state.round);
+    state.index++;
+    if (state.index >= state.deck.length){
+      state.deck = buildDeck(); // reshuffle and keep going — the deck never runs out
+      state.index = 0;
     }
+    showRound(state.index);
   });
 
   startBtn.addEventListener('click', function(){
     if (!validateSetup()) return;
 
     state.deck = buildDeck();
-    state.round = 0;
+    state.index = 0;
 
-    dots.build(state.deck.length);
     showRound(0);
     switchScreen(screenGame);
-  });
-
-  newRoundBtn.addEventListener('click', function(){
-    enterSetup();
   });
 
   // ---------- how-to-play guide ----------
