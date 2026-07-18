@@ -23,16 +23,16 @@
     background-color:var(--bg2);
   }
 
-  .team-color-0{background:#c9525c;}
-  .team-color-1{background:#5b8fe0;}
-  .team-color-2{background:#8b6dd6;}
-  .team-color-3{background:#d9974f;}
+  .team-color-0{background:#5b8fe0;}
+  .team-color-1{background:#c9525c;}
+  .team-color-2{background:#4fbf7a;}
+  .team-color-3{background:#f2c94c;}
 
   /* ---- team boxes (setup): tap-and-drag a player's chip to another team, identical to Time's Up / Mímica ---- */
   .team-boxes-header{
     display:flex;
     align-items:center;
-    justify-content:space-between;
+    justify-content:center;
     gap:10px;
     margin:10px 0 14px;
   }
@@ -72,14 +72,15 @@
     cursor:grabbing;
     pointer-events:none;
   }
-  .team-box.team-color-0{border-color:rgba(201,82,92,0.5); background:rgba(201,82,92,0.14);}
-  .team-box.team-color-1{border-color:rgba(91,143,224,0.5); background:rgba(91,143,224,0.14);}
-  .team-box.team-color-2{border-color:rgba(139,109,214,0.5); background:rgba(139,109,214,0.14);}
-  .team-box.team-color-3{border-color:rgba(217,151,79,0.5); background:rgba(217,151,79,0.14);}
-  .team-box-chip.team-color-0{background:#c9525c; border-color:#c9525c; color:#fff;}
-  .team-box-chip.team-color-1{background:#5b8fe0; border-color:#5b8fe0; color:#fff;}
-  .team-box-chip.team-color-2{background:#8b6dd6; border-color:#8b6dd6; color:#fff;}
-  .team-box-chip.team-color-3{background:#d9974f; border-color:#d9974f; color:#fff;}
+  .team-box.team-color-0{border-color:rgba(91,143,224,0.5); background:rgba(91,143,224,0.14);}
+  .team-box.team-color-1{border-color:rgba(201,82,92,0.5); background:rgba(201,82,92,0.14);}
+  .team-box.team-color-2{border-color:rgba(79,191,122,0.5); background:rgba(79,191,122,0.14);}
+  .team-box.team-color-3{border-color:rgba(242,201,76,0.5); background:rgba(242,201,76,0.14);}
+  .team-box-chip.team-color-0{background:#5b8fe0; border-color:#5b8fe0; color:#fff;}
+  .team-box-chip.team-color-1{background:#c9525c; border-color:#c9525c; color:#fff;}
+  .team-box-chip.team-color-2{background:#4fbf7a; border-color:#4fbf7a; color:#fff;}
+  .team-box-chip.team-color-3{background:#f2c94c; border-color:#f2c94c; color:#333;}
+  .mini-score-pill.team-color-3, .team-turn-badge.team-color-3{color:#3a2f00;}
   .team-box.drag-over{
     border-color:var(--accent);
     background:rgba(255,255,255,0.1);
@@ -333,8 +334,7 @@
           <button type="button" id="team-count-plus">+</button>
         </div>
         <div class="team-boxes-header">
-          <p class="count-info" style="margin:0;">Arrastra a alguien a otra caja para cambiarlo de equipo.</p>
-          <button type="button" class="guide-btn" id="randomize-teams-btn" aria-label="Repartir al azar"><span class="dice-icon"></span></button>
+          <button type="button" class="randomize-teams-btn" id="randomize-teams-btn"><span class="dice-icon"></span>Aleatorio</button>
         </div>
         <div id="team-boxes"></div>
         <div class="error-msg" id="teams-error"></div>
@@ -442,7 +442,7 @@
   var MIN_TEAMS = 2, MAX_TEAMS = 4;
   var MAX_ROUNDS = 72; // safety cap so a match always ends even if wedges are unlucky
   var MIN_WEDGE_GAP = 3, MAX_WEDGE_GAP = 5; // a wedge round every 3-5 questions
-  var TEAM_NAMES = ['Rojo', 'Azul', 'Morado', 'Naranja'];
+  var TEAM_NAMES = ['Azul', 'Rojo', 'Verde', 'Amarillo'];
   var TEAM_HEX = ['#c9525c', '#5b8fe0', '#8b6dd6', '#d9974f'];
 
   // classic Trivial Pursuit wedge colors, one per category
