@@ -358,10 +358,7 @@
   <div class="screen hidden" id="screen-game">
     <div class="card">
       <div class="setup-header">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
-          <span class="back-btn" style="cursor:default;" id="turn-status">Ronda 1 / 3</span>
-        </div>
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
       </div>
 
       <!-- TURN INTRO: gate before the minute starts -->
@@ -964,7 +961,6 @@
   }
 
   // ---------- game screen: 60s timed team turns ----------
-  var turnStatusEl = document.getElementById('turn-status');
   var turnIntroEl = document.getElementById('turn-intro');
   var turnTeamBadgeEl = document.getElementById('turn-team-badge');
   var turnPlayerNameEl = document.getElementById('turn-player-name');
@@ -1049,8 +1045,6 @@
     state.turnWords = [];
     state.timeRemaining = config.turnSeconds;
 
-    var roundNum = Math.floor(state.turnIdx / config.numTeams) + 1;
-    turnStatusEl.textContent = 'Ronda ' + roundNum + ' / ' + config.rounds;
     turnTeamBadgeEl.textContent = TEAM_NAMES[teamIdx].toUpperCase();
     turnTeamBadgeEl.className = 'team-turn-badge team-color-' + teamIdx;
     turnPlayerNameEl.textContent = state.playerNames[actorIdx];

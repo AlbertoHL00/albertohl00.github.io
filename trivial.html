@@ -122,17 +122,6 @@
     margin-top:10px;
   }
 
-  .tv-questions-remaining{
-    display:flex;
-    align-items:center;
-    gap:5px;
-    font-family:var(--font-display);
-    font-weight:800;
-    font-size:0.95rem;
-    color:var(--text-dim);
-  }
-  .tv-questions-icon{font-size:1.1rem; line-height:1;}
-
   .team-turn-badge{
     display:inline-block;
     margin:0 0 10px;
@@ -412,7 +401,6 @@
           <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
           <span class="back-btn" style="cursor:default;">TRIVIAL PURSUIT</span>
         </div>
-        <div class="tv-questions-remaining" id="tv-round-indicator"><span class="tv-questions-icon">🎲</span><span id="tv-round-value">Ronda 1</span></div>
       </div>
 
       <!-- ACTIVE PLAY: question + options -->
@@ -870,7 +858,6 @@
   }
 
   // ---------- game screen ----------
-  var tvRoundValueEl = document.getElementById('tv-round-value');
   var tvTeamBarEl = document.getElementById('tv-team-bar');
   var turnTeamBadgeEl = document.getElementById('turn-team-badge');
   var turnPlayerNameEl = document.getElementById('turn-player-name');
@@ -924,7 +911,6 @@
     state.currentActorIdx = actorIdx;
     state.answered = false;
 
-    tvRoundValueEl.textContent = 'Ronda ' + (state.round + 1);
     turnTeamBadgeEl.textContent = TEAM_NAMES[teamIdx].toUpperCase();
     turnTeamBadgeEl.className = 'team-turn-badge team-color-' + teamIdx;
     turnPlayerNameEl.textContent = state.playerNames[actorIdx];

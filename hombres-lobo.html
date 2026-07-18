@@ -758,7 +758,6 @@
           <span class="back-btn" style="cursor:default; margin-bottom:0;" id="day-night-status">🌙 Noche</span>
         </div>
         <div class="round-stepper">
-          <span id="round-value">Ronda 1</span>
           <button type="button" class="guide-btn" id="tab-deaths-btn" aria-label="Personajes"><span class="people-icon"></span></button>
         </div>
       </div>
@@ -1698,7 +1697,6 @@
   var reminderSeq = 1;
 
   var dayNightStatusEl = document.getElementById('day-night-status');
-  var roundValueEl = document.getElementById('round-value');
   var tabDeathsBtn = document.getElementById('tab-deaths-btn'); // "Personajes" icon button — opens the overlay below
   var deathsModalBackdrop = document.getElementById('deaths-modal-backdrop');
   var deathsModalClose = document.getElementById('deaths-modal-close');
@@ -1741,9 +1739,6 @@
   var nightDots = createDots(nightProgressDots);
   var roleWidgetEl = document.getElementById('role-widget');
 
-  function renderRound(){
-    roundValueEl.textContent = 'Ronda ' + state.round;
-  }
   function goToNextRound(){
     stopVoteTimer();
     state.round++;
@@ -1766,7 +1761,6 @@
     videntePickIdx = null;
     state.nightIdx = 0;
     buildNightSteps();
-    renderRound();
     setNarratorTab('night');
     renderNightStep();
     nightDots.build(nightSteps.length);
@@ -3417,7 +3411,6 @@
     videntePickIdx = null;
 
     buildNightSteps();
-    renderRound();
     setNarratorTab('night');
     renderNightStep();
     nightDots.build(nightSteps.length);

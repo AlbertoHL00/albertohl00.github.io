@@ -226,7 +226,7 @@
       <div class="setup-header">
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
       </div>
-      <div class="player-badge" id="word-badge">RONDA</div>
+      <div class="player-badge" id="word-badge">TU TURNO</div>
       <div class="player-name" id="word-name">1</div>
       <div class="pass-hint">Pasa el dispositivo a este jugador. Solo debe mirarlo él o ella.</div>
 
@@ -243,7 +243,6 @@
       <div class="setup-header">
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
       </div>
-      <div class="player-badge" id="reveal-badge">RONDA</div>
       <p class="subtitle">Toca tu nombre para ver tu carta. Nadie más debe mirar.</p>
 
       <div class="roster-list" id="reveal-roster"></div>
@@ -272,8 +271,6 @@
       <div class="setup-header">
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
       </div>
-      <div class="player-badge" id="vote-badge">RONDA</div>
-
       <div id="vote-reveal-stage">
         <p class="subtitle">Debatid en voz alta y votad a mano alzada</p>
         <p class="pass-hint">Cuando el grupo termine de votar, revela al conspirador.</p>
@@ -512,7 +509,6 @@
   });
 
   // ---------- role reveal roster: tap your own name to show your card ----------
-  var revealBadge = document.getElementById('reveal-badge');
   var revealRosterEl = document.getElementById('reveal-roster');
   var revealContinueBtn = document.getElementById('reveal-continue-btn');
   var revealModalBackdrop = document.getElementById('reveal-modal-backdrop');
@@ -579,7 +575,6 @@
   });
 
   // ---------- manual vote: reveal conspirador (no undo), then mark voters ----------
-  var voteBadge = document.getElementById('vote-badge');
   var voteRevealStage = document.getElementById('vote-reveal-stage');
   var voteResultStage = document.getElementById('vote-result-stage');
   var voteRevealConspiradorBtn = document.getElementById('vote-reveal-conspirador-btn');
@@ -591,7 +586,6 @@
   var selectedVoters = {};
 
   function startVotePhase(){
-    voteBadge.textContent = "RONDA " + (state.round + 1) + "/" + state.totalRounds;
     voteRevealStage.classList.remove('hidden');
     voteResultStage.classList.add('hidden');
     switchScreen(screenVote);
@@ -719,7 +713,6 @@
   });
 
   // ---------- round engine ----------
-  var wordBadge = document.getElementById('word-badge');
   var wordName = document.getElementById('word-name');
   var wordInput = document.getElementById('word-input');
   var wordConfirmBtn = document.getElementById('word-confirm-btn');
@@ -733,7 +726,6 @@
     state.revealOrder = others.slice();
     state.revealViewed = others.map(function(){ return false; });
 
-    wordBadge.textContent = "RONDA " + (state.round + 1) + "/" + state.totalRounds + " · TU TURNO";
     wordName.textContent = state.playerNames[state.activeIdx];
     wordInput.value = '';
     wordConfirmBtn.disabled = true;
@@ -749,7 +741,6 @@
     var word = wordInput.value.trim();
     if (!word) return;
     state.word = word;
-    revealBadge.textContent = "RONDA " + (state.round + 1) + "/" + state.totalRounds;
     renderRevealRoster();
     switchScreen(screenReveal);
   });
