@@ -22,6 +22,16 @@
        the raw background color showing on some viewports/scroll ranges */
     background-color:var(--bg2);
   }
+  .reveal-close-hint{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:0.82rem;
+    margin:14px 0 0;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .3s ease;
+  }
+  .reveal-wrap.revealed ~ .reveal-close-hint{opacity:1;}
   .packages-dropdown-btn{
     width:100%;
     display:flex;
@@ -60,11 +70,11 @@
   .start-player-line{
     text-align:center;
     color:var(--text-dim);
-    font-size:0.85rem;
+    font-size:1.1rem;
     font-weight:600;
-    margin:0 0 18px;
+    margin:0 0 20px;
   }
-  .start-player-line strong{color:var(--text);}
+  .start-player-line strong{color:var(--text); font-size:1.2em;}
   .debate-title{transition:color .2s;}
   .debate-title.game-over-impostores{
     background:none;
@@ -322,6 +332,7 @@
           <span class="reveal-text">Revelar</span>
         </button>
       </div>
+      <p class="reveal-close-hint">Toca la pantalla para cerrar</p>
     </div>
   </div>
 
@@ -332,7 +343,6 @@
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
       </div>
       <h1 class="debate-title" style="font-size:1.6rem;" id="debate-title">A DEBATIR</h1>
-      <p class="subtitle" id="debate-subtitle">Debatid y decidid quién creéis que es el impostor</p>
       <p class="start-player-line" id="start-player-line"></p>
 
       <div id="debate-timer-wrap" class="hidden">
@@ -344,15 +354,25 @@
       <div id="vote-section">
         <label>¿Quién creéis que es el impostor?</label>
         <div id="vote-players-list"></div>
-        <button class="btn-main" id="confirm-vote-btn" disabled>Confirmar voto</button>
+        <button class="btn-main" id="confirm-vote-btn" disabled>Comprobar</button>
       </div>
 
       <div id="vote-result" class="hidden">
         <div class="vote-result-icon" id="vote-result-icon">🎭</div>
         <div class="vote-result-title" id="vote-result-title"></div>
         <p class="subtitle" id="vote-result-detail"></p>
-        <button class="btn-main" id="vote-next-btn">Siguiente ronda</button>
+        <button class="btn-main" id="vote-next-btn">Siguiente</button>
       </div>
+    </div>
+  </div>
+
+  <!-- VICTORY MODAL: only shown once "Siguiente" is pressed after the last impostor's reveal,
+       so the vote-result card never spoils the outcome ahead of time -->
+  <div class="guide-modal-backdrop hidden" id="victory-modal-backdrop">
+    <div class="guide-modal" style="text-align:center;">
+      <h1 class="debate-title" id="victory-title" style="font-size:1.6rem; margin-bottom:6px;"></h1>
+      <p class="subtitle" id="victory-subtitle" style="margin-bottom:20px;">La partida ha terminado.</p>
+      <button class="btn-main" id="victory-new-game-btn">Nueva partida</button>
     </div>
   </div>
 
@@ -859,8 +879,9 @@
     openRevealModal(parseInt(row.getAttribute('data-index'), 10));
   });
 
-  revealModalClose.addEventListener('click', function(){
-    if (revealModalClose.disabled) return;
+  // once revealed, tapping anywhere on the modal (not just the small ✕) closes it
+  revealModalBackdrop.addEventListener('click', function(){
+    if (!revealWrap.classList.contains('revealed')) return;
     revealModalBackdrop.classList.add('hidden');
     state.viewed[currentRevealIdx] = true;
     renderRevealRoster();
@@ -879,8 +900,6 @@
   }
 
   // ---------- debate + vote ----------
-  var debateTitleEl = document.getElementById('debate-title');
-  var debateSubtitleEl = document.getElementById('debate-subtitle');
   var startPlayerLineEl = document.getElementById('start-player-line');
   var debateTimerWrap = document.getElementById('debate-timer-wrap');
   var debateTimerMm = document.getElementById('debate-timer-mm');
@@ -893,9 +912,9 @@
   var voteResultTitle = document.getElementById('vote-result-title');
   var voteResultDetail = document.getElementById('vote-result-detail');
   var voteNextBtn = document.getElementById('vote-next-btn');
-
-  var DEBATE_TITLE_DEFAULT = 'A DEBATIR';
-  var DEBATE_SUBTITLE_DEFAULT = 'Debatid y decidid quién creéis que es el impostor';
+  var victoryModalBackdrop = document.getElementById('victory-modal-backdrop');
+  var victoryTitleEl = document.getElementById('victory-title');
+  var victoryNewGameBtn = document.getElementById('victory-new-game-btn');
 
   var debateTimerInterval = null;
   var selectedVoteIdx = null;
@@ -953,19 +972,20 @@
     state.gameOver = false;
     state.winner = null;
     isFirstDebate = true;
-    debateTitleEl.textContent = DEBATE_TITLE_DEFAULT;
-    debateTitleEl.className = 'debate-title';
-    debateSubtitleEl.textContent = DEBATE_SUBTITLE_DEFAULT;
-    voteNextBtn.textContent = 'Siguiente ronda';
   }
 
+  // records the outcome without showing it yet — the victory modal only
+  // appears once "Siguiente" is pressed, so the vote-result reveal never
+  // gets spoiled ahead of time
   function endGame(winner){
     state.gameOver = true;
     state.winner = winner;
-    debateTitleEl.textContent = winner === 'impostores' ? 'GANAN LOS IMPOSTORES' : 'GANAN LOS CIVILES';
-    debateTitleEl.className = 'debate-title game-over-' + winner;
-    debateSubtitleEl.textContent = 'La partida ha terminado.';
-    voteNextBtn.textContent = 'Nueva partida';
+  }
+
+  function showVictoryModal(winner){
+    victoryTitleEl.textContent = winner === 'impostores' ? 'GANAN LOS IMPOSTORES' : 'GANAN LOS CIVILES';
+    victoryTitleEl.className = 'debate-title game-over-' + winner;
+    victoryModalBackdrop.classList.remove('hidden');
   }
 
   function pickStartingPlayer(){
@@ -1045,19 +1065,13 @@
     var impostorsWin = impostorsAlive > civiliansAlive ||
       (impostorsAlive === 1 && civiliansAlive === 1);
 
-    var detailText;
-    if (impostorsAlive === 0){
-      detailText = 'Todos los impostores han sido descubiertos.';
-      endGame('civiles');
-    } else if (impostorsWin){
-      detailText = civiliansAlive === 1 ?
-        'Solo queda un civil frente al impostor.' : 'Los impostores ya son mayoría.';
-      endGame('impostores');
-    } else {
-      detailText = 'Quedan ' + impostorsAlive + (impostorsAlive === 1 ? ' impostor' : ' impostores') +
-        ' y ' + civiliansAlive + (civiliansAlive === 1 ? ' civil' : ' civiles') + '. Otra ronda de palabras y votación.';
-      voteNextBtn.textContent = 'Siguiente ronda';
-    }
+    if (impostorsAlive === 0) endGame('civiles');
+    else if (impostorsWin) endGame('impostores');
+
+    // result modal only ever shows the role and how many impostors are left —
+    // whether that means the game just ended stays hidden until "Siguiente"
+    var detailText = impostorsAlive === 0 ? 'No quedan impostores.' :
+      'Quedan ' + impostorsAlive + (impostorsAlive === 1 ? ' impostor.' : ' impostores.');
 
     // suspenseful two-stage reveal: "<Nombre> era..." first, then the verdict pulses in color
     voteResultIcon.textContent = '🤔';
@@ -1077,12 +1091,17 @@
   });
 
   voteNextBtn.addEventListener('click', function(){
+    voteResult.classList.add('hidden');
     if (state.gameOver){
-      enterSetup(false);
+      showVictoryModal(state.winner);
     } else {
-      voteResult.classList.add('hidden');
       startDebatePhase();
     }
+  });
+
+  victoryNewGameBtn.addEventListener('click', function(){
+    victoryModalBackdrop.classList.add('hidden');
+    enterSetup(false);
   });
 
   startBtn.addEventListener('click', function(){
