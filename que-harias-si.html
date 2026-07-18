@@ -22,9 +22,20 @@
        the raw background color showing on some viewports/scroll ranges */
     background-color:var(--bg2);
   }
-  /* no tap-to-reveal gesture here: the scenario is meant to be read aloud
-     the instant it's shown, so reveal-wrap starts "revealed" */
-  #reveal-wrap{cursor:default;}
+  .qh-phrase{
+    text-align:center;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:1.4rem;
+    line-height:1.4;
+    margin:10px 0 20px;
+    max-height:38vh;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    word-break:break-word;
+  }
 </style>
 </head>
 <body>
@@ -81,11 +92,8 @@
       <div class="setup-header">
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
       </div>
-      <div class="pass-hint">Responde qué harías. El resto puede opinar o rebatir.</div>
-
-      <div class="reveal-wrap revealed" id="reveal-wrap">
-        <div class="reveal-content wild" id="reveal-content"></div>
-      </div>
+      <div class="qh-phrase" id="qh-phrase"></div>
+      <p class="subtitle">Responde qué harías. El resto puede opinar o rebatir.</p>
 
       <button class="btn-main" id="next-btn">Siguiente</button>
     </div>
@@ -209,35 +217,29 @@
   }
 
   // ---------- prompt screen (scenario shown immediately, no privacy) ----------
-  var revealWrap = document.getElementById('reveal-wrap');
-  var revealContent = document.getElementById('reveal-content');
+  var phraseEl = document.getElementById('qh-phrase');
   var nextBtn = document.getElementById('next-btn');
 
-  var REVEAL_MAX_FONT_REM = 1.4;
-  var REVEAL_MIN_FONT_REM = 0.85;
-
-  function fitRevealText(){
-    revealContent.style.fontSize = '';
-    var size = REVEAL_MAX_FONT_REM;
-    revealContent.style.fontSize = size + 'rem';
-    while (size > REVEAL_MIN_FONT_REM &&
-      (revealContent.scrollHeight > revealContent.clientHeight ||
-       revealContent.scrollWidth > revealContent.clientWidth)){
-      size -= 0.1;
-      revealContent.style.fontSize = size.toFixed(2) + 'rem';
+  function fitPhraseText(){
+    var maxSize = 1.4, minSize = 0.85, step = 0.05;
+    var size = maxSize;
+    phraseEl.style.fontSize = size + 'rem';
+    while (size > minSize && phraseEl.scrollHeight > phraseEl.clientHeight + 1){
+      size -= step;
+      phraseEl.style.fontSize = size + 'rem';
     }
   }
 
   function showRound(i){
-    // re-trigger the fade-in transition every round by toggling the class
-    // off/on around a forced reflow (no flash of the old scenario)
-    revealWrap.classList.remove('revealed');
-    revealContent.textContent = state.deck[i];
-    revealContent.style.fontSize = '';
-    void revealWrap.offsetWidth;
-    revealWrap.classList.add('revealed');
-    fitRevealText();
+    phraseEl.textContent = state.deck[i];
+    fitPhraseText();
   }
+
+  var phraseResizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(phraseResizeTimer);
+    phraseResizeTimer = setTimeout(fitPhraseText, 150);
+  });
 
   nextBtn.addEventListener('click', function(){
     state.index++;
