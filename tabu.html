@@ -303,7 +303,7 @@
           <button type="button" id="turn-seconds-plus">+</button>
         </div>
 
-        <label><span class="label-icon">⏭️</span>Segundos que resta pasar o decir palabra prohibida</label>
+        <label><span class="label-icon">⏭️</span>Segundos que resta decir palabra prohibida</label>
         <div class="stepper">
           <button type="button" id="skip-seconds-minus">−</button>
           <div class="value" id="skip-seconds-value">5</div>
@@ -333,8 +333,7 @@
       <h3>Durante el turno</h3>
       <ul>
         <li><strong>✅ Acierto:</strong> el equipo suma un punto y pasáis a la siguiente carta.</li>
-        <li><strong>⏭️ Pasar:</strong> si os atascáis, la carta vuelve al final del mazo y resta unos segundos al cronómetro (configurable).</li>
-        <li><strong>❌ Prohibida:</strong> la carta vuelve al final del mazo sin puntos para nadie y resta los mismos segundos que pasar.</li>
+        <li><strong>❌ Prohibida:</strong> la carta vuelve al final del mazo sin puntos para nadie y resta unos segundos al cronómetro (configurable).</li>
       </ul>
 
       <h3>Fin del turno y de la partida</h3>
@@ -374,7 +373,6 @@
         <div class="tb-taboo-list" id="tb-taboo-list"></div>
         <div class="icon-action-row">
           <button type="button" class="icon-action-btn icon-action-error" id="tb-foul-btn" aria-label="Prohibida"><span class="icon-action-icon"></span></button>
-          <button type="button" class="icon-action-btn icon-action-skip" id="tb-skip-btn" aria-label="Pasar"><span class="icon-action-icon"></span></button>
           <button type="button" class="icon-action-btn icon-action-correct" id="tb-correct-btn" aria-label="Acierto"><span class="icon-action-icon"></span></button>
         </div>
       </div>
@@ -922,7 +920,6 @@
   var tbTimerEl = document.getElementById('tb-timer');
   var tbWordEl = document.getElementById('tb-word');
   var tbTabooListEl = document.getElementById('tb-taboo-list');
-  var tbSkipBtn = document.getElementById('tb-skip-btn');
   var tbCorrectBtn = document.getElementById('tb-correct-btn');
   var tbFoulBtn = document.getElementById('tb-foul-btn');
   var turnEndEl = document.getElementById('turn-end');
@@ -1005,21 +1002,6 @@
       osc.stop(now + n.t + 0.2);
     });
   }
-  function playSkipSound(){
-    if (!state.audioCtx) return;
-    var now = state.audioCtx.currentTime;
-    var osc = state.audioCtx.createOscillator();
-    var gain = state.audioCtx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(420, now);
-    osc.frequency.exponentialRampToValueAtTime(220, now + 0.18);
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
-    osc.connect(gain).connect(state.audioCtx.destination);
-    osc.start(now);
-    osc.stop(now + 0.22);
-  }
   function playFoulSound(){
     if (!state.audioCtx) return;
     var now = state.audioCtx.currentTime;
@@ -1062,19 +1044,6 @@
     state.turnWords.push(card.palabra);
     renderCardsRemaining();
     if (state.deck.length === 0){ endTurn(true); return; }
-    renderCurrentCard();
-  });
-
-  tbSkipBtn.addEventListener('click', function(){
-    if (state.deck.length === 0) return;
-    playSkipSound();
-    state.deck.push(state.deck.shift()); // passed: back of the deck, resurfaces later this match
-    state.timeRemaining = Math.max(0, state.timeRemaining - config.skipPenaltySeconds);
-    updateTimerDisplay(state.timeRemaining);
-    tbTimerEl.classList.remove('skip-pulse');
-    void tbTimerEl.offsetWidth;
-    tbTimerEl.classList.add('skip-pulse');
-    if (state.timeRemaining <= 0){ endTurn(false); return; }
     renderCurrentCard();
   });
 
