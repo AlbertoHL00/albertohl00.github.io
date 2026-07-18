@@ -77,8 +77,8 @@
   <div class="screen" id="screen-setup">
     <div class="card">
       <div class="setup-header">
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
-        <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
       </div>
       <h1>PATATA CALIENTE</h1>
 
@@ -130,12 +130,15 @@
   <div class="screen hidden" id="screen-game">
     <div class="card">
       <div class="setup-header">
-        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+        <div class="header-actions">
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        </div>
       </div>
 
       <div id="pc-round">
         <div class="pc-theme" id="pc-theme"></div>
-        <p class="pass-hint">Decid en voz alta palabras relacionadas y pasaos el móvil.</p>
         <div class="pc-bomb-icon" id="pc-bomb-icon">💣</div>
         <button class="btn-main" id="start-fuse-btn">Encender la mecha</button>
       </div>
@@ -365,7 +368,7 @@
     osc.type = 'square';
     osc.frequency.value = 740;
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.22, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.1, now + 0.015);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
     osc.connect(gain).connect(state.audioCtx.destination);
     osc.start(now);
@@ -389,7 +392,7 @@
     noiseFilter.frequency.setValueAtTime(1800, now);
     noiseFilter.frequency.exponentialRampToValueAtTime(120, now + 0.5);
     var noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.5, now);
+    noiseGain.gain.setValueAtTime(0.8, now);
     noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
     noise.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
     noise.start(now);
@@ -400,7 +403,7 @@
     osc.type = 'sine';
     osc.frequency.setValueAtTime(150, now);
     osc.frequency.exponentialRampToValueAtTime(35, now + 0.4);
-    oscGain.gain.setValueAtTime(0.9, now);
+    oscGain.gain.setValueAtTime(1, now);
     oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
     osc.connect(oscGain).connect(ctx.destination);
     osc.start(now);
@@ -459,10 +462,16 @@
 
   // ---------- how-to-play guide ----------
   setupModal(
-    document.getElementById('guide-btn'),
+    document.querySelectorAll('.ayuda-trigger'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
   );
+
+  // ---------- back to setup (stop any running fuse first) ----------
+  initBackToSetupConfirm(function(){
+    clearFuseTimers();
+    switchScreen(screenSetup);
+  });
 
   // ---------- init ----------
   loadCategories();
