@@ -137,21 +137,21 @@
   .tu-cards-remaining{
     display:flex;
     align-items:center;
-    gap:5px;
+    gap:6px;
     font-family:var(--font-display);
     font-weight:800;
-    font-size:0.95rem;
+    font-size:1.4rem;
     color:var(--text-dim);
   }
-  .tu-cards-icon{font-size:1.1rem; line-height:1;}
+  .tu-cards-icon{font-size:1.7rem; line-height:1;}
   .phase-intro-cards-remaining{
     display:flex;
     align-items:center;
     justify-content:center;
-    gap:6px;
+    gap:8px;
     font-family:var(--font-display);
     font-weight:800;
-    font-size:0.95rem;
+    font-size:1.4rem;
     color:var(--text-dim);
     margin:2px 0 16px;
   }
@@ -167,7 +167,7 @@
     font-size:0.9rem;
     letter-spacing:0.5px;
   }
-  .tu-timer-wrap{margin-bottom:2px;}
+  .tu-timer-wrap{margin-bottom:2px; text-align:center;}
   .tu-timer{
     font-family:var(--font-display);
     font-size:2.6rem;
@@ -199,6 +199,10 @@
     justify-content:center;
     word-break:break-word;
   }
+  /* bigger, pushed toward the card edges — easier to hit mid-turn without looking */
+  #turn-play .icon-action-row{justify-content:space-between; gap:12px;}
+  #turn-play .icon-action-icon{width:70px; height:70px;}
+  #turn-end-icon{filter:grayscale(1);}
 
   .team-score-row{
     display:flex;
@@ -234,15 +238,11 @@
     font-weight:700;
   }
   .phase-rule-box{
-    text-align:left;
-    background:rgba(255,255,255,0.05);
-    border:1px solid var(--glass-border);
-    border-radius:14px;
-    padding:14px 16px;
-    font-size:0.88rem;
+    text-align:center;
+    font-size:0.92rem;
     color:var(--text-dim);
     line-height:1.5;
-    margin:16px 0 20px;
+    margin:10px 0 20px;
   }
 </style>
 </head>
@@ -355,7 +355,6 @@
       <div class="setup-header">
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
       </div>
-      <div class="end-icon" id="phase-intro-icon">🗣️</div>
       <h1 style="font-size:1.6rem;" id="phase-intro-title">FASE I</h1>
       <div class="phase-rule-box" id="phase-intro-rule"></div>
       <div class="phase-intro-cards-remaining"><span class="tu-cards-icon">🂠</span><span id="phase-intro-cards-value">x40</span></div>
@@ -397,9 +396,8 @@
 
       <!-- TURN END: summary before moving on -->
       <div id="turn-end" class="hidden">
-        <div class="end-icon">⏱️</div>
+        <div class="end-icon" id="turn-end-icon">⏱️</div>
         <h1 style="font-size:1.4rem;">¡Tiempo!</h1>
-        <p class="subtitle" id="turn-end-subtitle"></p>
         <div class="tu-word-pill-wrap" id="turn-end-words"></div>
         <div id="turn-end-scoreboard"></div>
         <button class="btn-main" id="turn-continue-btn">Continuar</button>
@@ -450,9 +448,9 @@
   var TEAM_HEX = ['#5b8fe0', '#c9525c', '#4fbf7a', '#f2c94c'];
 
   var PHASES = [
-    { title: 'FASE I', icon: '🗣️', rule: 'Describe la carta como quieras, sin decir la palabra ni derivados.' },
-    { title: 'FASE II', icon: '1️⃣', rule: 'Solo puedes decir UNA palabra (tampoco la palabra en sí ni un derivado).' },
-    { title: 'FASE III', icon: '🤐', rule: 'Solo gestos y sonidos, sin hablar.' }
+    { title: 'FASE I', subtitle: 'DESCRIBIR', rule: 'Describe la carta como quieras, sin decir la palabra ni derivados.' },
+    { title: 'FASE II', subtitle: 'UNA PALABRA', rule: 'Solo puedes decir UNA palabra (tampoco la palabra en sí ni un derivado).' },
+    { title: 'FASE III', subtitle: 'MÍMICA', rule: 'Solo gestos y sonidos, sin hablar.' }
   ];
 
   var config = {
@@ -957,7 +955,6 @@
   }
 
   // ---------- phase intro ----------
-  var phaseIntroIcon = document.getElementById('phase-intro-icon');
   var phaseIntroTitle = document.getElementById('phase-intro-title');
   var phaseIntroRule = document.getElementById('phase-intro-rule');
   var phaseIntroScores = document.getElementById('phase-intro-scores');
@@ -967,8 +964,7 @@
   function showPhaseIntro(phaseIdx){
     state.phase = phaseIdx;
     var phase = PHASES[phaseIdx];
-    phaseIntroIcon.textContent = phase.icon;
-    phaseIntroTitle.textContent = phase.title;
+    phaseIntroTitle.textContent = phase.title + ': ' + phase.subtitle;
     phaseIntroRule.textContent = phase.rule;
     phaseIntroCardsValueEl.textContent = 'x' + state.matchNames.length;
     if (phaseIdx > 0){
@@ -1000,7 +996,6 @@
   var tuSkipBtn = document.getElementById('tu-skip-btn');
   var tuCorrectBtn = document.getElementById('tu-correct-btn');
   var turnEndEl = document.getElementById('turn-end');
-  var turnEndSubtitleEl = document.getElementById('turn-end-subtitle');
   var turnEndScoreboardEl = document.getElementById('turn-end-scoreboard');
   var turnEndWordsEl = document.getElementById('turn-end-words');
   var turnContinueBtn = document.getElementById('turn-continue-btn');
@@ -1024,6 +1019,7 @@
     turnTeamBadgeEl.textContent = TEAM_NAMES[teamIdx].toUpperCase();
     turnTeamBadgeEl.className = 'team-turn-badge team-color-' + teamIdx;
     turnPlayerNameEl.textContent = state.playerNames[actorIdx];
+    turnPlayerNameEl.style.color = TEAM_HEX[teamIdx];
 
     turnIntroEl.classList.remove('hidden');
     turnPlayEl.classList.add('hidden');
@@ -1143,8 +1139,6 @@
     tuTimerWrapEl.classList.add('time-up');
     playAlarmSound();
     turnEndEl.classList.remove('hidden');
-    turnEndSubtitleEl.textContent = state.playerNames[state.currentActorIdx] + ' jugó para ' + TEAM_NAMES[teamIdx] +
-      ' y acertó ' + state.turnCorrect + (state.turnCorrect === 1 ? ' carta.' : ' cartas.');
     turnEndWordsEl.innerHTML = state.turnWords.length ?
       state.turnWords.map(function(w){ return '<span class="tu-word-pill team-color-' + teamIdx + '">' + escapeHtml(w) + '</span>'; }).join('') :
       '<span class="count-info">Ninguna carta acertada.</span>';
