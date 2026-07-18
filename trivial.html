@@ -144,15 +144,50 @@
     font-size:0.9rem;
     letter-spacing:0.5px;
   }
-  .tv-turn-team-row{
+  /* ---- persistent team bar: every team's insignia progress, always visible on screen-game ---- */
+  .tv-team-bar{
+    position:sticky;
+    top:0;
+    z-index:5;
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 10px;
+    justify-content:center;
+    padding:10px 22px;
+    margin:-26px -22px 16px;
+    border-radius:24px 24px 0 0;
+    background:var(--glass);
+    border-bottom:1px solid var(--glass-border);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+  }
+  .tv-team-bar-item{
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+  .tv-team-bar-dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
+  .tv-team-bar-wedges{display:flex; gap:2px;}
+  .tv-team-bar-wedge{
+    width:16px;
+    height:16px;
+    border-radius:50%;
     display:flex;
     align-items:center;
     justify-content:center;
-    gap:10px;
-    margin:0 0 10px;
-    flex-wrap:wrap;
+    font-size:0.62rem;
+    line-height:1;
+    opacity:0.3;
+    filter:grayscale(1);
   }
-  .tv-turn-team-row .team-turn-badge{ margin:0; }
+  .tv-team-bar-wedge.won{opacity:1; filter:none;}
+
+  .wedge-won-msg{
+    text-align:center;
+    font-weight:700;
+    color:var(--accent2);
+    margin:0 0 10px;
+  }
 
   .tv-question{
     font-family:var(--font-display);
@@ -196,15 +231,6 @@
   }
   .tv-option.disabled{cursor:default; opacity:0.6;}
   .tv-option.disabled.correct, .tv-option.disabled.incorrect{opacity:1;}
-  .tv-result{
-    text-align:center;
-    font-family:var(--font-display);
-    font-weight:700;
-    font-size:1.1rem;
-    margin:16px 0 6px;
-  }
-  .tv-result.correct-text{color:var(--safe);}
-  .tv-result.incorrect-text{color:var(--danger);}
 
   .tv-wedge-tracker{
     display:flex;
@@ -263,7 +289,7 @@
   .tv-category-option:active{transform:scale(0.97);}
   .tv-category-option-icon{font-size:1.4rem; line-height:1;}
 
-  #screen-game .card.insignia-round{
+  #next-turn-modal.insignia-round{
     background:linear-gradient(160deg, rgba(242,201,76,0.28), var(--glass) 65%);
     border-color:#f2c94c;
     box-shadow:0 0 0 1px rgba(242,201,76,0.4), 0 8px 32px rgba(242,201,76,0.22);
@@ -380,6 +406,7 @@
   <!-- GAME SCREEN: team turn, question + options -->
   <div class="screen hidden" id="screen-game">
     <div class="card">
+      <div class="tv-team-bar" id="tv-team-bar"></div>
       <div class="setup-header">
         <div style="display:flex; align-items:center; gap:8px;">
           <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
@@ -388,32 +415,25 @@
         <div class="tv-questions-remaining" id="tv-round-indicator"><span class="tv-questions-icon">🎲</span><span id="tv-round-value">Ronda 1</span></div>
       </div>
 
-      <!-- TURN INTRO: gate before the category choice -->
-      <div id="turn-intro">
-        <div class="tv-turn-team-row">
-          <div class="team-turn-badge" id="turn-team-badge">ROJO</div>
-          <div class="tv-wedge-tracker" id="turn-wedge-tracker" style="margin:0;"></div>
-        </div>
-        <div class="player-name" id="turn-player-name">Nombre</div>
-        <p class="pass-hint">Elige una categoría para la siguiente pregunta.</p>
-        <button class="btn-main" id="turn-start-btn">Elegir categoría ▶</button>
-      </div>
-
-      <!-- CATEGORY CHOICE: pick one of 2 categories offered for this question -->
-      <div id="category-choice" class="hidden">
-        <div class="tv-wedge-banner hidden" id="wedge-banner">¡Ronda de insignia! Acierta y te llevas la categoría elegida.</div>
-        <p class="pass-hint">¿Sobre qué categoría queréis la pregunta?</p>
-        <div class="tv-category-options" id="category-options"></div>
-      </div>
-
       <!-- ACTIVE PLAY: question + options -->
       <div id="turn-play" class="hidden">
         <div class="tv-category-current" id="tv-category-current"></div>
         <div class="tv-question" id="tv-question">Pregunta</div>
         <div class="tv-options" id="tv-options"></div>
-        <div class="tv-result hidden" id="tv-result"></div>
         <button class="btn-main hidden" id="turn-continue-btn">Continuar</button>
       </div>
+    </div>
+  </div>
+
+  <!-- NEXT TURN MODAL: who's up next, with the category choice built right in -->
+  <div class="guide-modal-backdrop hidden" id="next-turn-modal-backdrop">
+    <div class="guide-modal" id="next-turn-modal" style="text-align:center;">
+      <div class="team-turn-badge" id="turn-team-badge">ROJO</div>
+      <div class="player-name" id="turn-player-name">Nombre</div>
+      <p class="wedge-won-msg hidden" id="wedge-won-msg"></p>
+      <div class="tv-wedge-banner hidden" id="wedge-banner">¡Ronda de insignia! Acierta y te llevas la categoría elegida.</div>
+      <p class="pass-hint">Selecciona una categoría</p>
+      <div class="tv-category-options" id="category-options"></div>
     </div>
   </div>
 
@@ -513,7 +533,8 @@
     isWedgeRound: false, // whether the CURRENT question is a wedge opportunity
     currentOptions: [], // [{ text, isCorrect }], shuffled for display
     answered: false,
-    winnerTeamIdx: null // set once a team completes all wedges
+    winnerTeamIdx: null, // set once a team completes all wedges
+    wedgeWonMsg: null // pending "you won an insignia" message, shown on the next-turn modal
   };
 
   var screenSetup = document.getElementById('screen-setup');
@@ -850,21 +871,19 @@
 
   // ---------- game screen ----------
   var tvRoundValueEl = document.getElementById('tv-round-value');
-  var turnIntroEl = document.getElementById('turn-intro');
+  var tvTeamBarEl = document.getElementById('tv-team-bar');
   var turnTeamBadgeEl = document.getElementById('turn-team-badge');
   var turnPlayerNameEl = document.getElementById('turn-player-name');
-  var turnWedgeTrackerEl = document.getElementById('turn-wedge-tracker');
-  var turnStartBtn = document.getElementById('turn-start-btn');
-  var categoryChoiceEl = document.getElementById('category-choice');
+  var nextTurnModalBackdrop = document.getElementById('next-turn-modal-backdrop');
+  var nextTurnModalBox = document.getElementById('next-turn-modal');
+  var wedgeWonMsgEl = document.getElementById('wedge-won-msg');
   var wedgeBannerEl = document.getElementById('wedge-banner');
   var categoryOptionsEl = document.getElementById('category-options');
   var turnPlayEl = document.getElementById('turn-play');
   var tvCategoryCurrentEl = document.getElementById('tv-category-current');
   var tvQuestionEl = document.getElementById('tv-question');
   var tvOptionsEl = document.getElementById('tv-options');
-  var tvResultEl = document.getElementById('tv-result');
   var turnContinueBtn = document.getElementById('turn-continue-btn');
-  var gameCardEl = screenGame.querySelector('.card');
 
   function randomInt(min, max){
     return min + Math.floor(Math.random() * (max - min + 1));
@@ -874,6 +893,21 @@
     container.innerHTML = CATEGORIES.map(function(c){
       var won = team.wedges.indexOf(c.id) !== -1;
       return wedgeSpanHtml(c, won);
+    }).join('');
+  }
+
+  // every team's insignia progress, always visible on screen-game
+  function renderTeamBar(){
+    tvTeamBarEl.innerHTML = state.teams.map(function(team, t){
+      var wedgesHtml = CATEGORIES.map(function(c){
+        var won = team.wedges.indexOf(c.id) !== -1;
+        var style = won ? ' style="background:' + categoryColor(c.id) + ';"' : '';
+        return '<span class="tv-team-bar-wedge' + (won ? ' won' : '') + '"' + style + ' title="' + escapeHtml(c.nombre) + '">' + c.icono + '</span>';
+      }).join('');
+      return '<div class="tv-team-bar-item">' +
+        '<span class="tv-team-bar-dot team-color-' + t + '"></span>' +
+        '<span class="tv-team-bar-wedges">' + wedgesHtml + '</span>' +
+      '</div>';
     }).join('');
   }
 
@@ -895,12 +929,10 @@
     turnTeamBadgeEl.className = 'team-turn-badge team-color-' + teamIdx;
     turnPlayerNameEl.textContent = state.playerNames[actorIdx];
     turnPlayerNameEl.style.color = TEAM_HEX[teamIdx];
-    renderWedgeTracker(turnWedgeTrackerEl, team);
-    gameCardEl.classList.remove('insignia-round');
+    renderTeamBar();
 
-    turnIntroEl.classList.remove('hidden');
-    categoryChoiceEl.classList.add('hidden');
     turnPlayEl.classList.add('hidden');
+    showCategoryChoice();
   }
 
   function showCategoryChoice(){
@@ -923,8 +955,15 @@
     }
     state.currentCategoryChoices = choices.map(function(c){ return c.id; });
 
-    gameCardEl.classList.toggle('insignia-round', state.isWedgeRound);
+    nextTurnModalBox.classList.toggle('insignia-round', state.isWedgeRound);
     wedgeBannerEl.classList.toggle('hidden', !state.isWedgeRound);
+    if (state.wedgeWonMsg){
+      wedgeWonMsgEl.textContent = state.wedgeWonMsg;
+      wedgeWonMsgEl.classList.remove('hidden');
+      state.wedgeWonMsg = null;
+    } else {
+      wedgeWonMsgEl.classList.add('hidden');
+    }
     categoryOptionsEl.innerHTML = choices.map(function(c){
       var color = categoryColor(c.id);
       return '<button type="button" class="tv-category-option" data-category-id="' + c.id + '" style="border-color:' + color + '55; background:' + color + '22;">' +
@@ -933,11 +972,8 @@
       '</button>';
     }).join('');
 
-    turnIntroEl.classList.add('hidden');
-    categoryChoiceEl.classList.remove('hidden');
+    nextTurnModalBackdrop.classList.remove('hidden');
   }
-
-  turnStartBtn.addEventListener('click', showCategoryChoice);
 
   function showQuestion(categoryId){
     var category = categoryById(categoryId);
@@ -955,12 +991,9 @@
     tvOptionsEl.innerHTML = state.currentOptions.map(function(opt, i){
       return '<button type="button" class="tv-option" data-index="' + i + '">' + escapeHtml(opt.text) + '</button>';
     }).join('');
-    tvResultEl.classList.add('hidden');
-    tvResultEl.textContent = '';
     turnContinueBtn.classList.add('hidden');
     state.answered = false;
 
-    categoryChoiceEl.classList.add('hidden');
     turnPlayEl.classList.remove('hidden');
   }
 
@@ -968,6 +1001,7 @@
     var btn = e.target.closest('.tv-category-option');
     if (!btn) return;
     state.currentCategoryId = btn.getAttribute('data-category-id');
+    nextTurnModalBackdrop.classList.add('hidden');
     showQuestion(state.currentCategoryId);
   });
 
@@ -999,14 +1033,10 @@
       else if (i === idx) b.classList.add('incorrect');
     });
 
-    tvResultEl.classList.remove('hidden');
-    tvResultEl.className = 'tv-result ' + (picked.isCorrect ? 'correct-text' : 'incorrect-text');
-    if (wedgeWon){
-      var wonCategory = categoryById(state.currentCategoryId);
-      tvResultEl.textContent = '¡Correcto! Consigues la insignia de ' + wonCategory.nombre;
-    } else {
-      tvResultEl.textContent = picked.isCorrect ? '¡Correcto! Sigues jugando' : 'Incorrecto';
-    }
+    // the option colors already say correct/incorrect — only the wedge win needs
+    // a message of its own, and it's shown on the next-turn modal instead
+    state.wedgeWonMsg = wedgeWon ? '¡Ganaste la insignia de ' + categoryById(state.currentCategoryId).nombre + '!' : null;
+    if (wedgeWon) renderTeamBar();
 
     state.round++;
     if (state.isWedgeRound){
@@ -1014,7 +1044,7 @@
     }
     state.lastAnswerCorrect = picked.isCorrect;
 
-    turnContinueBtn.textContent = state.winnerTeamIdx !== null ? 'Ver resultado' : 'Continuar';
+    turnContinueBtn.textContent = state.winnerTeamIdx !== null ? 'Ver resultado' : 'Siguiente';
     turnContinueBtn.classList.remove('hidden');
   });
 
