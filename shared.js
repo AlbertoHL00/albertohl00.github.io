@@ -78,11 +78,14 @@ function buildRandomRoles(total, marked){
   return shuffle(roles);
 }
 
-/* generic dismissible modal: click trigger to open, click backdrop/close/Escape to close */
-function setupModal(triggerEl, backdropEl, closeEl){
+/* generic dismissible modal: click trigger(s) to open, click backdrop/close/Escape
+   to close. triggerEls can be a single element or a NodeList/array — the "ayuda"
+   button is repeated on every screen, all opening the same modal. */
+function setupModal(triggerEls, backdropEl, closeEl){
   function open(){ backdropEl.classList.remove('hidden'); }
   function close(){ backdropEl.classList.add('hidden'); }
-  triggerEl.addEventListener('click', open);
+  var triggers = triggerEls && typeof triggerEls.length === 'number' ? triggerEls : [triggerEls];
+  Array.prototype.forEach.call(triggers, function(t){ t.addEventListener('click', open); });
   closeEl.addEventListener('click', close);
   backdropEl.addEventListener('click', function(e){ if (e.target === backdropEl) close(); });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') close(); });
@@ -164,6 +167,52 @@ function initHomeExitConfirm(){
   });
 }
 initHomeExitConfirm();
+
+/* "back to setup" (back icon next to the home icon) needs the same exit-progress
+   confirmation as the home button, but returns to this game's own setup screen
+   instead of navigating away — so the actual reset logic (returnToSetup) is
+   supplied by each page's own script, only the confirm UI is shared here. */
+function initBackToSetupConfirm(returnToSetup){
+  var buttons = document.querySelectorAll('.back-to-setup-btn');
+  if (!buttons.length) return;
+
+  var backdrop = null;
+
+  function buildModal(){
+    if (backdrop) return;
+    backdrop = document.createElement('div');
+    backdrop.className = 'guide-modal-backdrop hidden';
+    backdrop.id = 'setup-confirm-backdrop';
+    backdrop.innerHTML =
+      '<div class="guide-modal">' +
+        '<h2>¿Volver a configuración?</h2>' +
+        '<p>Se perderá el progreso de la partida actual.</p>' +
+        '<button type="button" class="btn-main" id="setup-confirm-cancel-btn" style="margin-top:14px;">Seguir jugando</button>' +
+        '<button type="button" class="night-nav-btn" id="setup-confirm-exit-btn" style="width:100%; margin-top:10px;">Volver a configuración</button>' +
+      '</div>';
+    document.body.appendChild(backdrop);
+    document.getElementById('setup-confirm-cancel-btn').addEventListener('click', function(){
+      backdrop.classList.add('hidden');
+    });
+    document.getElementById('setup-confirm-exit-btn').addEventListener('click', function(){
+      backdrop.classList.add('hidden');
+      returnToSetup();
+    });
+    backdrop.addEventListener('click', function(e){
+      if (e.target === backdrop) backdrop.classList.add('hidden');
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') backdrop.classList.add('hidden');
+    });
+  }
+
+  Array.prototype.forEach.call(buttons, function(btn){
+    btn.addEventListener('click', function(){
+      buildModal();
+      backdrop.classList.remove('hidden');
+    });
+  });
+}
 
 /* tap-to-reveal card: covers reveal-content with reveal-btn until tapped.
    showFor(isAlarm) re-covers instantly (no flash) and arms the optional

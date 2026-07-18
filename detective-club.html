@@ -147,8 +147,8 @@
   <div class="screen" id="screen-setup">
     <div class="card">
       <div class="setup-header">
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
-        <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
       </div>
       <h1>DETECTIVE CLUB</h1>
       <p class="subtitle">Necesitas una baraja de cartas Dixit físicas para jugar</p>
@@ -224,7 +224,11 @@
   <div class="screen hidden" id="screen-word">
     <div class="card">
       <div class="setup-header">
-        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+        <div class="header-actions">
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        </div>
       </div>
       <div class="player-badge" id="word-badge">TU TURNO</div>
       <div class="player-name" id="word-name">1</div>
@@ -241,7 +245,11 @@
   <div class="screen hidden" id="screen-reveal">
     <div class="card">
       <div class="setup-header">
-        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+        <div class="header-actions">
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        </div>
       </div>
       <p class="subtitle">Toca tu nombre para ver tu carta. Nadie más debe mirar.</p>
 
@@ -269,7 +277,11 @@
   <div class="screen hidden" id="screen-vote">
     <div class="card">
       <div class="setup-header">
-        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+        <div class="header-actions">
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        </div>
       </div>
       <div id="vote-reveal-stage">
         <p class="subtitle">Debatid en voz alta y votad a mano alzada</p>
@@ -291,7 +303,11 @@
   <div class="screen hidden" id="screen-result">
     <div class="card">
       <div class="setup-header">
-        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+        <div class="header-actions">
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        </div>
       </div>
       <div class="result-icon" id="result-icon">🕵️</div>
       <div class="result-title" id="result-title"></div>
@@ -310,7 +326,11 @@
   <div class="screen hidden" id="screen-final">
     <div class="card">
       <div class="setup-header">
-        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+        <div class="header-actions">
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        </div>
       </div>
       <div class="end-icon">🏆</div>
       <h1 style="font-size:1.6rem;">PARTIDA TERMINADA</h1>
@@ -769,10 +789,13 @@
 
   // ---------- how-to-play guide ----------
   setupModal(
-    document.getElementById('guide-btn'),
+    document.querySelectorAll('.ayuda-trigger'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
   );
+
+  // ---------- back to setup ----------
+  initBackToSetupConfirm(enterSetup);
 
   // ---------- init ----------
   renderRows();

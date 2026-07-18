@@ -297,6 +297,13 @@ input[type="text"]::placeholder{color:rgba(244,242,255,0.35);}
   margin-bottom:10px;
 }
 .setup-header .back-btn{margin-bottom:0;}
+/* ---- groups "volver a configuración" + "inicio" together on the header's
+   right side, opposite the ayuda button on the left ---- */
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
 .guide-btn{
   width:32px;
   height:32px;

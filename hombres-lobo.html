@@ -600,8 +600,8 @@
   <div class="screen" id="screen-setup">
     <div class="card">
       <div class="setup-header">
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
-        <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
       </div>
       <h1>HOMBRES LOBO</h1>
 
@@ -722,7 +722,11 @@
   <div class="screen hidden" id="screen-game">
     <div class="card">
       <div class="setup-header">
-        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+        <div class="header-actions">
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        </div>
       </div>
       <p class="subtitle">Toca tu nombre para ver tu carta. Nadie más debe mirar.</p>
 
@@ -754,6 +758,8 @@
     <div class="card">
       <div class="setup-header">
         <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
           <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
           <span class="back-btn" style="cursor:default; margin-bottom:0;" id="day-night-status">🌙 Noche</span>
         </div>
@@ -844,6 +850,8 @@
     <div class="card">
       <div class="setup-header">
         <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
           <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
           <span class="back-btn" style="cursor:default;">📋 Sin guía</span>
         </div>
@@ -1342,10 +1350,13 @@
 
   // ---------- how-to-play guide ----------
   setupModal(
-    document.getElementById('guide-btn'),
+    document.querySelectorAll('.ayuda-trigger'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
   );
+
+  // ---------- back to setup ----------
+  initBackToSetupConfirm(function(){ stopVoteTimer(); enterSetup(); });
 
   // ---------- role picker tip (explains the long-press-for-details gesture) ----------
   setupModal(
