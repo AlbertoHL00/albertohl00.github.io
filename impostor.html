@@ -189,8 +189,8 @@
   <div class="screen" id="screen-setup">
     <div class="card">
       <div class="setup-header">
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
-        <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
       </div>
       <h1>IMPOSTOR</h1>
 
@@ -311,7 +311,11 @@
   <div class="screen hidden" id="screen-game">
     <div class="card">
       <div class="setup-header">
-        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+        <div class="header-actions">
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        </div>
       </div>
       <p class="subtitle">Toca tu nombre para ver tu rol. Nadie más debe mirar.</p>
 
@@ -324,7 +328,7 @@
   <!-- role card modal, opened from the roster above -->
   <div class="guide-modal-backdrop hidden" id="reveal-modal-backdrop">
     <div class="guide-modal reveal-modal">
-      <button type="button" class="guide-modal-close" id="reveal-modal-close" disabled>✕</button>
+      <button type="button" class="hidden" id="reveal-modal-close" disabled></button>
       <div class="reveal-wrap" id="reveal-wrap">
         <div class="reveal-content" id="reveal-content"></div>
         <button type="button" class="reveal-btn" id="reveal-btn">
@@ -336,14 +340,26 @@
     </div>
   </div>
 
+  <!-- STARTING PLAYER MODAL: independent from the role-reveal modal above, shown
+       once at the start of the first debate of the match -->
+  <div class="guide-modal-backdrop hidden" id="start-player-modal-backdrop">
+    <div class="guide-modal" style="text-align:center;">
+      <p class="start-player-line" id="start-player-line" style="margin:0 0 14px;"></p>
+      <p class="subtitle" style="margin:0;">Toca la pantalla para continuar</p>
+    </div>
+  </div>
+
   <!-- DEBATE / VOTE SCREEN -->
   <div class="screen hidden" id="screen-debate">
     <div class="card">
       <div class="setup-header">
-        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+        <div class="header-actions">
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        </div>
       </div>
       <h1 class="debate-title" style="font-size:1.6rem;" id="debate-title">A DEBATIR</h1>
-      <p class="start-player-line" id="start-player-line"></p>
 
       <div id="debate-timer-wrap" class="hidden">
         <div class="debate-timer" id="debate-timer">
@@ -879,11 +895,17 @@
     openRevealModal(parseInt(row.getAttribute('data-index'), 10));
   });
 
-  // once revealed, tapping anywhere on the modal (not just the small ✕) closes it —
-  // but not the tap on "Revelar" itself, which bubbles up from revealBtn on the very
-  // click that just set .revealed, and would otherwise close the modal before it's seen
+  // before reveal: tapping anywhere on the modal reveals the word, not just the
+  // "Revelar" button itself (revealBtn already covers the whole card via its own
+  // inset:0, so this just extends that same tap target to the full screen).
+  // After reveal: tapping anywhere closes it — but not the tap on "Revelar" itself,
+  // which bubbles up from revealBtn on the very click that just set .revealed, and
+  // would otherwise close the modal before it's seen.
   revealModalBackdrop.addEventListener('click', function(e){
-    if (!revealWrap.classList.contains('revealed')) return;
+    if (!revealWrap.classList.contains('revealed')){
+      if (!revealBtn.contains(e.target)) revealBtn.click();
+      return;
+    }
     if (revealBtn.contains(e.target)) return;
     revealModalBackdrop.classList.add('hidden');
     state.viewed[currentRevealIdx] = true;
@@ -904,6 +926,10 @@
 
   // ---------- debate + vote ----------
   var startPlayerLineEl = document.getElementById('start-player-line');
+  var startPlayerModalBackdrop = document.getElementById('start-player-modal-backdrop');
+  startPlayerModalBackdrop.addEventListener('click', function(){
+    startPlayerModalBackdrop.classList.add('hidden');
+  });
   var debateTimerWrap = document.getElementById('debate-timer-wrap');
   var debateTimerMm = document.getElementById('debate-timer-mm');
   var debateTimerSs = document.getElementById('debate-timer-ss');
@@ -995,6 +1021,7 @@
     var alive = aliveIndexes();
     var starter = alive[Math.floor(Math.random() * alive.length)];
     startPlayerLineEl.innerHTML = 'Empieza a hablar: <strong>' + escapeHtml(state.playerNames[starter]) + '</strong>';
+    startPlayerModalBackdrop.classList.remove('hidden');
   }
 
   function startDebatePhase(){
@@ -1009,8 +1036,6 @@
     if (isFirstDebate){
       pickStartingPlayer();
       isFirstDebate = false;
-    } else {
-      startPlayerLineEl.textContent = '';
     }
     renderVotePlayers();
     voteSection.classList.remove('hidden');
@@ -1145,10 +1170,13 @@
 
   // ---------- how-to-play guide ----------
   setupModal(
-    document.getElementById('guide-btn'),
+    document.querySelectorAll('.ayuda-trigger'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
   );
+
+  // ---------- back to setup ----------
+  initBackToSetupConfirm(function(){ enterSetup(false); });
 
   // ---------- init ----------
   setSubMode(config.subMode);
