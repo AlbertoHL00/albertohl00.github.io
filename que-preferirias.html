@@ -105,15 +105,17 @@
 
   var OPTIONS = null;
   // smaller offline fallback (used only if que-preferirias.json can't be fetched, e.g. file:// testing)
+  // "nivel" is how desirable the option is (1 = costoso, 4 = muy deseable) — pairs are
+  // only drawn from the same nivel, so a dream power never gets matched against a sacrifice
   var OPTIONS_FALLBACK = [
-    "Poder volar",
-    "Ser invisible a voluntad",
-    "Leer la mente de los demás",
-    "Tener memoria fotográfica",
-    "No necesitar dormir nunca",
-    "Ser millonario pero no poder contárselo a nadie",
-    "Vivir 200 años con buena salud",
-    "No volver a probar el alcohol nunca más"
+    { "texto": "Poder volar", "nivel": 4 },
+    { "texto": "Ser invisible a voluntad", "nivel": 4 },
+    { "texto": "Leer la mente de los demás", "nivel": 3 },
+    { "texto": "Tener memoria fotográfica", "nivel": 4 },
+    { "texto": "No necesitar dormir nunca", "nivel": 3 },
+    { "texto": "Ser millonario pero no poder contárselo a nadie", "nivel": 3 },
+    { "texto": "Vivir 200 años con buena salud", "nivel": 4 },
+    { "texto": "No volver a probar el alcohol nunca más", "nivel": 1 }
   ];
 
   function loadOptions(){
@@ -140,10 +142,16 @@
   var optionBEl = document.getElementById('qpref-option-b');
   var nextBtn = document.getElementById('next-btn');
 
-  // picks 2 distinct options at random from the whole pool — with 70+ options
-  // that's thousands of possible pairings, so the same combo almost never repeats
+  // picks 2 distinct options at random, but only from the same nivel (desirability
+  // tier) — so a round never mixes a dream power with a costly sacrifice. With 70+
+  // options spread across 4 niveles there's still plenty of pairings within each.
   function pickPair(){
-    var pool = OPTIONS.slice();
+    var byLevel = {};
+    OPTIONS.forEach(function(o){
+      (byLevel[o.nivel] = byLevel[o.nivel] || []).push(o.texto);
+    });
+    var levels = Object.keys(byLevel).filter(function(lvl){ return byLevel[lvl].length >= 2; });
+    var pool = byLevel[levels[Math.floor(Math.random() * levels.length)]].slice();
     var idxA = Math.floor(Math.random() * pool.length);
     var optionA = pool[idxA];
     pool.splice(idxA, 1);
