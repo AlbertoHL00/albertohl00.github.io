@@ -176,6 +176,12 @@
     filter:grayscale(1) brightness(0.35);
   }
   .tv-team-bar-wedge.won{opacity:1; filter:none;}
+  .tv-team-bar-wedge.wedge-pop{animation:wedgePop 0.6s ease;}
+  @keyframes wedgePop{
+    0%{ transform:scale(0.3); box-shadow:0 0 0 0 rgba(255,255,255,0.9); }
+    50%{ transform:scale(1.4); box-shadow:0 0 12px 4px rgba(255,255,255,0.75); }
+    100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(255,255,255,0); }
+  }
 
   .wedge-won-msg{
     text-align:center;
@@ -183,6 +189,7 @@
     color:var(--accent2);
     margin:0 0 10px;
   }
+  .wedge-won-msg.pop{animation:tada 0.7s ease;}
 
   .tv-question{
     font-family:var(--font-display);
@@ -336,8 +343,8 @@
   <div class="screen" id="screen-setup">
     <div class="card">
       <div class="setup-header">
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
         <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
-        <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
       </div>
       <h1>TRIVIAL PURSUIT</h1>
 
@@ -404,6 +411,8 @@
       <div class="tv-team-bar" id="tv-team-bar"></div>
       <div class="setup-header">
         <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
           <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
           <span class="back-btn" style="cursor:default;">TRIVIAL PURSUIT</span>
         </div>
@@ -435,7 +444,11 @@
   <div class="screen hidden" id="screen-end">
     <div class="card">
       <div class="setup-header">
-        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn ayuda-trigger" aria-label="Ayuda">?</button>
+        <div class="header-actions">
+          <button type="button" class="guide-btn back-to-setup-btn" aria-label="Volver a configuración"><span class="back-icon"></span></button>
+          <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        </div>
       </div>
       <div class="end-icon">🏆</div>
       <h1 style="font-size:1.6rem;" id="end-title">RESULTADOS</h1>
@@ -518,8 +531,7 @@
     playerTeams: [],
     teams: [], // { score, memberIdxs, nextMemberPointer, wedges: [categoryId, ...] }
     categoryQueues: {}, // categoryId -> shuffled queue of question objects, refilled when emptied
-    round: 0, // questions resolved so far this match
-    nextWedgeRound: 0, // round number (1-based) at which the next wedge opportunity happens
+    round: 0, // questions resolved so far this match (safety cap only, see MAX_ROUNDS)
     turnTeamPointer: 0,
     currentActorIdx: null,
     currentCategoryChoices: [], // [categoryId, categoryId] offered this question
@@ -889,13 +901,16 @@
     }).join('');
   }
 
-  // every team's insignia progress, always visible on screen-game
-  function renderTeamBar(){
+  // every team's insignia progress, always visible on screen-game.
+  // justWonTeamIdx/justWonCategoryId (only set right after a team earns a badge)
+  // mark that one wedge with a pop animation — every other render leaves it out.
+  function renderTeamBar(justWonTeamIdx, justWonCategoryId){
     tvTeamBarEl.innerHTML = state.teams.map(function(team, t){
       var wedgesHtml = CATEGORIES.map(function(c){
         var won = team.wedges.indexOf(c.id) !== -1;
+        var justWon = won && t === justWonTeamIdx && c.id === justWonCategoryId;
         var style = won ? ' style="background:' + categoryColor(c.id) + ';"' : '';
-        return '<span class="tv-team-bar-wedge' + (won ? ' won' : '') + '"' + style + ' title="' + escapeHtml(c.nombre) + '">' + c.icono + '</span>';
+        return '<span class="tv-team-bar-wedge' + (won ? ' won' : '') + (justWon ? ' wedge-pop' : '') + '"' + style + ' title="' + escapeHtml(c.nombre) + '">' + c.icono + '</span>';
       }).join('');
       return '<div class="tv-team-bar-item team-color-' + t + '">' +
         '<span class="tv-team-bar-wedges">' + wedgesHtml + '</span>' +
@@ -928,7 +943,7 @@
 
   function showCategoryChoice(){
     var team = state.teams[state.turnTeamPointer];
-    state.isWedgeRound = (state.round + 1) === state.nextWedgeRound;
+    state.isWedgeRound = (team.turnsPlayed + 1) === team.nextWedgeTurn;
 
     var pool = CATEGORIES.slice();
     shuffle(pool);
@@ -951,9 +966,11 @@
     if (state.wedgeWonMsg){
       wedgeWonMsgEl.textContent = state.wedgeWonMsg;
       wedgeWonMsgEl.classList.remove('hidden');
+      wedgeWonMsgEl.classList.add('pop');
       state.wedgeWonMsg = null;
     } else {
       wedgeWonMsgEl.classList.add('hidden');
+      wedgeWonMsgEl.classList.remove('pop');
     }
     categoryOptionsEl.innerHTML = choices.map(function(c){
       var color = categoryColor(c.id);
@@ -1027,11 +1044,12 @@
     // the option colors already say correct/incorrect — only the wedge win needs
     // a message of its own, and it's shown on the next-turn modal instead
     state.wedgeWonMsg = wedgeWon ? '¡Ganaste la insignia de ' + categoryById(state.currentCategoryId).nombre + '!' : null;
-    if (wedgeWon) renderTeamBar();
+    if (wedgeWon) renderTeamBar(teamIdx, state.currentCategoryId);
 
     state.round++;
+    team.turnsPlayed++;
     if (state.isWedgeRound){
-      state.nextWedgeRound = state.round + randomInt(MIN_WEDGE_GAP, MAX_WEDGE_GAP);
+      team.nextWedgeTurn = team.turnsPlayed + randomInt(MIN_WEDGE_GAP, MAX_WEDGE_GAP);
     }
     state.lastAnswerCorrect = picked.isCorrect;
 
@@ -1090,13 +1108,15 @@
       var memberIdxs = [];
       state.playerTeams.forEach(function(teamIdx, idx){ if (teamIdx === t) memberIdxs.push(idx); });
       shuffle(memberIdxs); // who within the team goes first is random too
-      state.teams.push({ score: 0, memberIdxs: memberIdxs, nextMemberPointer: 0, wedges: [] });
+      state.teams.push({
+        score: 0, memberIdxs: memberIdxs, nextMemberPointer: 0, wedges: [],
+        turnsPlayed: 0, nextWedgeTurn: randomInt(MIN_WEDGE_GAP, MAX_WEDGE_GAP) // own wedge cadence, independent per team
+      });
     }
     state.turnTeamPointer = Math.floor(Math.random() * state.teams.length); // random starting team
 
     state.categoryQueues = {};
     state.round = 0;
-    state.nextWedgeRound = randomInt(MIN_WEDGE_GAP, MAX_WEDGE_GAP);
     state.winnerTeamIdx = null;
 
     switchScreen(screenGame);
@@ -1105,10 +1125,13 @@
 
   // ---------- how-to-play guide ----------
   setupModal(
-    document.getElementById('guide-btn'),
+    document.querySelectorAll('.ayuda-trigger'),
     document.getElementById('guide-modal-backdrop'),
     document.getElementById('guide-modal-close')
   );
+
+  // ---------- back to setup ----------
+  initBackToSetupConfirm(enterSetup);
 
   // ---------- init ----------
   autoBalanceAllTeams();
