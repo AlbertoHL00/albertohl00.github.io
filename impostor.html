@@ -879,9 +879,12 @@
     openRevealModal(parseInt(row.getAttribute('data-index'), 10));
   });
 
-  // once revealed, tapping anywhere on the modal (not just the small ✕) closes it
-  revealModalBackdrop.addEventListener('click', function(){
+  // once revealed, tapping anywhere on the modal (not just the small ✕) closes it —
+  // but not the tap on "Revelar" itself, which bubbles up from revealBtn on the very
+  // click that just set .revealed, and would otherwise close the modal before it's seen
+  revealModalBackdrop.addEventListener('click', function(e){
     if (!revealWrap.classList.contains('revealed')) return;
+    if (revealBtn.contains(e.target)) return;
     revealModalBackdrop.classList.add('hidden');
     state.viewed[currentRevealIdx] = true;
     renderRevealRoster();
