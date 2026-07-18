@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<script src="analytics.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Patata Caliente · Game Hub</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="78" font-size="72" text-anchor="middle">%F0%9F%92%A3</text></svg>'>
+<link rel="stylesheet" href="shared.css">
+<style>
+  :root{
+    --accent:#d9502f;
+    --accent2:#f5936a;
+    --reveal-b:#f5936a;
+  }
+  html,body{
+    /* flat solid fill — a multi-layer gradient here used to leave gaps of
+       the raw background color showing on some viewports/scroll ranges */
+    background-color:var(--bg2);
+  }
+
+  .pc-theme{
+    text-align:center;
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:1.7rem;
+    line-height:1.35;
+    margin:6px 0 4px;
+    max-height:30vh;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    word-break:break-word;
+  }
+  .pc-bomb-icon{
+    text-align:center;
+    font-size:4rem;
+    line-height:1;
+    margin:14px 0 22px;
+    filter:drop-shadow(0 4px 14px rgba(0,0,0,0.4));
+    animation:pcBombIdle 2s ease-in-out infinite;
+  }
+  @keyframes pcBombIdle{
+    0%, 100%{ transform:scale(1); }
+    50%{ transform:scale(1.06); }
+  }
+  .pc-bomb-icon.armed{
+    animation:pcBombArmed 0.5s ease-in-out infinite;
+  }
+  @keyframes pcBombArmed{
+    0%, 100%{ transform:scale(1); filter:drop-shadow(0 4px 14px rgba(217,80,47,0.35)); }
+    50%{ transform:scale(1.16); filter:drop-shadow(0 4px 26px rgba(217,80,47,0.85)); }
+  }
+  #pc-boom{
+    text-align:center;
+    animation:pcShake 0.5s ease;
+  }
+  #pc-boom .end-icon{font-size:4.6rem;}
+  @keyframes pcShake{
+    0%, 100%{ transform:translateX(0); }
+    20%{ transform:translateX(-10px); }
+    40%{ transform:translateX(10px); }
+    60%{ transform:translateX(-6px); }
+    80%{ transform:translateX(6px); }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SETUP: no players/teams — just categories and how long the fuse can run -->
+  <div class="screen" id="screen-setup">
+    <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+        <button type="button" class="guide-btn" id="guide-btn" aria-label="Cómo se juega">?</button>
+      </div>
+      <h1>PATATA CALIENTE</h1>
+
+      <label><span class="label-icon">🏷️</span>Categorías</label>
+      <button type="button" class="chip-toggle-all" id="category-toggle-all-btn">Seleccionar todas</button>
+      <div class="chip-list" id="category-list"></div>
+
+      <label><span class="label-icon">⏱️</span>Mecha mínima</label>
+      <div class="stepper">
+        <button type="button" id="fuse-min-minus">−</button>
+        <div class="value" id="fuse-min-value">20s</div>
+        <button type="button" id="fuse-min-plus">+</button>
+      </div>
+
+      <label><span class="label-icon">⏱️</span>Mecha máxima</label>
+      <div class="stepper">
+        <button type="button" id="fuse-max-minus">−</button>
+        <div class="value" id="fuse-max-value">45s</div>
+        <button type="button" id="fuse-max-plus">+</button>
+      </div>
+
+      <div class="error-msg" id="setup-error"></div>
+
+      <button class="btn-main" id="start-btn">Iniciar partida</button>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY GUIDE -->
+  <div class="guide-modal-backdrop hidden" id="guide-modal-backdrop">
+    <div class="guide-modal">
+      <button type="button" class="guide-modal-close" id="guide-modal-close">✕</button>
+      <h2>Cómo se juega</h2>
+
+      <h3>Objetivo</h3>
+      <p>No hace falta configurar jugadores ni equipos: la app solo controla la bomba. Aparece un tema; entre todos decís en voz alta palabras relacionadas mientras os pasáis el móvil como una patata caliente.</p>
+
+      <h3>Usar la app</h3>
+      <ol>
+        <li>Elige las categorías de temas que queráis usar y el rango de duración de la mecha.</li>
+        <li>Pulsa "Encender la mecha" cuando estéis listos para empezar a pasaros el móvil.</li>
+        <li>El pitido se acelera al azar sin avisar cuánto queda — nadie sabe cuándo va a explotar.</li>
+        <li>Cuando explota, quien tenga el móvil en la mano en ese momento pierde esa ronda.</li>
+        <li>Pulsa "Siguiente tema" para seguir jugando con un tema nuevo. Los temas no se repiten hasta agotar todos los de las categorías elegidas.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN: theme + bomb fuse, then explosion -->
+  <div class="screen hidden" id="screen-game">
+    <div class="card">
+      <div class="setup-header">
+        <a href="index.html" class="guide-btn" aria-label="Inicio"><span class="home-icon"></span></a>
+      </div>
+
+      <div id="pc-round">
+        <div class="pc-theme" id="pc-theme"></div>
+        <p class="pass-hint">Decid en voz alta palabras relacionadas y pasaos el móvil.</p>
+        <div class="pc-bomb-icon" id="pc-bomb-icon">💣</div>
+        <button class="btn-main" id="start-fuse-btn">Encender la mecha</button>
+      </div>
+
+      <div id="pc-boom" class="hidden">
+        <div class="end-icon">💥</div>
+        <h1 style="font-size:1.7rem;">¡BOOM!</h1>
+        <p class="subtitle">Quien tenga el móvil en la mano… ¡pierde esta ronda!</p>
+        <button class="btn-main" id="next-btn">Siguiente tema ▶</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="shared.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var MIN_FUSE = 10, MAX_FUSE = 90, FUSE_STEP = 5;
+  var MIN_BEEP_INTERVAL = 130, MAX_BEEP_INTERVAL = 850; // ms between beeps: calm start, frantic near the end
+
+  var config = {
+    selectedCategories: [],
+    fuseMin: 20,
+    fuseMax: 45
+  };
+
+  var CATEGORIES = null;
+  var CATEGORIES_FALLBACK = [
+    { "id": "comida", "nombre": "Comida", "icono": "🍕", "temas": ["Frutas", "Verduras", "Postres", "Comida rápida", "Bebidas sin alcohol", "Comida picante"] },
+    { "id": "animales", "nombre": "Animales", "icono": "🦁", "temas": ["Animales de granja", "Animales marinos", "Aves", "Insectos", "Mascotas", "Dinosaurios"] }
+  ];
+
+  function loadCategories(){
+    return fetch('patata-caliente.json')
+      .then(function(r){ if (!r.ok) throw new Error('bad response'); return r.json(); })
+      .then(function(data){ CATEGORIES = data.categorias; })
+      .catch(function(){ CATEGORIES = CATEGORIES_FALLBACK; })
+      .then(function(){
+        if (config.selectedCategories.length === 0){
+          config.selectedCategories = CATEGORIES.map(function(c){ return c.id; });
+        }
+        renderCategoryList();
+        validateSetup();
+      });
+  }
+
+  function randomInt(min, max){
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+
+  var state = {
+    deck: [],
+    index: 0,
+    audioCtx: null,
+    beepTimeout: null,
+    explodeTimeout: null,
+    fuseStart: 0,
+    fuseDuration: 0
+  };
+
+  var screenSetup = document.getElementById('screen-setup');
+  var screenGame = document.getElementById('screen-game');
+  var ALL_SCREENS = [screenSetup, screenGame];
+
+  function switchScreen(target){
+    ALL_SCREENS.forEach(function(s){ s.classList.add('hidden'); });
+    target.classList.remove('hidden');
+  }
+
+  // ---------- categories (multiple choice) ----------
+  var categoryListEl = document.getElementById('category-list');
+  var categoryToggleAllBtn = document.getElementById('category-toggle-all-btn');
+  var setupError = document.getElementById('setup-error');
+  var startBtn = document.getElementById('start-btn');
+
+  function renderToggleAllLabel(){
+    if (!CATEGORIES){ categoryToggleAllBtn.textContent = 'Seleccionar todas'; return; }
+    categoryToggleAllBtn.textContent = config.selectedCategories.length === CATEGORIES.length ? 'Quitar todas' : 'Seleccionar todas';
+  }
+
+  function renderCategoryList(){
+    if (!CATEGORIES || CATEGORIES.length === 0){
+      categoryListEl.innerHTML = '<p class="chip-loading">Cargando categorías…</p>';
+      renderToggleAllLabel();
+      return;
+    }
+    categoryListEl.innerHTML = CATEGORIES.map(function(c){
+      var selected = config.selectedCategories.indexOf(c.id) !== -1;
+      return '<button type="button" class="chip' + (selected ? ' selected' : '') + '" data-category-id="' + c.id + '">' +
+        '<span class="chip-icon">' + escapeHtml(c.icono || '📦') + '</span>' +
+        '<span class="chip-name">' + escapeHtml(c.nombre) + '</span>' +
+      '</button>';
+    }).join('');
+    renderToggleAllLabel();
+  }
+
+  categoryListEl.addEventListener('click', function(e){
+    var chip = e.target.closest('.chip');
+    if (!chip) return;
+    var id = chip.getAttribute('data-category-id');
+    var idx = config.selectedCategories.indexOf(id);
+    if (idx === -1) config.selectedCategories.push(id);
+    else config.selectedCategories.splice(idx, 1);
+    renderCategoryList();
+    validateSetup();
+  });
+
+  categoryToggleAllBtn.addEventListener('click', function(){
+    if (!CATEGORIES) return;
+    if (config.selectedCategories.length === CATEGORIES.length){
+      config.selectedCategories = [];
+    } else {
+      config.selectedCategories = CATEGORIES.map(function(c){ return c.id; });
+    }
+    renderCategoryList();
+    validateSetup();
+  });
+
+  function buildDeck(){
+    var pool = [];
+    CATEGORIES.forEach(function(c){
+      if (config.selectedCategories.indexOf(c.id) !== -1) pool = pool.concat(c.temas);
+    });
+    return shuffle(pool.slice());
+  }
+
+  function validateSetup(){
+    var msgs = [];
+    if (!CATEGORIES) msgs.push("Cargando categorías…");
+    else if (config.selectedCategories.length === 0) msgs.push("Selecciona al menos una categoría.");
+    setupError.textContent = msgs[0] || "";
+    startBtn.disabled = msgs.length !== 0;
+    return msgs.length === 0;
+  }
+
+  // ---------- fuse length (setup) ----------
+  var fuseMinValueEl = document.getElementById('fuse-min-value');
+  var fuseMaxValueEl = document.getElementById('fuse-max-value');
+
+  function renderFuseValues(){
+    fuseMinValueEl.textContent = config.fuseMin + 's';
+    fuseMaxValueEl.textContent = config.fuseMax + 's';
+  }
+  document.getElementById('fuse-min-minus').addEventListener('click', function(){
+    config.fuseMin = clamp(config.fuseMin - FUSE_STEP, MIN_FUSE, config.fuseMax);
+    renderFuseValues();
+    popValue(fuseMinValueEl);
+  });
+  document.getElementById('fuse-min-plus').addEventListener('click', function(){
+    config.fuseMin = clamp(config.fuseMin + FUSE_STEP, MIN_FUSE, config.fuseMax);
+    renderFuseValues();
+    popValue(fuseMinValueEl);
+  });
+  document.getElementById('fuse-max-minus').addEventListener('click', function(){
+    config.fuseMax = clamp(config.fuseMax - FUSE_STEP, config.fuseMin, MAX_FUSE);
+    renderFuseValues();
+    popValue(fuseMaxValueEl);
+  });
+  document.getElementById('fuse-max-plus').addEventListener('click', function(){
+    config.fuseMax = clamp(config.fuseMax + FUSE_STEP, config.fuseMin, MAX_FUSE);
+    renderFuseValues();
+    popValue(fuseMaxValueEl);
+  });
+  renderFuseValues();
+
+  // ---------- round screen: theme + bomb fuse ----------
+  var phraseEl = document.getElementById('pc-theme');
+  var pcRoundEl = document.getElementById('pc-round');
+  var pcBoomEl = document.getElementById('pc-boom');
+  var pcBombIconEl = document.getElementById('pc-bomb-icon');
+  var startFuseBtn = document.getElementById('start-fuse-btn');
+  var nextBtn = document.getElementById('next-btn');
+
+  function fitPhraseText(){
+    var maxSize = 1.7, minSize = 1, step = 0.05;
+    var size = maxSize;
+    phraseEl.style.fontSize = size + 'rem';
+    while (size > minSize && phraseEl.scrollHeight > phraseEl.clientHeight + 1){
+      size -= step;
+      phraseEl.style.fontSize = size + 'rem';
+    }
+  }
+
+  var phraseResizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(phraseResizeTimer);
+    phraseResizeTimer = setTimeout(fitPhraseText, 150);
+  });
+
+  function clearFuseTimers(){
+    if (state.beepTimeout){ clearTimeout(state.beepTimeout); state.beepTimeout = null; }
+    if (state.explodeTimeout){ clearTimeout(state.explodeTimeout); state.explodeTimeout = null; }
+  }
+
+  function resetRoundView(){
+    clearFuseTimers();
+    pcBombIconEl.classList.remove('armed');
+    startFuseBtn.disabled = false;
+    startFuseBtn.classList.remove('hidden');
+    pcRoundEl.classList.remove('hidden');
+    pcBoomEl.classList.add('hidden');
+  }
+
+  function showRound(i){
+    phraseEl.textContent = state.deck[i];
+    fitPhraseText();
+    resetRoundView();
+  }
+
+  // ---------- audio: bomb beep + explosion, synthesized (no audio files) ----------
+  function unlockAudio(){
+    if (!state.audioCtx){
+      try { state.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){ state.audioCtx = null; }
+    } else if (state.audioCtx.state === 'suspended'){
+      state.audioCtx.resume();
+    }
+  }
+
+  function playBeepSound(){
+    if (!state.audioCtx) return;
+    var now = state.audioCtx.currentTime;
+    var osc = state.audioCtx.createOscillator();
+    var gain = state.audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = 740;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.22, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+    osc.connect(gain).connect(state.audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.14);
+  }
+
+  function playExplosionSound(){
+    if (!state.audioCtx) return;
+    var ctx = state.audioCtx;
+    var now = ctx.currentTime;
+
+    // noise burst — the "crack"
+    var bufferSize = Math.floor(ctx.sampleRate * 0.5);
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++){ data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize); }
+    var noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    var noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = 'lowpass';
+    noiseFilter.frequency.setValueAtTime(1800, now);
+    noiseFilter.frequency.exponentialRampToValueAtTime(120, now + 0.5);
+    var noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.5, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+    noise.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
+    noise.start(now);
+
+    // sub-bass thud — the "boom"
+    var osc = ctx.createOscillator();
+    var oscGain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(35, now + 0.4);
+    oscGain.gain.setValueAtTime(0.9, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+    osc.connect(oscGain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.6);
+  }
+
+  // ---------- fuse engine: hidden random duration, beep accelerates as it nears the end ----------
+  function scheduleBeep(){
+    var elapsed = Date.now() - state.fuseStart;
+    var frac = clamp(elapsed / state.fuseDuration, 0, 1);
+    playBeepSound();
+    var interval = MAX_BEEP_INTERVAL - (MAX_BEEP_INTERVAL - MIN_BEEP_INTERVAL) * frac;
+    state.beepTimeout = setTimeout(scheduleBeep, interval);
+  }
+
+  function explode(){
+    clearFuseTimers();
+    playExplosionSound();
+    pcRoundEl.classList.add('hidden');
+    pcBoomEl.classList.remove('hidden');
+  }
+
+  function startFuse(){
+    state.fuseDuration = randomInt(config.fuseMin, config.fuseMax) * 1000;
+    state.fuseStart = Date.now();
+    scheduleBeep();
+    state.explodeTimeout = setTimeout(explode, state.fuseDuration);
+  }
+
+  startFuseBtn.addEventListener('click', function(){
+    unlockAudio();
+    startFuseBtn.disabled = true;
+    startFuseBtn.classList.add('hidden');
+    pcBombIconEl.classList.add('armed');
+    startFuse();
+  });
+
+  nextBtn.addEventListener('click', function(){
+    state.index++;
+    if (state.index >= state.deck.length){
+      state.deck = buildDeck(); // reshuffle and keep going — the deck never runs out
+      state.index = 0;
+    }
+    showRound(state.index);
+  });
+
+  startBtn.addEventListener('click', function(){
+    if (!validateSetup()) return;
+
+    state.deck = buildDeck();
+    state.index = 0;
+
+    showRound(0);
+    switchScreen(screenGame);
+  });
+
+  // ---------- how-to-play guide ----------
+  setupModal(
+    document.getElementById('guide-btn'),
+    document.getElementById('guide-modal-backdrop'),
+    document.getElementById('guide-modal-close')
+  );
+
+  // ---------- init ----------
+  loadCategories();
+})();
+</script>
+</body>
+</html>

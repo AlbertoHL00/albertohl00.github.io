@@ -1,0 +1,48 @@
+{
+  "categorias": [
+    { "id": "comida", "nombre": "Comida", "icono": "🍕", "temas": [
+      "Frutas", "Verduras", "Postres", "Comida rápida", "Cosas que llevan queso", "Bebidas sin alcohol",
+      "Comida picante", "Desayunos", "Comida italiana", "Snacks salados", "Cosas que se comen con la mano",
+      "Platos típicos españoles"
+    ] },
+    { "id": "animales", "nombre": "Animales", "icono": "🦁", "temas": [
+      "Animales de granja", "Animales salvajes de África", "Animales marinos", "Aves", "Insectos",
+      "Animales que dan miedo", "Mascotas", "Dinosaurios", "Animales polares", "Animales venenosos",
+      "Animales que vuelan", "Animales gigantes"
+    ] },
+    { "id": "cine_series", "nombre": "Cine y series", "icono": "🎬", "temas": [
+      "Películas de terror", "Superhéroes", "Dibujos animados", "Villanos de película", "Películas de Disney",
+      "Series de humor", "Películas de acción", "Sagas de ciencia ficción", "Personajes de Star Wars",
+      "Series de misterio"
+    ] },
+    { "id": "deportes", "nombre": "Deportes", "icono": "🏅", "temas": [
+      "Deportes olímpicos", "Cosas que hay en un gimnasio", "Deportes de raqueta", "Deportes de invierno",
+      "Cosas del fútbol", "Deportes de equipo", "Cosas del boxeo", "Deportes acuáticos"
+    ] },
+    { "id": "viajes", "nombre": "Viajes y vacaciones", "icono": "✈️", "temas": [
+      "Cosas que llevas en la maleta", "Playas famosas", "Medios de transporte", "Cosas que hay en un aeropuerto",
+      "Países de Europa", "Ciudades del mundo", "Cosas de un hotel", "Monumentos famosos"
+    ] },
+    { "id": "fiesta", "nombre": "Fiesta", "icono": "🥳", "temas": [
+      "Cosas de una boda", "Cosas de un cumpleaños", "Bebidas de fiesta", "Cosas de Nochevieja",
+      "Disfraces de Halloween", "Cosas de un festival de música", "Juegos de fiesta", "Cosas de una despedida de soltero"
+    ] },
+    { "id": "cuerpo_moda", "nombre": "Cuerpo y moda", "icono": "👕", "temas": [
+      "Prendas de ropa", "Partes del cuerpo", "Complementos de moda", "Cosas que llevas en el bolso",
+      "Peinados", "Calzado", "Colores", "Cosas que llevas en los bolsillos"
+    ] },
+    { "id": "tecnologia", "nombre": "Tecnología", "icono": "💻", "temas": [
+      "Redes sociales", "Marcas de móviles", "Videojuegos famosos", "Cosas que hay en un ordenador",
+      "Aplicaciones del móvil", "Inventos tecnológicos", "Marcas de tecnología"
+    ] },
+    { "id": "cotidiano", "nombre": "Vida cotidiana", "icono": "🏠", "temas": [
+      "Cosas que hay en una cocina", "Cosas que hay en un baño", "Cosas de la escuela",
+      "Cosas que hay en una oficina", "Electrodomésticos", "Cosas que hay en un coche", "Herramientas",
+      "Cosas que hay en un parque"
+    ] },
+    { "id": "adultos", "nombre": "Para adultos (+18)", "icono": "🔞", "temas": [
+      "Cosas de una despedida de soltero salvaje", "Cosas que dirías ligando en un bar", "Bebidas alcohólicas",
+      "Cosas que haces con resaca", "Cosas de un club nocturno", "Excusas para no ir a trabajar tras una fiesta"
+    ] }
+  ]
+}

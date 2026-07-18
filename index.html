@@ -56,6 +56,7 @@
   .mode-grid .mode-card:nth-child(13){animation-delay:.65s;}
   .mode-grid .mode-card:nth-child(14){animation-delay:.7s;}
   .mode-grid .mode-card:nth-child(15){animation-delay:.75s;}
+  .mode-grid .mode-card:nth-child(16){animation-delay:.8s;}
   @keyframes modeIn{
     from{opacity:0; transform:translateY(10px) scale(0.98);}
     to{opacity:1; transform:translateY(0) scale(1);}
@@ -91,6 +92,8 @@
   .mode-card.theme-orange:active{background:rgba(240,149,79,0.12);}
   .mode-card.theme-cyan{border-color:rgba(79,195,217,0.4);}
   .mode-card.theme-cyan:active{background:rgba(79,195,217,0.12);}
+  .mode-card.theme-flame{border-color:rgba(217,80,47,0.4);}
+  .mode-card.theme-flame:active{background:rgba(217,80,47,0.12);}
   .mode-card.disabled{cursor:default;}
   .mode-card.disabled:active{transform:none;}
   .mode-card.disabled.theme-rose:active{background:rgba(255,255,255,0.05);}
@@ -375,6 +378,13 @@
           <span class="mode-icon-badge" style="mask-image:url('images/hub/hitster-logo.svg');-webkit-mask-image:url('images/hub/hitster-logo.svg');"></span>
           <span class="coming-soon-badge">Próximamente</span>
         </span>
+      </div>
+
+      <div class="card mode-card theme-flame">
+        <button type="button" class="mode-info-btn" aria-label="Descripción" data-emoji="💣" data-title="Patata Caliente" data-desc="Aparece un tema y os pasáis el móvil diciendo palabras relacionadas mientras la mecha suena cada vez más rápido. Cuando explota, quien lo tenga en la mano pierde la ronda. Sin jugadores ni equipos que configurar.">ⓘ</button>
+        <a href="patata-caliente.html" class="mode-card-link" aria-label="Patata Caliente">
+          <span class="mode-icon-emoji">💣</span>
+        </a>
       </div>
     </div>
   </div>
