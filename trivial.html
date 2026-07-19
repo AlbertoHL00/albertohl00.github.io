@@ -182,6 +182,17 @@
     50%{ transform:scale(1.4); box-shadow:0 0 12px 4px rgba(255,255,255,0.75); }
     100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(255,255,255,0); }
   }
+  .wedge-fly{
+    position:fixed;
+    z-index:2000;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
+    pointer-events:none;
+    box-shadow:0 8px 32px rgba(0,0,0,0.45);
+  }
 
   .wedge-won-msg{
     text-align:center;
@@ -906,20 +917,52 @@
   }
 
   // every team's insignia progress, always visible on screen-game.
-  // justWonTeamIdx/justWonCategoryId (only set right after a team earns a badge)
-  // mark that one wedge with a pop animation — every other render leaves it out.
-  function renderTeamBar(justWonTeamIdx, justWonCategoryId){
+  function renderTeamBar(){
     tvTeamBarEl.innerHTML = state.teams.map(function(team, t){
       var wedgesHtml = CATEGORIES.map(function(c){
         var won = team.wedges.indexOf(c.id) !== -1;
-        var justWon = won && t === justWonTeamIdx && c.id === justWonCategoryId;
         var style = won ? ' style="background:' + categoryColor(c.id) + ';"' : '';
-        return '<span class="tv-team-bar-wedge' + (won ? ' won' : '') + (justWon ? ' wedge-pop' : '') + '"' + style + ' title="' + escapeHtml(c.nombre) + '">' + c.icono + '</span>';
+        return '<span class="tv-team-bar-wedge' + (won ? ' won' : '') + '"' + style + ' data-category-id="' + c.id + '" title="' + escapeHtml(c.nombre) + '">' + c.icono + '</span>';
       }).join('');
-      return '<div class="tv-team-bar-item team-color-' + t + '">' +
+      return '<div class="tv-team-bar-item team-color-' + t + '" data-team="' + t + '">' +
         '<span class="tv-team-bar-wedges">' + wedgesHtml + '</span>' +
       '</div>';
     }).join('');
+  }
+
+  // FLIP-style win animation: the category icon appears big and centered, holds
+  // briefly, then flies to the exact position/size of its slot in the team bar
+  // (already rendered in its final "won" look, hidden until the icon lands there).
+  function animateWedgeWin(teamIdx, categoryId){
+    var targetEl = tvTeamBarEl.querySelector('.tv-team-bar-item[data-team="' + teamIdx + '"] .tv-team-bar-wedge[data-category-id="' + categoryId + '"]');
+    if (!targetEl) return;
+    targetEl.style.visibility = 'hidden';
+
+    var cat = categoryById(categoryId);
+    var rect = targetEl.getBoundingClientRect();
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var bigSize = Math.min(vw, vh) * 0.34;
+    var bigX = vw / 2 - bigSize / 2, bigY = vh / 2 - bigSize / 2;
+    var endX = rect.left, endY = rect.top, endSize = rect.width;
+
+    var fly = document.createElement('div');
+    fly.className = 'wedge-fly';
+    fly.style.background = categoryColor(categoryId);
+    fly.textContent = cat.icono;
+    document.body.appendChild(fly);
+
+    var anim = fly.animate([
+      { left: bigX + 'px', top: bigY + 'px', width: bigSize + 'px', height: bigSize + 'px', fontSize: (bigSize * 0.5) + 'px', opacity: 0, offset: 0 },
+      { left: bigX + 'px', top: bigY + 'px', width: bigSize + 'px', height: bigSize + 'px', fontSize: (bigSize * 0.5) + 'px', opacity: 1, offset: 0.15 },
+      { left: bigX + 'px', top: bigY + 'px', width: bigSize + 'px', height: bigSize + 'px', fontSize: (bigSize * 0.5) + 'px', opacity: 1, offset: 0.55 },
+      { left: endX + 'px', top: endY + 'px', width: endSize + 'px', height: endSize + 'px', fontSize: (endSize * 0.5) + 'px', opacity: 1, offset: 1 }
+    ], { duration: 1200, easing: 'cubic-bezier(.32,.78,.32,1)', fill: 'forwards' });
+
+    anim.onfinish = function(){
+      fly.remove();
+      targetEl.style.visibility = '';
+      targetEl.classList.add('wedge-pop');
+    };
   }
 
   function startTurn(rotateActor){
@@ -1048,7 +1091,10 @@
     // the option colors already say correct/incorrect — only the wedge win needs
     // a message of its own, and it's shown on the next-turn modal instead
     state.wedgeWonMsg = wedgeWon ? '¡Ganaste la insignia de ' + categoryById(state.currentCategoryId).nombre + '!' : null;
-    if (wedgeWon) renderTeamBar(teamIdx, state.currentCategoryId);
+    if (wedgeWon){
+      renderTeamBar();
+      animateWedgeWin(teamIdx, state.currentCategoryId);
+    }
 
     state.round++;
     team.turnsPlayed++;
