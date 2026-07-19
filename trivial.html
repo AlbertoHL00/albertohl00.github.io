@@ -1091,10 +1091,6 @@
     // the option colors already say correct/incorrect — only the wedge win needs
     // a message of its own, and it's shown on the next-turn modal instead
     state.wedgeWonMsg = wedgeWon ? '¡Ganaste la insignia de ' + categoryById(state.currentCategoryId).nombre + '!' : null;
-    if (wedgeWon){
-      renderTeamBar();
-      animateWedgeWin(teamIdx, state.currentCategoryId);
-    }
 
     state.round++;
     team.turnsPlayed++;
@@ -1105,6 +1101,14 @@
 
     turnContinueBtn.textContent = state.winnerTeamIdx !== null ? 'Ver resultado' : 'Siguiente';
     turnContinueBtn.classList.remove('hidden');
+
+    // layout must be fully settled (continue button shown, card re-centered) before
+    // measuring the team bar slot — otherwise the fly animation targets a stale
+    // position and lands off by however much the card shifts afterwards.
+    if (wedgeWon){
+      renderTeamBar();
+      animateWedgeWin(teamIdx, state.currentCategoryId);
+    }
   });
 
   turnContinueBtn.addEventListener('click', function(){
