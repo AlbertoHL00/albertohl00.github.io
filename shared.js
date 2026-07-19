@@ -157,7 +157,7 @@ function initHomeExitConfirm(){
 
   Array.prototype.forEach.call(links, function(link){
     var screen = link.closest('.screen');
-    if (!screen || screen.id === 'screen-setup') return;
+    if (screen && screen.id === 'screen-setup') return;
     link.addEventListener('click', function(e){
       e.preventDefault();
       buildModal();
