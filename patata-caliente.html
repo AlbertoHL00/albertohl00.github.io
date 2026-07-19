@@ -160,10 +160,11 @@
   "use strict";
 
   var MIN_FUSE = 10, MAX_FUSE = 90, FUSE_STEP = 5;
-  var MIN_BEEP_INTERVAL = 130, MAX_BEEP_INTERVAL = 850; // ms between beeps: calm start, frantic near the end
-  var BEEP_STEP_MIN = 700, BEEP_STEP_MAX = 3400; // random gap between each speed-up — wide spread so the ramp feels jumpy, not metronomic
-  var BEEP_STEP_SHRINK_MIN = 40, BEEP_STEP_SHRINK_MAX = 220; // ms shaved off the beep interval per speed-up — some steps barely speed up, others lurch forward
-  var FINAL_STRETCH_MS = 550; // last stretch before the explosion: beep goes constant/rapid, kept short so it doesn't linger
+  var BEEP_INITIAL_INTERVAL = 2000; // ms between beeps at the very start
+  var BEEP_STEP_SHRINK = 300; // fixed ms shaved off the beep interval on each speed-up
+  var BEEP_STEP_GAP_MIN_FRACTION = 1 / 8, BEEP_STEP_GAP_MAX_FRACTION = 1 / 4; // gap between speed-ups, as a fraction of the total fuse duration
+  var BEEP_MIN_INTERVAL = 200; // safety floor so the interval never hits zero/negative
+  var LONG_BEEP_MIN_MS = 3000, LONG_BEEP_MAX_MS = 5000; // final sustained beep right before the explosion — counted within the total fuse duration
 
   var config = {
     selectedCategories: [],
@@ -201,10 +202,13 @@
     audioCtx: null,
     beepTimeout: null,
     stepTimeout: null,
+    longBeepTimeout: null,
     explodeTimeout: null,
+    longBeepOsc: null,
     fuseStart: 0,
     fuseDuration: 0,
-    beepInterval: 0
+    beepInterval: 0,
+    longBeepDuration: 0
   };
 
   var screenSetup = document.getElementById('screen-setup');
@@ -339,7 +343,9 @@
   function clearFuseTimers(){
     if (state.beepTimeout){ clearTimeout(state.beepTimeout); state.beepTimeout = null; }
     if (state.stepTimeout){ clearTimeout(state.stepTimeout); state.stepTimeout = null; }
+    if (state.longBeepTimeout){ clearTimeout(state.longBeepTimeout); state.longBeepTimeout = null; }
     if (state.explodeTimeout){ clearTimeout(state.explodeTimeout); state.explodeTimeout = null; }
+    stopLongBeepSound();
   }
 
   function resetRoundView(){
@@ -381,6 +387,34 @@
     osc.stop(now + 0.14);
   }
 
+  // sustained tone for the final stretch — replaces discrete beeps once the fuse
+  // enters its last LONG_BEEP_MIN_MS-LONG_BEEP_MAX_MS window before exploding.
+  function playLongBeepSound(durationMs){
+    if (!state.audioCtx) return;
+    var ctx = state.audioCtx;
+    var now = ctx.currentTime;
+    var dur = durationMs / 1000;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = 740;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.1, now + 0.02);
+    gain.gain.setValueAtTime(0.1, now + dur - 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + dur);
+    state.longBeepOsc = osc;
+  }
+
+  function stopLongBeepSound(){
+    if (state.longBeepOsc){
+      try { state.longBeepOsc.stop(); } catch (e){}
+      state.longBeepOsc = null;
+    }
+  }
+
   function playExplosionSound(){
     if (!state.audioCtx) return;
     var ctx = state.audioCtx;
@@ -417,20 +451,26 @@
   }
 
   // ---------- fuse engine: hidden random duration, beep speeds up in random steps,
-  // then goes constant right before the explosion ----------
+  // then holds one long sustained tone right before the explosion ----------
   function scheduleBeep(){
     playBeepSound();
-    var remaining = state.fuseDuration - (Date.now() - state.fuseStart);
-    var interval = remaining <= FINAL_STRETCH_MS ? MIN_BEEP_INTERVAL : state.beepInterval;
-    state.beepTimeout = setTimeout(scheduleBeep, interval);
+    state.beepTimeout = setTimeout(scheduleBeep, state.beepInterval);
   }
 
   function scheduleSpeedUp(){
-    var remaining = state.fuseDuration - (Date.now() - state.fuseStart);
-    if (remaining <= FINAL_STRETCH_MS) return; // already in the constant-beep final stretch
-    var shrink = randomInt(BEEP_STEP_SHRINK_MIN, BEEP_STEP_SHRINK_MAX);
-    state.beepInterval = Math.max(MIN_BEEP_INTERVAL, state.beepInterval - shrink);
-    state.stepTimeout = setTimeout(scheduleSpeedUp, randomInt(BEEP_STEP_MIN, BEEP_STEP_MAX));
+    var gapMin = state.fuseDuration * BEEP_STEP_GAP_MIN_FRACTION;
+    var gapMax = state.fuseDuration * BEEP_STEP_GAP_MAX_FRACTION;
+    state.stepTimeout = setTimeout(function(){
+      state.beepInterval = Math.max(BEEP_MIN_INTERVAL, state.beepInterval - BEEP_STEP_SHRINK);
+      scheduleSpeedUp();
+    }, randomInt(gapMin, gapMax));
+  }
+
+  // switches from discrete beeps to one sustained tone that plays through to the explosion
+  function startLongBeep(){
+    if (state.beepTimeout){ clearTimeout(state.beepTimeout); state.beepTimeout = null; }
+    if (state.stepTimeout){ clearTimeout(state.stepTimeout); state.stepTimeout = null; }
+    playLongBeepSound(state.longBeepDuration);
   }
 
   function explode(){
@@ -443,9 +483,11 @@
   function startFuse(){
     state.fuseDuration = randomInt(config.fuseMin, config.fuseMax) * 1000;
     state.fuseStart = Date.now();
-    state.beepInterval = MAX_BEEP_INTERVAL;
+    state.longBeepDuration = randomInt(LONG_BEEP_MIN_MS, LONG_BEEP_MAX_MS);
+    state.beepInterval = BEEP_INITIAL_INTERVAL;
     scheduleBeep();
-    state.stepTimeout = setTimeout(scheduleSpeedUp, randomInt(BEEP_STEP_MIN, BEEP_STEP_MAX));
+    scheduleSpeedUp();
+    state.longBeepTimeout = setTimeout(startLongBeep, state.fuseDuration - state.longBeepDuration);
     state.explodeTimeout = setTimeout(explode, state.fuseDuration);
   }
 
