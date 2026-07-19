@@ -67,6 +67,64 @@
   }
   .score-count b{color:var(--accent2);}
 
+  .coin-count{
+    font-size:0.85rem;
+    font-weight:700;
+    color:var(--text-dim);
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
+  .coin-count b{color:var(--wild);}
+  .coin-count.pop{animation:valuePop .3s ease;}
+  @keyframes valuePop{
+    0%{transform:scale(1);}
+    40%{transform:scale(1.3);}
+    100%{transform:scale(1);}
+  }
+
+  .gift-song-btn{
+    width:100%;
+    padding:14px;
+    margin-bottom:18px;
+    border-radius:16px;
+    border:1px dashed var(--wild);
+    background:rgba(224,176,77,0.1);
+    color:var(--wild);
+    font-weight:700;
+    font-size:0.9rem;
+    cursor:pointer;
+  }
+  .gift-song-btn:active{transform:scale(0.98);}
+  .gift-song-btn.hidden{display:none;}
+
+  .guess-check{
+    text-align:center;
+    margin:-8px 0 18px;
+  }
+  .guess-check p{
+    font-size:0.85rem;
+    color:var(--text-dim);
+    margin:0 0 10px;
+  }
+  .guess-check-btns{
+    display:flex;
+    gap:10px;
+  }
+  .guess-check-btns button{
+    flex:1;
+    padding:12px;
+    border-radius:12px;
+    border:1px solid var(--glass-border);
+    background:rgba(255,255,255,0.06);
+    color:var(--text);
+    font-weight:700;
+    font-size:0.85rem;
+    cursor:pointer;
+  }
+  .guess-check-btns button:active{transform:scale(0.96);}
+  .guess-check.hidden{display:none;}
+
   .mystery-card{
     position:relative;
     border-radius:20px;
@@ -108,6 +166,7 @@
   }
   .result-banner.correct{background:rgba(34,197,94,0.12); color:var(--safe); border:1px solid rgba(34,197,94,0.3);}
   .result-banner.wrong{background:rgba(201,82,92,0.12); color:var(--danger); border:1px solid rgba(201,82,92,0.3);}
+  .result-banner.gift{background:rgba(224,176,77,0.12); color:var(--wild); border:1px solid rgba(224,176,77,0.3);}
   .result-song{
     display:block;
     margin-top:6px;
@@ -209,6 +268,10 @@
         <li>La app revela el título, artista y año: si acertáis el hueco, la canción se suma a vuestra línea de tiempo.</li>
         <li>Pasad el turno al siguiente equipo y repetid hasta que alguien alcance el objetivo.</li>
       </ol>
+
+      <h3>Monedas y canción regalada</h3>
+      <p>Antes de escuchar la canción, intentad adivinar en voz alta también el título y el artista, no solo el año. Quien lleve el móvil hace de árbitro: tras revelar la respuesta, marca si acertasteis esa parte. Si es así, ganáis una moneda 🪙.</p>
+      <p>Al llegar a 3 monedas se desbloquea "Canción regalada": la gastáis y la app añade una canción directamente a vuestra línea de tiempo, ya bien colocada, sin necesidad de escucharla ni arriesgar el turno.</p>
     </div>
   </div>
 
@@ -224,8 +287,11 @@
       </div>
       <div class="score-bar">
         <span class="score-team" id="score-team-name">Equipo</span>
+        <span class="coin-count" id="coin-count-wrap">🪙 <b id="coin-count">0</b></span>
         <span class="score-count"><b id="score-count">0</b> / <span id="score-target">10</span></span>
       </div>
+
+      <button type="button" class="gift-song-btn hidden" id="gift-song-btn">🎁 Canción regalada (gastar 3 🪙)</button>
 
       <button type="button" class="mystery-card" id="mystery-play-btn">
         <span class="icon">🎵</span>
@@ -239,6 +305,14 @@
       <a href="#" target="_blank" rel="noopener noreferrer" class="suggestion-link hidden" id="audio-fallback-link">¿No suena? Ábrela en YouTube</a>
 
       <div id="result-banner" class="result-banner hidden"></div>
+
+      <div class="guess-check hidden" id="guess-check">
+        <p>¿Han acertado también el título y el artista?</p>
+        <div class="guess-check-btns">
+          <button type="button" id="guess-check-yes">🪙 Sí, acertaron</button>
+          <button type="button" id="guess-check-no">No</button>
+        </div>
+      </div>
 
       <p class="pass-hint" id="placement-hint">¿En qué punto de vuestra línea de tiempo va esta canción?</p>
 
@@ -269,6 +343,9 @@
   <!-- hidden audio-only YouTube embed: no visible video/title so the mystery isn't spoiled -->
   <iframe id="yt-audio-player" title="" src="" allow="autoplay"
     style="position:fixed; top:0; left:0; width:1px; height:1px; opacity:0; pointer-events:none; border:none;"></iframe>
+
+  <!-- local mp3 playback, for once songs ship as files in the repo instead of YouTube embeds -->
+  <audio id="local-audio-player"></audio>
 
 </div>
 
@@ -347,11 +424,14 @@
 
   var MIN_TARGET = 3, MAX_TARGET = 20;
 
+  var COINS_PER_GIFT = 3;
+
   var state = {
     pool: [],
     timeline: [],
     currentSong: null,
-    selectedSlot: null
+    selectedSlot: null,
+    coins: 0
   };
 
   var screenSetup = document.getElementById('screen-setup');
@@ -469,17 +549,30 @@
   var scoreTeamName = document.getElementById('score-team-name');
   var scoreCount = document.getElementById('score-count');
   var scoreTarget = document.getElementById('score-target');
+  var coinCountEl = document.getElementById('coin-count');
+  var giftSongBtn = document.getElementById('gift-song-btn');
   var mysteryPlayBtn = document.getElementById('mystery-play-btn');
   var audioControls = document.getElementById('audio-controls');
   var audioRestartBtn = document.getElementById('audio-restart-btn');
   var audioStopBtn = document.getElementById('audio-stop-btn');
   var audioFallbackLink = document.getElementById('audio-fallback-link');
   var ytAudioPlayer = document.getElementById('yt-audio-player');
+  var localAudioPlayer = document.getElementById('local-audio-player');
   var resultBanner = document.getElementById('result-banner');
+  var guessCheckEl = document.getElementById('guess-check');
+  var guessCheckYesBtn = document.getElementById('guess-check-yes');
+  var guessCheckNoBtn = document.getElementById('guess-check-no');
   var placementHint = document.getElementById('placement-hint');
   var timelineListEl = document.getElementById('timeline-list');
   var confirmBtn = document.getElementById('confirm-btn');
   var continueBtn = document.getElementById('continue-btn');
+
+  // gift button only makes sense between rounds, while the mystery card is showing
+  function renderCoins(animate){
+    coinCountEl.textContent = state.coins;
+    if (animate) popValue(coinCountEl.parentElement);
+    giftSongBtn.classList.toggle('hidden', state.coins < COINS_PER_GIFT || mysteryPlayBtn.classList.contains('hidden'));
+  }
 
   function buildPool(){
     var pool = [];
@@ -519,15 +612,30 @@
 
   function stopAudio(){
     ytAudioPlayer.src = '';
+    localAudioPlayer.pause();
+    localAudioPlayer.src = '';
   }
 
+  // "archivo" is reserved for when songs ship as local mp3s in the repo instead of
+  // YouTube embeds — once a song has that field, this plays it directly with no
+  // other changes needed elsewhere.
   function playAudio(song){
+    if (song.archivo){
+      ytAudioPlayer.src = '';
+      localAudioPlayer.src = 'music/' + song.archivo;
+      localAudioPlayer.play();
+      audioControls.classList.remove('hidden');
+      audioFallbackLink.classList.add('hidden');
+      return;
+    }
     if (!song.videoId){
       audioFallbackLink.classList.remove('hidden');
       audioFallbackLink.href = ytSearchUrl(song);
       audioFallbackLink.textContent = 'No tenemos audio directo para esta canción — ábrela en YouTube';
       return;
     }
+    localAudioPlayer.pause();
+    localAudioPlayer.src = '';
     ytAudioPlayer.src = 'https://www.youtube-nocookie.com/embed/' + song.videoId +
       '?autoplay=1&controls=0&modestbranding=1&rel=0&playsinline=1';
     audioControls.classList.remove('hidden');
@@ -545,6 +653,7 @@
     stopAudio();
     resultBanner.classList.add('hidden');
     resultBanner.className = 'result-banner hidden';
+    guessCheckEl.classList.add('hidden');
     mysteryPlayBtn.classList.remove('hidden');
     audioControls.classList.add('hidden');
     audioFallbackLink.classList.add('hidden');
@@ -555,6 +664,7 @@
     continueBtn.classList.add('hidden');
     state.currentSong = null;
     state.selectedSlot = null;
+    renderCoins(false);
   }
 
   function ytSearchUrl(song){
@@ -571,6 +681,7 @@
     playAudio(state.currentSong);
 
     mysteryPlayBtn.classList.add('hidden');
+    giftSongBtn.classList.add('hidden');
     placementHint.classList.remove('hidden');
     timelineListEl.classList.remove('hidden');
     renderTimeline();
@@ -605,6 +716,50 @@
     timelineListEl.classList.remove('hidden');
     Array.prototype.forEach.call(timelineListEl.querySelectorAll('.timeline-slot'), function(b){ b.disabled = true; });
     confirmBtn.classList.add('hidden');
+    continueBtn.classList.remove('hidden');
+    guessCheckEl.classList.remove('hidden');
+
+    if (state.timeline.length >= config.target){
+      window.setTimeout(function(){ finishGame(true); }, 400);
+    }
+  });
+
+  // asked every round regardless of whether the timeline placement was correct —
+  // guessing the title/artist out loud is a separate skill from knowing the year
+  guessCheckYesBtn.addEventListener('click', function(){
+    state.coins++;
+    renderCoins(true);
+    guessCheckEl.classList.add('hidden');
+  });
+  guessCheckNoBtn.addEventListener('click', function(){
+    guessCheckEl.classList.add('hidden');
+  });
+
+  giftSongBtn.addEventListener('click', function(){
+    if (state.coins < COINS_PER_GIFT) return;
+    if (state.pool.length === 0){
+      finishGame(false);
+      return;
+    }
+    state.coins -= COINS_PER_GIFT;
+    mysteryPlayBtn.classList.add('hidden');
+    giftSongBtn.classList.add('hidden');
+
+    var song = state.pool.pop();
+    var slot = state.timeline.length;
+    for (var i = 0; i < state.timeline.length; i++){
+      if (song.anio < state.timeline[i].anio){ slot = i; break; }
+    }
+    state.timeline.splice(slot, 0, song);
+    scoreCount.textContent = state.timeline.length;
+    renderCoins(true);
+
+    resultBanner.className = 'result-banner gift';
+    resultBanner.innerHTML = '🎁 ¡Canción regalada, directa a vuestra línea!' +
+      '<span class="result-song">' + escapeHtml(song.titulo) + ' — ' + escapeHtml(song.artista) + ' (' + song.anio + ')</span>';
+    resultBanner.classList.remove('hidden');
+    renderTimeline();
+    timelineListEl.classList.remove('hidden');
     continueBtn.classList.remove('hidden');
 
     if (state.timeline.length >= config.target){
@@ -646,6 +801,7 @@
 
     state.pool = buildPool();
     state.timeline = [];
+    state.coins = 0;
 
     resetRoundUI();
     switchScreen(screenGame);
