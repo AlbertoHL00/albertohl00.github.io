@@ -161,9 +161,9 @@
 
   var MIN_FUSE = 10, MAX_FUSE = 90, FUSE_STEP = 5;
   var MIN_BEEP_INTERVAL = 130, MAX_BEEP_INTERVAL = 850; // ms between beeps: calm start, frantic near the end
-  var BEEP_STEP_MIN = 1200, BEEP_STEP_MAX = 2800; // random gap between each speed-up
-  var BEEP_STEP_SHRINK_MIN = 60, BEEP_STEP_SHRINK_MAX = 180; // ms shaved off the beep interval per speed-up
-  var FINAL_STRETCH_MS = 1400; // last stretch before the explosion: beep goes constant/rapid
+  var BEEP_STEP_MIN = 700, BEEP_STEP_MAX = 3400; // random gap between each speed-up — wide spread so the ramp feels jumpy, not metronomic
+  var BEEP_STEP_SHRINK_MIN = 40, BEEP_STEP_SHRINK_MAX = 220; // ms shaved off the beep interval per speed-up — some steps barely speed up, others lurch forward
+  var FINAL_STRETCH_MS = 550; // last stretch before the explosion: beep goes constant/rapid, kept short so it doesn't linger
 
   var config = {
     selectedCategories: [],
