@@ -214,6 +214,49 @@ function initBackToSetupConfirm(returnToSetup){
   });
 }
 
+/* +18 content guard: categories/packages flag themselves as adult content by
+   putting "+18" in their display name (see truth-or-dare.json, yo-nunca.json,
+   patata-caliente.json, packages.json). Call isAdultContent(item) to check a
+   category/package object, and confirmAdultContent(onConfirm) right before
+   adding one to a selection — onConfirm only runs if the user accepts, so a
+   cancelled confirm just leaves the chip unselected. */
+function isAdultContent(item){
+  return !!item && /\+18/.test(item.nombre || '');
+}
+
+var adultConfirmBackdrop = null;
+var adultConfirmPending = null;
+function confirmAdultContent(onConfirm){
+  adultConfirmPending = onConfirm;
+  if (!adultConfirmBackdrop){
+    adultConfirmBackdrop = document.createElement('div');
+    adultConfirmBackdrop.className = 'guide-modal-backdrop hidden';
+    adultConfirmBackdrop.id = 'adult-confirm-backdrop';
+    adultConfirmBackdrop.innerHTML =
+      '<div class="guide-modal">' +
+        '<h2>🔞 Contenido para adultos</h2>' +
+        '<p>Esta categoría incluye contenido para mayores de 18 años. ¿Seguro que quieres activarla?</p>' +
+        '<button type="button" class="btn-main" id="adult-confirm-accept-btn" style="margin-top:14px;">Sí, activar</button>' +
+        '<button type="button" class="night-nav-btn" id="adult-confirm-cancel-btn" style="width:100%; margin-top:10px;">Cancelar</button>' +
+      '</div>';
+    document.body.appendChild(adultConfirmBackdrop);
+    document.getElementById('adult-confirm-accept-btn').addEventListener('click', function(){
+      adultConfirmBackdrop.classList.add('hidden');
+      if (adultConfirmPending) adultConfirmPending();
+    });
+    document.getElementById('adult-confirm-cancel-btn').addEventListener('click', function(){
+      adultConfirmBackdrop.classList.add('hidden');
+    });
+    adultConfirmBackdrop.addEventListener('click', function(e){
+      if (e.target === adultConfirmBackdrop) adultConfirmBackdrop.classList.add('hidden');
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') adultConfirmBackdrop.classList.add('hidden');
+    });
+  }
+  adultConfirmBackdrop.classList.remove('hidden');
+}
+
 /* tap-to-reveal card: covers reveal-content with reveal-btn until tapped.
    showFor(isAlarm) re-covers instantly (no flash) and arms the optional
    danger-pulse border for the upcoming reveal; call it once per player,

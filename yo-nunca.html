@@ -125,7 +125,8 @@
       .catch(function(){ CATEGORIES = CATEGORIES_FALLBACK; })
       .then(function(){
         if (config.selectedCategories.length === 0){
-          config.selectedCategories = CATEGORIES.map(function(c){ return c.id; });
+          // +18 categories start unselected — picking one goes through the confirm modal
+          config.selectedCategories = CATEGORIES.filter(function(c){ return !isAdultContent(c); }).map(function(c){ return c.id; });
         }
         renderCategoryList();
         validateSetup();
@@ -173,26 +174,46 @@
     renderToggleAllLabel();
   }
 
+  function addCategory(id){
+    config.selectedCategories.push(id);
+    renderCategoryList();
+    validateSetup();
+  }
+
   categoryListEl.addEventListener('click', function(e){
     var chip = e.target.closest('.chip');
     if (!chip) return;
     var id = chip.getAttribute('data-category-id');
     var idx = config.selectedCategories.indexOf(id);
-    if (idx === -1) config.selectedCategories.push(id);
-    else config.selectedCategories.splice(idx, 1);
-    renderCategoryList();
-    validateSetup();
+    if (idx !== -1){
+      config.selectedCategories.splice(idx, 1);
+      renderCategoryList();
+      validateSetup();
+      return;
+    }
+    var cat = CATEGORIES.filter(function(c){ return c.id === id; })[0];
+    if (isAdultContent(cat)) confirmAdultContent(function(){ addCategory(id); });
+    else addCategory(id);
   });
 
   categoryToggleAllBtn.addEventListener('click', function(){
     if (!CATEGORIES) return;
     if (config.selectedCategories.length === CATEGORIES.length){
       config.selectedCategories = [];
-    } else {
-      config.selectedCategories = CATEGORIES.map(function(c){ return c.id; });
+      renderCategoryList();
+      validateSetup();
+      return;
     }
-    renderCategoryList();
-    validateSetup();
+    function selectAll(){
+      config.selectedCategories = CATEGORIES.map(function(c){ return c.id; });
+      renderCategoryList();
+      validateSetup();
+    }
+    var hasUnselectedAdult = CATEGORIES.some(function(c){
+      return isAdultContent(c) && config.selectedCategories.indexOf(c.id) === -1;
+    });
+    if (hasUnselectedAdult) confirmAdultContent(selectAll);
+    else selectAll();
   });
 
   function buildDeck(){

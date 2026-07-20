@@ -516,7 +516,8 @@
       .catch(function(){ PACKAGES = PACKAGES_FALLBACK; })
       .then(function(){
         if (config.selectedPackages.length === 0){
-          config.selectedPackages = PACKAGES.map(function(p){ return p.id; });
+          // +18 packages start unselected — picking one goes through the confirm modal
+          config.selectedPackages = PACKAGES.filter(function(p){ return !isAdultContent(p); }).map(function(p){ return p.id; });
         }
         renderPackageList();
         validateSetup();
@@ -840,26 +841,46 @@
     renderToggleAllLabel();
   }
 
+  function addPackage(id){
+    config.selectedPackages.push(id);
+    renderPackageList();
+    validateSetup();
+  }
+
   packageListEl.addEventListener('click', function(e){
     var chip = e.target.closest('.chip');
     if (!chip) return;
     var id = chip.getAttribute('data-package-id');
     var idx = config.selectedPackages.indexOf(id);
-    if (idx === -1) config.selectedPackages.push(id);
-    else config.selectedPackages.splice(idx, 1);
-    renderPackageList();
-    validateSetup();
+    if (idx !== -1){
+      config.selectedPackages.splice(idx, 1);
+      renderPackageList();
+      validateSetup();
+      return;
+    }
+    var pkg = PACKAGES.filter(function(p){ return p.id === id; })[0];
+    if (isAdultContent(pkg)) confirmAdultContent(function(){ addPackage(id); });
+    else addPackage(id);
   });
 
   packageToggleAllBtn.addEventListener('click', function(){
     if (!PACKAGES) return;
     if (config.selectedPackages.length === PACKAGES.length){
       config.selectedPackages = [];
-    } else {
-      config.selectedPackages = PACKAGES.map(function(p){ return p.id; });
+      renderPackageList();
+      validateSetup();
+      return;
     }
-    renderPackageList();
-    validateSetup();
+    function selectAll(){
+      config.selectedPackages = PACKAGES.map(function(p){ return p.id; });
+      renderPackageList();
+      validateSetup();
+    }
+    var hasUnselectedAdult = PACKAGES.some(function(p){
+      return isAdultContent(p) && config.selectedPackages.indexOf(p.id) === -1;
+    });
+    if (hasUnselectedAdult) confirmAdultContent(selectAll);
+    else selectAll();
   });
 
   packagesDropdownBtn.addEventListener('click', function(){
