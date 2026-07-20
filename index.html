@@ -264,6 +264,13 @@
   @media (prefers-reduced-motion: reduce){
     .hub-logo{animation:none;}
   }
+  .hub-footer{
+    text-align:center;
+    margin-top:18px;
+    color:var(--text-dim);
+    font-size:0.75rem;
+    line-height:1.6;
+  }
 </style>
 </head>
 <body>
@@ -388,6 +395,11 @@
         </span>
       </div>
     </div>
+
+    <div class="hub-footer">
+      <p>Hecho por Alberto Hernández</p>
+      <p>v<span id="hub-version">…</span></p>
+    </div>
   </div>
 
   <!-- GAME DESCRIPTION OVERLAY -->
@@ -430,6 +442,15 @@
     });
     setTimeout(reveal, 1500); // safety net in case an icon never settles
   })();
+
+  // ---------- version (build number bumped automatically on every commit, see .githooks/pre-commit) ----------
+  var hubVersionEl = document.getElementById('hub-version');
+  if (hubVersionEl){
+    fetch('version.json')
+      .then(function(r){ if (!r.ok) throw new Error('bad response'); return r.json(); })
+      .then(function(data){ hubVersionEl.textContent = data.build; })
+      .catch(function(){ hubVersionEl.textContent = '?'; });
+  }
 
   var backdrop = document.getElementById('desc-overlay-backdrop');
   var iconEl = document.getElementById('desc-overlay-icon');

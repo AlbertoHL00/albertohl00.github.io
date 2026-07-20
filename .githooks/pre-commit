@@ -1,0 +1,15 @@
+#!/bin/sh
+# Auto-increments version.json's build number on every commit, so the hub
+# always shows a version tied to real commit activity with no manual step.
+# Skips merge commits (git already ran this hook for each merged commit) and
+# honors SKIP_VERSION_BUMP=1 for the rare manual override.
+
+if [ -f "$GIT_DIR/MERGE_HEAD" ]; then exit 0; fi
+if [ "$SKIP_VERSION_BUMP" = "1" ]; then exit 0; fi
+
+VERSION_FILE="version.json"
+current=$(grep -o '[0-9]\+' "$VERSION_FILE" 2>/dev/null | head -1)
+current=${current:-0}
+next=$((current + 1))
+printf '{ "build": %s }\n' "$next" > "$VERSION_FILE"
+git add "$VERSION_FILE"

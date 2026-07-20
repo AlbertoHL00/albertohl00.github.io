@@ -73,6 +73,10 @@ Cada juego tiene un logo SVG propio en `images/hub/<juego>-logo.svg`, usado como
 
 Una tarjeta de juego sin terminar/publicar usa `class="mode-card ... disabled"` y sustituye el `<a href="...">` por un `<span>` con un badge `.coming-soon-badge`. Ver `.claude/HITSTER.md` para el caso concreto de cómo pasar de deshabilitada a activa.
 
+## Versión (número de build)
+
+`version.json` (`{ "build": N }`) se muestra en el footer del hub (`index.html`) y se incrementa solo: el hook `.githooks/pre-commit` suma 1 en cada commit y lo incluye automáticamente. En un checkout nuevo hay que activar el hook una vez con `git config core.hooksPath .githooks` (no viene activado por defecto porque `core.hooksPath` es config local, no versionable).
+
 ## Botón de sugerencias
 
 `<a href="https://forms.gle/..." class="suggestion-link">💡 Enviar una sugerencia</a>` en el hub — enlaza a un Google Form externo, no tocar salvo que el usuario pida cambiar el formulario.
