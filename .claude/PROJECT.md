@@ -75,7 +75,7 @@ Una tarjeta de juego sin terminar/publicar usa `class="mode-card ... disabled"` 
 
 ## Versión (número de build)
 
-`version.json` (`{ "build": N }`) se muestra en el footer del hub (`index.html`) y se incrementa solo: el hook `.githooks/pre-commit` suma 1 en cada commit y lo incluye automáticamente. En un checkout nuevo hay que activar el hook una vez con `git config core.hooksPath .githooks` (no viene activado por defecto porque `core.hooksPath` es config local, no versionable).
+`version.json` (`{ "build": N }`) se muestra en el footer del hub (`index.html`) como `0.N`, junto a los créditos. Se incrementa solo, sin ningún paso manual en ningún clon: el workflow `.github/workflows/bump-version.yml` corre en GitHub Actions en cada push a `main`, suma 1 a `version.json` y hace commit+push de vuelta (marcando el mensaje con `[skip version]` para no disparar el workflow otra vez a sí mismo).
 
 ## Botón de sugerencias
 
