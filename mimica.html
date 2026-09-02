@@ -232,6 +232,8 @@
     font-size:0.78rem;
     font-weight:700;
   }
+  .mimica-word-pill.turn-missed{background:var(--danger); opacity:.72; text-decoration:line-through;}
+  button.mimica-word-pill{border:0; cursor:pointer; font:inherit;}
   .end-player-extreme{
     display:flex;
     justify-content:space-between;
@@ -507,6 +509,7 @@
     currentActorIdx: null,
     turnCorrect: 0,
     turnWords: [], // words guessed correctly during the current turn
+    turnResults: [],
     wordDeck: [],
     wordDeckIdx: 0,
     timeRemaining: 60,
@@ -1074,6 +1077,7 @@
     state.currentActorIdx = actorIdx;
     state.turnCorrect = 0;
     state.turnWords = [];
+    state.turnResults = [];
     state.timeRemaining = config.turnSeconds;
 
     turnTeamBadgeEl.textContent = TEAM_NAMES[teamIdx].toUpperCase();
@@ -1169,20 +1173,22 @@
     state.playerScores[state.currentActorIdx]++;
     state.turnCorrect++;
     state.turnWords.push(mimicaWordEl.textContent);
+    state.turnResults.push({ word: mimicaWordEl.textContent, correct: true });
     mimicaWordEl.textContent = drawNextWord();
   });
   mimicaSkipBtn.addEventListener('click', function(){
     playSkipSound();
+    state.turnResults.push({ word: mimicaWordEl.textContent, correct: false });
     state.timeRemaining = Math.max(0, state.timeRemaining - config.skipPenaltySeconds);
     updateTimerDisplay(state.timeRemaining);
     mimicaTimerEl.classList.remove('skip-pulse');
     void mimicaTimerEl.offsetWidth;
     mimicaTimerEl.classList.add('skip-pulse');
-    if (state.timeRemaining <= 0){ endTurn(); return; }
+    if (state.timeRemaining <= 0){ endTurn(false); return; }
     mimicaWordEl.textContent = drawNextWord();
   });
 
-  function endTurn(){
+  function endTurn(hasActiveWord){
     stopTimer();
     mimicaTimerWrapEl.classList.add('time-up');
     playAlarmSound();
@@ -1190,16 +1196,35 @@
     turnEndEl.classList.remove('hidden');
 
     var teamIdx = state.turnOrder[state.turnIdx];
+    if (hasActiveWord !== false) state.turnResults.push({ word: mimicaWordEl.textContent, correct: false });
     turnEndSubtitleEl.textContent = state.playerNames[state.currentActorIdx] + ' jugó para ' + TEAM_NAMES[teamIdx] +
       ' y acertó ' + state.turnCorrect + (state.turnCorrect === 1 ? ' palabra.' : ' palabras.');
-    turnEndWordsEl.innerHTML = state.turnWords.length ?
-      state.turnWords.map(function(w){ return '<span class="mimica-word-pill team-color-' + teamIdx + '">' + escapeHtml(w) + '</span>'; }).join('') :
-      '<span class="count-info">Ninguna palabra acertada.</span>';
-    renderScoreboardRows(turnEndScoreboardEl, false, false);
+    renderTurnResults();
 
     var isLastTurn = state.turnIdx >= state.turnOrder.length - 1;
     turnContinueBtn.textContent = isLastTurn ? 'Ver resultados' : 'Continuar';
   }
+
+  function renderTurnResults(){
+    var teamIdx = state.turnOrder[state.turnIdx];
+    turnEndWordsEl.innerHTML = state.turnResults.map(function(result, index){
+      return '<button type="button" class="mimica-word-pill team-color-' + teamIdx + (result.correct ? '' : ' turn-missed') + '" data-index="' + index + '" aria-label="Marcar ' + escapeHtml(result.word) + (result.correct ? ' como no acertada' : ' como acertada') + '">' + escapeHtml(result.word) + '</button>';
+    }).join('');
+    renderScoreboardRows(turnEndScoreboardEl, false, false);
+  }
+
+  turnEndWordsEl.addEventListener('click', function(e){
+    var pill = e.target.closest('.mimica-word-pill');
+    if (!pill) return;
+    var result = state.turnResults[parseInt(pill.getAttribute('data-index'), 10)];
+    var scoreChange = result.correct ? -1 : 1;
+    result.correct = !result.correct;
+    var teamIdx = state.turnOrder[state.turnIdx];
+    state.teams[teamIdx].score += scoreChange;
+    state.playerScores[state.currentActorIdx] += scoreChange;
+    state.turnCorrect += scoreChange;
+    renderTurnResults();
+  });
 
   turnContinueBtn.addEventListener('click', function(){
     state.turnIdx++;

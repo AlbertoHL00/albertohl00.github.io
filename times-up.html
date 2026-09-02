@@ -237,6 +237,8 @@
     font-size:0.78rem;
     font-weight:700;
   }
+  .tu-word-pill.turn-missed{background:var(--danger); opacity:.72; text-decoration:line-through;}
+  button.tu-word-pill{border:0; cursor:pointer; font:inherit;}
   .phase-rule-box{
     text-align:center;
     font-size:0.92rem;
@@ -544,7 +546,9 @@
     currentActorIdx: null,
     turnCorrect: 0,
     turnWords: [],
+    turnResults: [],
     timeRemaining: 30,
+    carryOverTurn: null,
     timerInterval: null,
     audioCtx: null
   };
@@ -1044,12 +1048,20 @@
   function startTurn(){
     var teamIdx = state.turnTeamPointer;
     var team = state.teams[teamIdx];
-    var actorIdx = team.memberIdxs[team.nextMemberPointer % team.memberIdxs.length];
-    team.nextMemberPointer++;
+    var carriedTurn = state.carryOverTurn;
+    var actorIdx;
+    if (carriedTurn){
+      actorIdx = carriedTurn.actorIdx;
+      state.carryOverTurn = null;
+    } else {
+      actorIdx = team.memberIdxs[team.nextMemberPointer % team.memberIdxs.length];
+      team.nextMemberPointer++;
+    }
     state.currentActorIdx = actorIdx;
     state.turnCorrect = 0;
     state.turnWords = [];
-    state.timeRemaining = config.turnSeconds;
+    state.turnResults = [];
+    state.timeRemaining = carriedTurn ? carriedTurn.timeRemaining : config.turnSeconds;
 
     phaseStatusEl.textContent = PHASES[state.phase].title + ' / 3';
     renderCardsRemaining();
@@ -1143,6 +1155,7 @@
     state.teams[teamIdx].score++;
     state.turnCorrect++;
     state.turnWords.push(word);
+    state.turnResults.push({ word: word, correct: true });
     renderCardsRemaining();
     if (state.deck.length === 0){ endTurn(true); return; }
     tuWordEl.textContent = state.deck[0];
@@ -1150,37 +1163,67 @@
 
   tuSkipBtn.addEventListener('click', function(){
     playSkipSound();
-    state.deck.push(state.deck.shift()); // missed/passed: back of the deck, resurfaces later this phase
+    var word = state.deck.shift();
+    state.deck.push(word); // missed/passed: back of the deck, resurfaces later this phase
+    state.turnResults.push({ word: word, correct: false });
     state.timeRemaining = Math.max(0, state.timeRemaining - config.skipPenaltySeconds);
     updateTimerDisplay(state.timeRemaining);
     tuTimerEl.classList.remove('skip-pulse');
     void tuTimerEl.offsetWidth;
     tuTimerEl.classList.add('skip-pulse');
-    if (state.timeRemaining <= 0){ endTurn(false); return; }
+    if (state.timeRemaining <= 0){ endTurn(false, false); return; }
     tuWordEl.textContent = state.deck[0];
   });
 
-  function endTurn(deckExhausted){
+  function endTurn(deckExhausted, hasActiveWord){
     stopTimer();
     turnPlayEl.classList.add('hidden');
 
     var teamIdx = state.turnTeamPointer;
-    // whoever's next keeps rotating regardless of how this turn ended
-    state.turnTeamPointer = (state.turnTeamPointer + 1) % state.teams.length;
 
     if (deckExhausted){
+      state.carryOverTurn = {
+        actorIdx: state.currentActorIdx,
+        timeRemaining: state.timeRemaining
+      };
       showPhaseEnd();
       return;
     }
 
+    if (hasActiveWord !== false){
+      var expiredWord = state.deck.shift(); // the active card expires with the turn
+      state.turnResults.push({ word: expiredWord, correct: false });
+    }
+    if (state.deck.length === 0){
+      showPhaseEnd();
+      return;
+    }
+    state.turnTeamPointer = (state.turnTeamPointer + 1) % state.teams.length;
+
     tuTimerWrapEl.classList.add('time-up');
     playAlarmSound();
     turnEndEl.classList.remove('hidden');
-    turnEndWordsEl.innerHTML = state.turnWords.length ?
-      state.turnWords.map(function(w){ return '<span class="tu-word-pill team-color-' + teamIdx + '">' + escapeHtml(w) + '</span>'; }).join('') :
-      '<span class="count-info">Ninguna carta acertada.</span>';
+    renderTurnResults();
+  }
+
+  function renderTurnResults(){
+    var teamIdx = state.turnTeamPointer === 0 ? state.teams.length - 1 : state.turnTeamPointer - 1;
+    turnEndWordsEl.innerHTML = state.turnResults.map(function(result, index){
+      return '<button type="button" class="tu-word-pill team-color-' + teamIdx + (result.correct ? '' : ' turn-missed') + '" data-index="' + index + '" aria-label="Marcar ' + escapeHtml(result.word) + (result.correct ? ' como no acertada' : ' como acertada') + '">' + escapeHtml(result.word) + '</button>';
+    }).join('');
     renderScoreboardRows(turnEndScoreboardEl, false, false);
   }
+
+  turnEndWordsEl.addEventListener('click', function(e){
+    var pill = e.target.closest('.tu-word-pill');
+    if (!pill) return;
+    var result = state.turnResults[parseInt(pill.getAttribute('data-index'), 10)];
+    var scoreChange = result.correct ? -1 : 1;
+    result.correct = !result.correct;
+    state.teams[state.turnTeamPointer === 0 ? state.teams.length - 1 : state.turnTeamPointer - 1].score += scoreChange;
+    state.turnCorrect += scoreChange;
+    renderTurnResults();
+  });
 
   turnContinueBtn.addEventListener('click', function(){
     startTurn();

@@ -245,6 +245,8 @@
     font-size:0.78rem;
     font-weight:700;
   }
+  .tb-word-pill.turn-missed{background:var(--danger); opacity:.72; text-decoration:line-through;}
+  button.tb-word-pill{border:0; cursor:pointer; font:inherit;}
 </style>
 </head>
 <body>
@@ -497,6 +499,7 @@
     currentActorIdx: null,
     turnCorrect: 0,
     turnWords: [],
+    turnResults: [],
     timeRemaining: 30,
     timerInterval: null,
     audioCtx: null
@@ -958,6 +961,7 @@
     state.currentActorIdx = actorIdx;
     state.turnCorrect = 0;
     state.turnWords = [];
+    state.turnResults = [];
     state.timeRemaining = config.turnSeconds;
 
     renderCardsRemaining();
@@ -1052,6 +1056,7 @@
     state.teams[teamIdx].score++;
     state.turnCorrect++;
     state.turnWords.push(card.palabra);
+    state.turnResults.push({ word: card.palabra, correct: true });
     renderCardsRemaining();
     if (state.deck.length === 0){ endTurn(true); return; }
     renderCurrentCard();
@@ -1060,39 +1065,65 @@
   tbFoulBtn.addEventListener('click', function(){
     if (state.deck.length === 0) return;
     playFoulSound();
-    state.deck.push(state.deck.shift()); // foul: no point for anyone, but back of the deck, resurfaces later this match
+    var card = state.deck.shift();
+    state.deck.push(card); // foul: no point for anyone, but back of the deck, resurfaces later this match
+    state.turnResults.push({ word: card.palabra, correct: false });
     state.timeRemaining = Math.max(0, state.timeRemaining - config.skipPenaltySeconds);
     updateTimerDisplay(state.timeRemaining);
     tbTimerEl.classList.remove('skip-pulse');
     void tbTimerEl.offsetWidth;
     tbTimerEl.classList.add('skip-pulse');
-    if (state.timeRemaining <= 0){ endTurn(false); return; }
+    if (state.timeRemaining <= 0){ endTurn(false, false); return; }
     renderCurrentCard();
   });
 
-  function endTurn(deckExhausted){
+  function endTurn(deckExhausted, hasActiveWord){
     stopTimer();
     turnPlayEl.classList.add('hidden');
 
     var teamIdx = state.turnTeamPointer;
-    // whoever's next keeps rotating regardless of how this turn ended
-    state.turnTeamPointer = (state.turnTeamPointer + 1) % state.teams.length;
 
     if (deckExhausted){
       showGameEnd();
       return;
     }
 
+    if (hasActiveWord !== false){
+      var expiredCard = state.deck.shift(); // the active card expires with the turn
+      state.turnResults.push({ word: expiredCard.palabra, correct: false });
+    }
+    if (state.deck.length === 0){
+      showGameEnd();
+      return;
+    }
+    state.turnTeamPointer = (state.turnTeamPointer + 1) % state.teams.length;
+
     tbTimerWrapEl.classList.add('time-up');
     playAlarmSound();
     turnEndEl.classList.remove('hidden');
     turnEndSubtitleEl.textContent = state.playerNames[state.currentActorIdx] + ' jugó para ' + TEAM_NAMES[teamIdx] +
       ' y acertó ' + state.turnCorrect + (state.turnCorrect === 1 ? ' carta.' : ' cartas.');
-    turnEndWordsEl.innerHTML = state.turnWords.length ?
-      state.turnWords.map(function(w){ return '<span class="tb-word-pill team-color-' + teamIdx + '">' + escapeHtml(w) + '</span>'; }).join('') :
-      '<span class="count-info">Ninguna carta acertada.</span>';
+    renderTurnResults();
+  }
+
+  function renderTurnResults(){
+    var teamIdx = state.turnTeamPointer === 0 ? state.teams.length - 1 : state.turnTeamPointer - 1;
+    turnEndWordsEl.innerHTML = state.turnResults.map(function(result, index){
+      return '<button type="button" class="tb-word-pill team-color-' + teamIdx + (result.correct ? '' : ' turn-missed') + '" data-index="' + index + '" aria-label="Marcar ' + escapeHtml(result.word) + (result.correct ? ' como no acertada' : ' como acertada') + '">' + escapeHtml(result.word) + '</button>';
+    }).join('');
     renderScoreboardRows(turnEndScoreboardEl, false, false);
   }
+
+  turnEndWordsEl.addEventListener('click', function(e){
+    var pill = e.target.closest('.tb-word-pill');
+    if (!pill) return;
+    var result = state.turnResults[parseInt(pill.getAttribute('data-index'), 10)];
+    var scoreChange = result.correct ? -1 : 1;
+    result.correct = !result.correct;
+    state.teams[state.turnTeamPointer === 0 ? state.teams.length - 1 : state.turnTeamPointer - 1].score += scoreChange;
+    state.turnCorrect += scoreChange;
+    renderTurnResults();
+  });
 
   turnContinueBtn.addEventListener('click', function(){
     startTurn();
