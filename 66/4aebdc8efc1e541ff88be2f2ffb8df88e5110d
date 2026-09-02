@@ -1,0 +1,21 @@
+impostor-words.json
+  s_75e782dad04079::t_43bef34fb4366d 1-2018
+impostor.html
+  s_75e782dad04079::t_8085a307a2ca69 428-453,457,816-818
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "664aebdc8efc1e541ff88be2f2ffb8df88e5110d",
+  "prompts": {},
+  "sessions": {
+    "s_75e782dad04079": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "47689a06-b4a5-4140-8e07-ecf48e096129",
+        "model": "unknown"
+      },
+      "human_author": "Alberto Hernández Lado <albertohljob@gmail.com>"
+    }
+  }
+}
