@@ -161,10 +161,10 @@
 
   var MIN_FUSE = 10, MAX_FUSE = 90, FUSE_STEP = 5;
   var BEEP_INITIAL_INTERVAL = 2000; // ms between beeps at the very start
-  var BEEP_STEP_SHRINK = 300; // fixed ms shaved off the beep interval on each speed-up
-  var BEEP_STEP_GAP_MIN_FRACTION = 1 / 8, BEEP_STEP_GAP_MAX_FRACTION = 1 / 4; // gap between speed-ups, as a fraction of the total fuse duration
-  var BEEP_MIN_INTERVAL = 200; // safety floor so the interval never hits zero/negative
-  var LONG_BEEP_MIN_MS = 3000, LONG_BEEP_MAX_MS = 5000; // final sustained beep right before the explosion — counted within the total fuse duration
+  var BEEP_MIN_INTERVAL = 50; // twenty distinct beeps per second at maximum speed
+  var BEEP_MAX_SPEED_HOLD_MS = 1000; // time at twenty beeps per second before the final tone
+  var LONG_BEEP_DURATION_MS = 3000; // fixed final warning right before the explosion — counted within the total fuse duration
+  var EXPLOSION_SOUND_SRC = 'images/common/boom.mp3';
 
   var config = {
     selectedCategories: [],
@@ -206,6 +206,7 @@
     longBeepTimeout: null,
     explodeTimeout: null,
     longBeepOsc: null,
+    explosionAudio: null,
     fuseStart: 0,
     fuseDuration: 0,
     beepInterval: 0,
@@ -401,7 +402,7 @@
     osc.type = 'square';
     osc.frequency.value = 740;
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.1, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.05, now + 0.015);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
     osc.connect(gain).connect(state.audioCtx.destination);
     osc.start(now);
@@ -420,8 +421,8 @@
     osc.type = 'square';
     osc.frequency.value = 740;
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.1, now + 0.02);
-    gain.gain.setValueAtTime(0.1, now + dur - 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.02);
+    gain.gain.setValueAtTime(0.01, now + dur - 0.05);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
     osc.connect(gain).connect(ctx.destination);
     osc.start(now);
@@ -437,54 +438,24 @@
   }
 
   function playExplosionSound(){
-    if (!state.audioCtx) return;
-    var ctx = state.audioCtx;
-    var now = ctx.currentTime;
-
-    // noise burst — the "crack"
-    var bufferSize = Math.floor(ctx.sampleRate * 0.5);
-    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    var data = buffer.getChannelData(0);
-    for (var i = 0; i < bufferSize; i++){ data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize); }
-    var noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    var noiseFilter = ctx.createBiquadFilter();
-    noiseFilter.type = 'lowpass';
-    noiseFilter.frequency.setValueAtTime(1800, now);
-    noiseFilter.frequency.exponentialRampToValueAtTime(120, now + 0.5);
-    var noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.8, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
-    noise.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
-    noise.start(now);
-
-    // sub-bass thud — the "boom"
-    var osc = ctx.createOscillator();
-    var oscGain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(150, now);
-    osc.frequency.exponentialRampToValueAtTime(35, now + 0.4);
-    oscGain.gain.setValueAtTime(1, now);
-    oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
-    osc.connect(oscGain).connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.6);
+    if (!state.explosionAudio){
+      state.explosionAudio = new Audio(EXPLOSION_SOUND_SRC);
+      state.explosionAudio.volume = 1;
+    }
+    state.explosionAudio.currentTime = 0;
+    state.explosionAudio.play().catch(function(){});
   }
 
-  // ---------- fuse engine: hidden random duration, beep speeds up in random steps,
+  // ---------- fuse engine: hidden random duration, beep speeds up progressively,
   // then holds one long sustained tone right before the explosion ----------
   function scheduleBeep(){
     playBeepSound();
+    var accelerationDuration = state.fuseDuration - state.longBeepDuration - BEEP_MAX_SPEED_HOLD_MS;
+    var progress = Math.min(1, (Date.now() - state.fuseStart) / accelerationDuration);
+    // Increase the beep frequency evenly throughout the fuse.
+    state.beepInterval = BEEP_INITIAL_INTERVAL -
+      (BEEP_INITIAL_INTERVAL - BEEP_MIN_INTERVAL) * progress;
     state.beepTimeout = setTimeout(scheduleBeep, state.beepInterval);
-  }
-
-  function scheduleSpeedUp(){
-    var gapMin = state.fuseDuration * BEEP_STEP_GAP_MIN_FRACTION;
-    var gapMax = state.fuseDuration * BEEP_STEP_GAP_MAX_FRACTION;
-    state.stepTimeout = setTimeout(function(){
-      state.beepInterval = Math.max(BEEP_MIN_INTERVAL, state.beepInterval - BEEP_STEP_SHRINK);
-      scheduleSpeedUp();
-    }, randomInt(gapMin, gapMax));
   }
 
   // switches from discrete beeps to one sustained tone that plays through to the explosion
@@ -504,11 +475,11 @@
   function startFuse(){
     state.fuseDuration = randomInt(config.fuseMin, config.fuseMax) * 1000;
     state.fuseStart = Date.now();
-    state.longBeepDuration = randomInt(LONG_BEEP_MIN_MS, LONG_BEEP_MAX_MS);
+    state.longBeepDuration = LONG_BEEP_DURATION_MS;
     state.beepInterval = BEEP_INITIAL_INTERVAL;
     scheduleBeep();
-    scheduleSpeedUp();
-    state.longBeepTimeout = setTimeout(startLongBeep, state.fuseDuration - state.longBeepDuration);
+    state.longBeepTimeout = setTimeout(startLongBeep,
+      state.fuseDuration - state.longBeepDuration);
     state.explodeTimeout = setTimeout(explode, state.fuseDuration);
   }
 
