@@ -40,9 +40,56 @@
       "Cosas que hay en una oficina", "Electrodomésticos", "Cosas que hay en un coche", "Herramientas",
       "Cosas que hay en un parque", "Cosas de camping", "Excusas para no hacer deporte", "Cosas que se pierden en casa", "Objetos de un botiquín", "Tareas del hogar que odiamos", "Cosas que hay en un armario", "Razones para no contestar el móvil", "Cosas que hay en una mochila"
     ] },
-    { "id": "adultos", "nombre": "Para adultos (+18)", "icono": "🔞", "temas": [
-      "Cosas de una despedida de soltero salvaje", "Cosas que dirías ligando en un bar", "Bebidas alcohólicas",
-      "Cosas que haces con resaca", "Cosas de un club nocturno", "Excusas para no ir a trabajar tras una fiesta", "Cosas que llevas en el bolso tras una noche loca", "Motes cariñosos para la pareja", "Cosas que dices en la primera cita", "Lugares poco convencionales para un beso", "Cosas que se hacen en una fiesta de espuma", "Excusas para escaparte de una cita que va mal"
+    { "id": "geografia", "nombre": "Geografía fácil", "icono": "🌍", "temas": [
+      "Países de América", "Países de Asia", "Países de África", "Países con costa", "Países que son islas",
+      "Capitales de Europa", "Ciudades de España", "Provincias españolas", "Comunidades autónomas de España",
+      "Ciudades con playa", "Islas del mundo", "Ríos famosos", "Montañas famosas", "Mares y océanos",
+      "Países donde se habla español", "Países donde se habla inglés", "Países que empiezan por A",
+      "Países que empiezan por M", "Lugares donde hace mucho frío", "Lugares donde hace mucho calor"
+    ] },
+    { "id": "musica", "nombre": "Música", "icono": "🎵", "temas": [
+      "Cantantes españoles", "Cantantes latinoamericanos", "Cantantes internacionales", "Grupos de música",
+      "Instrumentos musicales", "Canciones para bailar", "Canciones de karaoke", "Canciones de verano",
+      "Canciones infantiles", "Géneros musicales", "Festivales de música", "Cosas que hay en un concierto",
+      "Canciones con nombres de persona", "Canciones que hablan de amor", "Artistas con nombre de una sola palabra",
+      "Grupos con una mujer como cantante", "Canciones de los años 80", "Canciones de los años 90",
+      "Canciones de los años 2000", "Cosas que hace un DJ"
+    ] },
+    { "id": "personajes", "nombre": "Personajes conocidos", "icono": "⭐", "temas": [
+      "Personajes de Disney", "Personajes de Pixar", "Personajes de Los Simpson", "Personajes de Harry Potter",
+      "Personajes de Marvel", "Personajes de DC", "Princesas de cuentos", "Villanos de dibujos animados",
+      "Detectives famosos", "Piratas famosos", "Personajes que llevan capa", "Personajes con poderes",
+      "Personajes que usan magia", "Personajes de videojuegos", "Pokémon conocidos", "Futbolistas famosos",
+      "Actores españoles", "Actrices españolas", "Presentadores de televisión", "Personajes históricos famosos"
+    ] },
+    { "id": "palabras", "nombre": "Palabras rápidas", "icono": "🔤", "temas": [
+      "Palabras que empiezan por A", "Palabras que empiezan por B", "Palabras que empiezan por C",
+      "Palabras que empiezan por M", "Palabras que empiezan por P", "Palabras que empiezan por S",
+      "Palabras de cuatro letras", "Palabras de cinco letras", "Palabras con doble letra", "Palabras que riman con casa",
+      "Palabras que riman con gato", "Palabras acabadas en -ón", "Palabras acabadas en -ero", "Nombres de persona con A",
+      "Nombres de persona con M", "Apellidos comunes", "Palabras relacionadas con el frío", "Palabras relacionadas con el calor",
+      "Cosas de color rojo", "Cosas de color verde", "Cosas redondas", "Cosas que hacen ruido"
+    ] },
+    { "id": "profesiones", "nombre": "Profesiones y lugares", "icono": "🧑‍🍳", "temas": [
+      "Profesiones de un hospital", "Profesiones de una escuela", "Profesiones que llevan uniforme",
+      "Profesiones que trabajan de noche", "Profesiones que usan herramientas", "Profesiones artísticas",
+      "Profesiones relacionadas con animales", "Cosas que hay en un hospital", "Cosas que hay en un colegio",
+      "Cosas que hay en un supermercado", "Cosas que hay en una farmacia", "Cosas que hay en un restaurante",
+      "Cosas que hay en una biblioteca", "Cosas que hay en una comisaría", "Cosas que hay en una estación de tren",
+      "Cosas que hay en una ferretería", "Cosas que hay en una panadería", "Cosas que hay en una peluquería"
+    ] },
+    { "id": "juegos_ocio", "nombre": "Juegos y ocio", "icono": "🎲", "temas": [
+      "Juegos de mesa", "Juegos de cartas", "Juegos de patio", "Juegos para una fiesta", "Juegos con dados",
+      "Juegos en los que hay que dibujar", "Juegos en los que hay que correr", "Juegos para dos personas",
+      "Videojuegos clásicos", "Juegos para móvil", "Personajes de Nintendo", "Cosas de Minecraft",
+      "Cosas que haces un domingo", "Aficiones para hacer en casa", "Actividades al aire libre", "Manualidades",
+      "Cosas que colecciona la gente", "Cosas que haces cuando estás aburrido", "Planes gratis", "Cosas de un parque de atracciones"
+    ] },
+    { "id": "naturaleza", "nombre": "Naturaleza", "icono": "🌿", "temas": [
+      "Tipos de árboles", "Flores", "Frutas que crecen en árboles", "Cosas que hay en un bosque", "Cosas que hay en la playa",
+      "Cosas que hay en el campo", "Cosas que ves en el cielo", "Fenómenos meteorológicos", "Tipos de nubes",
+      "Cosas que necesitan agua", "Cosas que flotan", "Cosas que se derriten", "Cosas que brillan", "Cosas que tienen hojas",
+      "Cosas que huelen bien", "Cosas que pinchan", "Sonidos de la naturaleza", "Lugares para ver una puesta de sol"
     ] }
   ]
 }

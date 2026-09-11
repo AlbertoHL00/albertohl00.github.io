@@ -160,13 +160,18 @@
       <div class="count-info" id="dc-count-info"></div>
       <div class="warn-note hidden" id="dc-players-warn">Se recomiendan hasta 8 jugadores para partidas más dinámicas.</div>
 
-      <label><span class="label-icon">🔁</span>Vueltas</label>
-      <div class="stepper">
-        <button type="button" id="laps-minus">−</button>
-        <div class="value" id="laps-value">1</div>
-        <button type="button" id="laps-plus">+</button>
-      </div>
-      <p class="count-info">Cuántas veces es cada jugador el jugador activo.</p>
+      <details class="setup-optional">
+        <summary>Ajustes adicionales</summary>
+        <div class="setup-optional-content">
+          <label><span class="label-icon">🔁</span>Vueltas</label>
+          <div class="stepper">
+            <button type="button" id="laps-minus">−</button>
+            <div class="value" id="laps-value">1</div>
+            <button type="button" id="laps-plus">+</button>
+          </div>
+          <p class="count-info">Cuántas veces es cada jugador el jugador activo.</p>
+        </div>
+      </details>
 
       <button class="btn-main" id="dc-start-btn" disabled>Iniciar partida</button>
     </div>

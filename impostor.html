@@ -226,17 +226,29 @@
           </div>
         </div>
 
-        <div id="random-config-wrap" class="hidden">
-          <label><span class="label-icon">📦</span>Paquetes</label>
-          <button type="button" class="packages-dropdown-btn" id="packages-dropdown-btn" aria-expanded="false">
-            <span class="packages-dropdown-summary" id="packages-dropdown-summary">Selecciona paquetes</span>
-            <span class="packages-dropdown-chevron">▾</span>
-          </button>
-          <div class="packages-dropdown-panel hidden" id="packages-dropdown-panel">
-            <button type="button" class="chip-toggle-all" id="package-toggle-all-btn">Seleccionar todos</button>
-            <div class="chip-list" id="package-list"></div>
+        <details class="setup-optional">
+          <summary>Ajustes adicionales</summary>
+          <div class="setup-optional-content">
+            <div id="random-config-wrap" class="hidden">
+              <label><span class="label-icon">📦</span>Paquetes</label>
+              <button type="button" class="packages-dropdown-btn" id="packages-dropdown-btn" aria-expanded="false">
+                <span class="packages-dropdown-summary" id="packages-dropdown-summary">Selecciona paquetes</span>
+                <span class="packages-dropdown-chevron">▾</span>
+              </button>
+              <div class="packages-dropdown-panel hidden" id="packages-dropdown-panel">
+                <button type="button" class="chip-toggle-all" id="package-toggle-all-btn">Seleccionar todos</button>
+                <div class="chip-list" id="package-list"></div>
+              </div>
+            </div>
+
+            <label><span class="label-icon">⏱️</span>Tiempo para debatir</label>
+            <div class="stepper">
+              <button type="button" id="debate-minutes-minus">−</button>
+              <div class="value" id="debate-minutes-value">Sin límite</div>
+              <button type="button" id="debate-minutes-plus">+</button>
+            </div>
           </div>
-        </div>
+        </details>
 
         <div id="random-impostors-wrap" class="hidden">
           <label><span class="label-icon">🎭</span>Número de impostores</label>
@@ -246,7 +258,7 @@
             <button type="button" id="random-impostors-plus">+</button>
           </div>
 
-          <label><span class="label-icon">💡</span>Modo de pista para impostores</label>
+          <label><span class="label-icon">💡</span>Modo de juego</label>
           <div class="submode-toggle" id="impostor-mode-toggle">
             <button type="button" class="submode-btn" id="impostor-mode-none-btn">Sin pista</button>
             <button type="button" class="submode-btn" id="impostor-mode-hint-btn">Con pista</button>
@@ -257,13 +269,6 @@
 
         <div class="count-info" id="impostor-count-info"></div>
         <div class="error-msg" id="impostor-setup-error"></div>
-
-        <label><span class="label-icon">⏱️</span>Tiempo para debatir</label>
-        <div class="stepper">
-          <button type="button" id="debate-minutes-minus">−</button>
-          <div class="value" id="debate-minutes-value">Sin límite</div>
-          <button type="button" id="debate-minutes-plus">+</button>
-        </div>
 
         <div class="final-nav">
           <button type="button" class="night-nav-btn icon-only" id="setup-final-back-btn" aria-label="Anterior"><span class="back-icon"></span></button>

@@ -98,6 +98,31 @@ function popValue(el){
   el.classList.add('pop');
 }
 
+function initLandscapePrompt(){
+  if (document.body.dataset.landscapeRecommended === undefined) return;
+
+  var gameScreen = document.getElementById('screen-game');
+  if (!gameScreen) return;
+
+  var prompt = document.createElement('div');
+  prompt.className = 'landscape-prompt';
+  prompt.setAttribute('role', 'status');
+  prompt.setAttribute('aria-label', 'Orientación recomendada');
+  prompt.innerHTML =
+    '<span class="landscape-prompt-icon" aria-hidden="true"></span>' +
+    '<p class="landscape-prompt-title">Gira el móvil</p>' +
+    '<p class="landscape-prompt-text">Este juego se disfruta mejor con la pantalla en horizontal.</p>';
+  document.body.appendChild(prompt);
+
+  function updateVisibility(){
+    document.body.classList.toggle('landscape-game-active', !gameScreen.classList.contains('hidden'));
+  }
+
+  new MutationObserver(updateVisibility).observe(gameScreen, { attributes: true, attributeFilter: ['class'] });
+  updateVisibility();
+}
+initLandscapePrompt();
+
 /* progress dots under the reveal card */
 function createDots(container){
   return {

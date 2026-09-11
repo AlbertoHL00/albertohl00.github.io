@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /* ============================================================
    Shared design system for Impostor / Detective Club / Hombres Lobo
    Each mode file sets its own --accent / --accent2 / ambient glow
@@ -115,7 +116,11 @@ h1{
 }
 /* extra breathing room between the game title and the setup form below it */
 #screen-setup h1{
-  margin-bottom:20px;
+  margin-bottom:24px;
+  color:var(--accent2);
+  background:none;
+  -webkit-background-clip:initial;
+  background-clip:initial;
 }
 .subtitle{
   text-align:center;
@@ -130,7 +135,10 @@ label{
   margin:16px 0 6px;
   font-weight:600;
 }
-label:first-child{margin-top:0;}
+/* only the very first label right under the title skips the top margin —
+   nested labels (inside optional-settings panels, wrap divs, etc.) always
+   keep it so they never sit flush against the border/element above them */
+.card>label:first-child{margin-top:0;}
 label .label-icon{
   margin-right:6px;
   font-size:0.95rem;
@@ -629,6 +637,60 @@ button:focus-visible, input:focus-visible{
 
 ::selection{background:var(--accent2); color:#fff;}
 
+/* ---- landscape recommendation: opt in with data-landscape-recommended on body ---- */
+.landscape-prompt{
+  display:none;
+}
+@media (orientation:portrait) and (max-width:600px){
+  body[data-landscape-recommended].landscape-game-active .landscape-prompt{
+    position:fixed;
+    inset:0;
+    z-index:2000;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+    padding:32px;
+    padding-top:max(32px, env(safe-area-inset-top));
+    padding-bottom:max(32px, env(safe-area-inset-bottom));
+    background-color:var(--bg2);
+    color:var(--text);
+    text-align:center;
+  }
+  .landscape-prompt-icon{
+    width:112px;
+    height:112px;
+    background-color:var(--accent2);
+    mask-image:url('resources/images/common/rotate.svg');
+    -webkit-mask-image:url('resources/images/common/rotate.svg');
+    mask-repeat:no-repeat;
+    mask-position:center;
+    mask-size:contain;
+    -webkit-mask-repeat:no-repeat;
+    -webkit-mask-position:center;
+    -webkit-mask-size:contain;
+    animation:landscapePromptTurn 1.8s ease-in-out infinite;
+  }
+  .landscape-prompt-title{
+    margin:0;
+    font-family:var(--font-display);
+    font-size:1.55rem;
+    font-weight:800;
+  }
+  .landscape-prompt-text{
+    max-width:280px;
+    margin:0;
+    color:var(--text-dim);
+    font-size:1rem;
+    line-height:1.5;
+  }
+}
+@keyframes landscapePromptTurn{
+  0%, 25%{transform:rotate(0deg);}
+  60%, 100%{transform:rotate(-90deg);}
+}
+
 /* ---- player rows (name lists: Impostor + Hombres Lobo) ---- */
 .player-row{
   display:flex;
@@ -931,6 +993,168 @@ button:focus-visible, input:focus-visible{
   background-color:#f2c94c;
   mask-image:url('resources/images/common/next.svg');
   -webkit-mask-image:url('resources/images/common/next.svg');
+}
+
+/* ---- setup shell: a calmer, denser control surface shared by every game ---- */
+#screen-setup .card{
+  position:relative;
+  overflow:hidden;
+  padding:22px 22px 24px;
+  background:rgba(16,26,43,0.92);
+  border-color:rgba(255,255,255,0.16);
+  border-top:2px solid var(--accent2);
+  border-radius:20px;
+  box-shadow:0 18px 46px rgba(0,0,0,0.34), 0 0 0 1px rgba(255,255,255,0.025);
+}
+#screen-setup .setup-header{
+  margin-bottom:18px;
+}
+#screen-setup .subtitle{
+  max-width:34ch;
+  margin-left:auto;
+  margin-right:auto;
+  line-height:1.5;
+}
+#screen-setup label{
+  color:var(--text);
+  font-size:0.78rem;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+#screen-setup label .label-icon{
+  filter:saturate(0.8);
+}
+#screen-setup input[type="text"]{
+  background:rgba(5,7,13,0.32);
+  border-color:rgba(255,255,255,0.18);
+  border-radius:12px;
+}
+#screen-setup input[type="text"]:hover{
+  border-color:rgba(255,255,255,0.3);
+}
+#screen-setup input[type="text"]:focus{
+  border-color:var(--accent2);
+  background:rgba(5,7,13,0.48);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--accent2) 18%, transparent);
+}
+#screen-setup .stepper,
+#screen-setup .submode-toggle,
+#screen-setup .packages-dropdown-btn,
+#screen-setup .player-row,
+#screen-setup .chip,
+#screen-setup .night-nav-btn{
+  background:rgba(255,255,255,0.045);
+  border-color:rgba(255,255,255,0.16);
+}
+#screen-setup .stepper{
+  padding:6px;
+  border-radius:12px;
+}
+#screen-setup .stepper button{
+  width:40px;
+  height:40px;
+  border-radius:9px;
+  background:var(--accent);
+  box-shadow:none;
+}
+#screen-setup .stepper button:hover,
+#screen-setup .night-nav-btn:hover,
+#screen-setup .packages-dropdown-btn:hover,
+#screen-setup .chip:hover,
+#screen-setup .player-row:hover{
+  border-color:var(--accent2);
+  background:rgba(255,255,255,0.075);
+}
+#screen-setup .submode-toggle{
+  border-radius:12px;
+  padding:4px;
+}
+#screen-setup .submode-btn{
+  border-radius:9px;
+  padding:11px 8px;
+}
+#screen-setup .submode-btn.active,
+#screen-setup .chip.selected{
+  background:var(--accent);
+  border-color:var(--accent2);
+  box-shadow:0 5px 14px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+#screen-setup .packages-dropdown-panel{
+  padding:12px;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px;
+  background:rgba(5,7,13,0.3);
+}
+#screen-setup .chip{
+  border-radius:10px;
+}
+#screen-setup .night-nav{
+  margin-top:18px;
+}
+#screen-setup .night-nav-btn{
+  min-height:46px;
+  border-radius:11px;
+}
+#screen-setup .final-nav{
+  margin-top:20px;
+}
+#screen-setup .btn-main{
+  margin-top:0;
+  min-height:50px;
+  border-radius:11px;
+  background:var(--accent);
+  box-shadow:0 8px 20px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+#screen-setup .btn-main:hover{
+  filter:brightness(1.08);
+}
+#screen-setup .count-info{
+  line-height:1.45;
+}
+#screen-setup .setup-optional{
+  margin-top:18px;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:13px;
+  background:rgba(255,255,255,0.025);
+}
+#screen-setup .setup-optional summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  min-height:48px;
+  padding:0 14px;
+  color:var(--text);
+  font-size:0.78rem;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  cursor:pointer;
+  list-style:none;
+}
+#screen-setup .setup-optional summary::-webkit-details-marker{
+  display:none;
+}
+#screen-setup .setup-optional summary::after{
+  content:'▾';
+  color:var(--text-dim);
+  font-size:1.05rem;
+  transition:transform .2s;
+}
+#screen-setup .setup-optional[open] summary{
+  border-bottom:1px solid rgba(255,255,255,0.1);
+}
+#screen-setup .setup-optional[open] summary::after{
+  transform:rotate(180deg);
+}
+#screen-setup .setup-optional-content{
+  padding:14px 14px 14px;
+}
+#screen-setup .setup-optional-content>*:first-child,
+#screen-setup .setup-optional-content label:first-child{
+  margin-top:0;
+}
+#screen-setup .error-msg{
+  color:#f0a1a8;
 }
 
 @media (max-width:380px){

@@ -68,12 +68,44 @@
     60%{ transform:translateX(-6px); }
     80%{ transform:translateX(6px); }
   }
+
+  .packages-dropdown-btn{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 14px;
+    border-radius:14px;
+    border:1px solid var(--glass-border);
+    background:rgba(255,255,255,0.05);
+    color:var(--text);
+    font-size:0.88rem;
+    font-weight:600;
+    cursor:pointer;
+    text-align:left;
+  }
+  .packages-dropdown-btn:active{transform:scale(0.98);}
+  .packages-dropdown-summary{
+    color:var(--text-dim);
+  }
+  .packages-dropdown-chevron{
+    flex-shrink:0;
+    color:var(--text-dim);
+    transition:transform .2s;
+  }
+  .packages-dropdown-btn[aria-expanded="true"] .packages-dropdown-chevron{
+    transform:rotate(180deg);
+  }
+  .packages-dropdown-panel{
+    margin-top:10px;
+  }
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- SETUP: no players/teams — just categories and how long the fuse can run -->
+  <!-- SETUP: no players/teams — only optional fuse settings -->
   <div class="screen" id="screen-setup">
     <div class="card">
       <div class="setup-header">
@@ -82,27 +114,27 @@
       </div>
       <h1>PATATA CALIENTE</h1>
 
-      <label><span class="label-icon">🏷️</span>Categorías</label>
-      <button type="button" class="chip-toggle-all" id="category-toggle-all-btn">Seleccionar todas</button>
-      <div class="chip-list" id="category-list"></div>
+      <button type="button" class="packages-dropdown-btn" id="extra-settings-btn" aria-expanded="false">
+        <span class="packages-dropdown-summary">Ajustes adicionales</span>
+        <span class="packages-dropdown-chevron">▾</span>
+      </button>
+      <div class="packages-dropdown-panel hidden" id="extra-settings-panel">
+        <label><span class="label-icon">⏱️</span>Mecha mínima</label>
+        <div class="stepper">
+          <button type="button" id="fuse-min-minus">−</button>
+          <div class="value" id="fuse-min-value">20s</div>
+          <button type="button" id="fuse-min-plus">+</button>
+        </div>
 
-      <label><span class="label-icon">⏱️</span>Mecha mínima</label>
-      <div class="stepper">
-        <button type="button" id="fuse-min-minus">−</button>
-        <div class="value" id="fuse-min-value">20s</div>
-        <button type="button" id="fuse-min-plus">+</button>
+        <label><span class="label-icon">⏱️</span>Mecha máxima</label>
+        <div class="stepper">
+          <button type="button" id="fuse-max-minus">−</button>
+          <div class="value" id="fuse-max-value">45s</div>
+          <button type="button" id="fuse-max-plus">+</button>
+        </div>
       </div>
 
-      <label><span class="label-icon">⏱️</span>Mecha máxima</label>
-      <div class="stepper">
-        <button type="button" id="fuse-max-minus">−</button>
-        <div class="value" id="fuse-max-value">45s</div>
-        <button type="button" id="fuse-max-plus">+</button>
-      </div>
-
-      <div class="error-msg" id="setup-error"></div>
-
-      <button class="btn-main" id="start-btn">Iniciar partida</button>
+      <button class="btn-main" id="start-btn" disabled>Iniciar partida</button>
     </div>
   </div>
 
@@ -117,11 +149,11 @@
 
       <h3>Usar la app</h3>
       <ol>
-        <li>Elige las categorías de temas que queráis usar y el rango de duración de la mecha.</li>
+        <li>La app elige un tema al azar. Si queréis, podéis ajustar el rango de duración de la mecha.</li>
         <li>Pulsa "Encender la mecha" cuando estéis listos para empezar a pasaros el móvil.</li>
         <li>El pitido se acelera al azar sin avisar cuánto queda — nadie sabe cuándo va a explotar.</li>
         <li>Cuando explota, quien tenga el móvil en la mano en ese momento pierde esa ronda.</li>
-        <li>Pulsa "Siguiente tema" para seguir jugando con un tema nuevo. Los temas no se repiten hasta agotar todos los de las categorías elegidas.</li>
+        <li>Pulsa "Siguiente tema" para seguir jugando con un tema nuevo. Los temas no se repiten hasta agotar todo el mazo.</li>
       </ol>
     </div>
   </div>
@@ -167,7 +199,6 @@
   var EXPLOSION_SOUND_SRC = 'resources/audios/patata_caliente/boom.mp3';
 
   var config = {
-    selectedCategories: [],
     fuseMin: 20,
     fuseMax: 45
   };
@@ -183,14 +214,7 @@
       .then(function(r){ if (!r.ok) throw new Error('bad response'); return r.json(); })
       .then(function(data){ CATEGORIES = data.categorias; })
       .catch(function(){ CATEGORIES = CATEGORIES_FALLBACK; })
-      .then(function(){
-        if (config.selectedCategories.length === 0){
-          // +18 categories start unselected — picking one goes through the confirm modal
-          config.selectedCategories = CATEGORIES.filter(function(c){ return !isAdultContent(c); }).map(function(c){ return c.id; });
-        }
-        renderCategoryList();
-        validateSetup();
-      });
+      .then(validateSetup);
   }
 
   function randomInt(min, max){
@@ -222,90 +246,21 @@
     target.classList.remove('hidden');
   }
 
-  // ---------- categories (multiple choice) ----------
-  var categoryListEl = document.getElementById('category-list');
-  var categoryToggleAllBtn = document.getElementById('category-toggle-all-btn');
-  var setupError = document.getElementById('setup-error');
+  // ---------- topic deck ----------
   var startBtn = document.getElementById('start-btn');
-
-  function renderToggleAllLabel(){
-    if (!CATEGORIES){ categoryToggleAllBtn.textContent = 'Seleccionar todas'; return; }
-    categoryToggleAllBtn.textContent = config.selectedCategories.length === CATEGORIES.length ? 'Quitar todas' : 'Seleccionar todas';
-  }
-
-  function renderCategoryList(){
-    if (!CATEGORIES || CATEGORIES.length === 0){
-      categoryListEl.innerHTML = '<p class="chip-loading">Cargando categorías…</p>';
-      renderToggleAllLabel();
-      return;
-    }
-    categoryListEl.innerHTML = CATEGORIES.map(function(c){
-      var selected = config.selectedCategories.indexOf(c.id) !== -1;
-      return '<button type="button" class="chip' + (selected ? ' selected' : '') + '" data-category-id="' + c.id + '">' +
-        '<span class="chip-icon">' + escapeHtml(c.icono || '📦') + '</span>' +
-        '<span class="chip-name">' + escapeHtml(c.nombre) + '</span>' +
-      '</button>';
-    }).join('');
-    renderToggleAllLabel();
-  }
-
-  function addCategory(id){
-    config.selectedCategories.push(id);
-    renderCategoryList();
-    validateSetup();
-  }
-
-  categoryListEl.addEventListener('click', function(e){
-    var chip = e.target.closest('.chip');
-    if (!chip) return;
-    var id = chip.getAttribute('data-category-id');
-    var idx = config.selectedCategories.indexOf(id);
-    if (idx !== -1){
-      config.selectedCategories.splice(idx, 1);
-      renderCategoryList();
-      validateSetup();
-      return;
-    }
-    var cat = CATEGORIES.filter(function(c){ return c.id === id; })[0];
-    if (isAdultContent(cat)) confirmAdultContent(function(){ addCategory(id); });
-    else addCategory(id);
-  });
-
-  categoryToggleAllBtn.addEventListener('click', function(){
-    if (!CATEGORIES) return;
-    if (config.selectedCategories.length === CATEGORIES.length){
-      config.selectedCategories = [];
-      renderCategoryList();
-      validateSetup();
-      return;
-    }
-    function selectAll(){
-      config.selectedCategories = CATEGORIES.map(function(c){ return c.id; });
-      renderCategoryList();
-      validateSetup();
-    }
-    var hasUnselectedAdult = CATEGORIES.some(function(c){
-      return isAdultContent(c) && config.selectedCategories.indexOf(c.id) === -1;
-    });
-    if (hasUnselectedAdult) confirmAdultContent(selectAll);
-    else selectAll();
-  });
 
   function buildDeck(){
     var pool = [];
     CATEGORIES.forEach(function(c){
-      if (config.selectedCategories.indexOf(c.id) !== -1) pool = pool.concat(c.temas);
+      pool = pool.concat(c.temas);
     });
     return shuffle(pool.slice());
   }
 
   function validateSetup(){
-    var msgs = [];
-    if (!CATEGORIES) msgs.push("Cargando categorías…");
-    else if (config.selectedCategories.length === 0) msgs.push("Selecciona al menos una categoría.");
-    setupError.textContent = msgs[0] || "";
-    startBtn.disabled = msgs.length !== 0;
-    return msgs.length === 0;
+    var ready = !!CATEGORIES && CATEGORIES.length > 0;
+    startBtn.disabled = !ready;
+    return ready;
   }
 
   // ---------- fuse length (setup) ----------
@@ -337,6 +292,14 @@
     popValue(fuseMaxValueEl);
   });
   renderFuseValues();
+
+  var extraSettingsBtn = document.getElementById('extra-settings-btn');
+  var extraSettingsPanel = document.getElementById('extra-settings-panel');
+  extraSettingsBtn.addEventListener('click', function(){
+    var isOpen = !extraSettingsPanel.classList.contains('hidden');
+    extraSettingsPanel.classList.toggle('hidden', isOpen);
+    extraSettingsBtn.setAttribute('aria-expanded', String(!isOpen));
+  });
 
   // ---------- round screen: theme + bomb fuse ----------
   var phraseEl = document.getElementById('pc-theme');
