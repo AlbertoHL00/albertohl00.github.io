@@ -1,0 +1,23 @@
+codigo-secreto.html
+  s_5242af422479c7::t_be3516475c001b 199,218-231
+tabu.html
+  s_5242af422479c7::t_362b0112ecf8a7 182-183,185-186,198-199,205,210-211,214,292-303,305-310,312-319,321
+times-up.html
+  s_5242af422479c7::t_01d18695f35ed9 251,289-300,302-307,309-316
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "9f88267fe49c696929f89534498adfe4a5219db3",
+  "prompts": {},
+  "sessions": {
+    "s_5242af422479c7": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "522ff27b-f2bf-43da-96b6-4829ae7d2be1",
+        "model": "unknown"
+      },
+      "human_author": "Alberto Hernández Lado <albertohljob@gmail.com>"
+    }
+  }
+}
