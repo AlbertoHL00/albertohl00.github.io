@@ -64,14 +64,14 @@ Categorías actuales: `suave`, `fiesta`, `atrevido` (+18). Para añadir una inte
   "nombre": "Nombre del rol",
   "equipo": "lobos | aldeanos | solitario",
   "expansion": "base | la_aldea | luna_nueva",
-  "imagen": "images/hombres-lobo/archivo.png",
+  "imagen": "resources/images/hombres-lobo/archivo.png",
   "descripcion": "Texto de la habilidad, se muestra al ver el detalle del rol.",
   "defaultCount": 0,
   "maxCount": 1,
   "poder": 1.2
 }
 ```
-- **`imagen` es obligatoria y requiere subir el fichero PNG a `images/hombres-lobo/`** (se usa como `<img>`, no como máscara — necesita ser una ilustración real, no un icono monocromo). Sin ese fichero el rol se verá roto.
+- **`imagen` es obligatoria y requiere subir el fichero PNG a `resources/images/hombres-lobo/`** (se usa como `<img>`, no como máscara — necesita ser una ilustración real, no un icono monocromo). Sin ese fichero el rol se verá roto.
 - `equipo` determina en qué bando cuenta el rol para el cálculo de equilibrio lobos/aldeanos.
 - `expansion` agrupa el rol bajo un encabezado de expansión en el selector — usa uno de los tres valores existentes o crea uno nuevo si es una expansión distinta (aparecerá como grupo nuevo automáticamente).
 - `maxCount` limita cuántas copias de ese rol se pueden añadir a una partida (la mayoría de roles únicos usan `1`; roles genéricos como Aldeano Común usan un número alto).

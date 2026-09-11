@@ -41,9 +41,9 @@ Cuando el catálogo de canciones esté suficientemente ampliado, en `index.html`
 **Antes:**
 ```html
 <div class="card mode-card theme-rose disabled">
-  <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/hitster-logo.svg" data-color="#eeaed0" data-title="Hitster" data-desc="Un dispositivo por equipo: escuchad la canción y colocadla en vuestra línea de tiempo. Varias épocas y ediciones.">ⓘ</button>
+  <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="resources/images/hub/hitster-logo.svg" data-color="#eeaed0" data-title="Hitster" data-desc="Un dispositivo por equipo: escuchad la canción y colocadla en vuestra línea de tiempo. Varias épocas y ediciones.">ⓘ</button>
   <span class="mode-card-link" aria-label="Hitster">
-    <span class="mode-icon-badge" style="mask-image:url('images/hub/hitster-logo.svg');-webkit-mask-image:url('images/hub/hitster-logo.svg');"></span>
+    <span class="mode-icon-badge" style="mask-image:url('resources/images/hub/hitster-logo.svg');-webkit-mask-image:url('resources/images/hub/hitster-logo.svg');"></span>
     <span class="coming-soon-badge">Próximamente</span>
   </span>
 </div>
@@ -52,9 +52,9 @@ Cuando el catálogo de canciones esté suficientemente ampliado, en `index.html`
 **Después** (mismo patrón que cualquier otra tarjeta activa, ej. Detective Club):
 ```html
 <div class="card mode-card theme-rose">
-  <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="images/hub/hitster-logo.svg" data-color="#eeaed0" data-title="Hitster" data-desc="Un dispositivo por equipo: escuchad la canción y colocadla en vuestra línea de tiempo. Varias épocas y ediciones.">ⓘ</button>
+  <button type="button" class="mode-info-btn" aria-label="Descripción" data-icon="resources/images/hub/hitster-logo.svg" data-color="#eeaed0" data-title="Hitster" data-desc="Un dispositivo por equipo: escuchad la canción y colocadla en vuestra línea de tiempo. Varias épocas y ediciones.">ⓘ</button>
   <a href="hitster.html" class="mode-card-link" aria-label="Hitster">
-    <span class="mode-icon-badge" style="mask-image:url('images/hub/hitster-logo.svg');-webkit-mask-image:url('images/hub/hitster-logo.svg');"></span>
+    <span class="mode-icon-badge" style="mask-image:url('resources/images/hub/hitster-logo.svg');-webkit-mask-image:url('resources/images/hub/hitster-logo.svg');"></span>
   </a>
 </div>
 ```

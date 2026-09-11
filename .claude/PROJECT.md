@@ -67,7 +67,7 @@ En `index.html`, cada tarjeta de juego lleva una clase `theme-<color>` (`theme-r
 
 ## Iconos
 
-Cada juego tiene un logo SVG propio en `images/hub/<juego>-logo.svg`, usado como `mask-image` (así se puede recolorear vía CSS con `background-color` en vez de llevar el color "quemado" en el SVG). Si un juego no tuviera logo propio, existe la clase de respaldo `.mode-icon-emoji` (emoji centrado) — actualmente todos los juegos ya tienen su SVG.
+Cada juego tiene un logo SVG propio en `resources/images/hub/<juego>-logo.svg`, usado como `mask-image` (así se puede recolorear vía CSS con `background-color` en vez de llevar el color "quemado" en el SVG). Si un juego no tuviera logo propio, existe la clase de respaldo `.mode-icon-emoji` (emoji centrado) — actualmente todos los juegos ya tienen su SVG.
 
 ## Tarjeta deshabilitada ("Próximamente")
 

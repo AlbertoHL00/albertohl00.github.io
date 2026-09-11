@@ -919,18 +919,18 @@ button:focus-visible, input:focus-visible{
 }
 .icon-action-correct .icon-action-icon{
   background-color:#8fd9ac;
-  mask-image:url('images/common/check.svg');
-  -webkit-mask-image:url('images/common/check.svg');
+  mask-image:url('resources/images/common/check.svg');
+  -webkit-mask-image:url('resources/images/common/check.svg');
 }
 .icon-action-error .icon-action-icon{
   background-color:#e8929c;
-  mask-image:url('images/common/error.svg');
-  -webkit-mask-image:url('images/common/error.svg');
+  mask-image:url('resources/images/common/error.svg');
+  -webkit-mask-image:url('resources/images/common/error.svg');
 }
 .icon-action-skip .icon-action-icon{
   background-color:#f2c94c;
-  mask-image:url('images/common/next.svg');
-  -webkit-mask-image:url('images/common/next.svg');
+  mask-image:url('resources/images/common/next.svg');
+  -webkit-mask-image:url('resources/images/common/next.svg');
 }
 
 @media (max-width:380px){
