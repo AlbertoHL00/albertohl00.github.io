@@ -1,0 +1,14 @@
+patata-caliente.html
+  h_fed6a40af368f7 164-167,209,405,424-425,441-446,449,453-457,478,481-482
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c6c74aa616b26fa9445755103bee84e71e3abf46",
+  "prompts": {},
+  "humans": {
+    "h_fed6a40af368f7": {
+      "author": "Alberto Hernández Lado <albertohljob@gmail.com>"
+    }
+  }
+}
