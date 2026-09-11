@@ -1,0 +1,28 @@
+.claude/ADDING_CONTENT.md
+  h_fed6a40af368f7 67,74
+.claude/HITSTER.md
+  h_fed6a40af368f7 44,46,55,57
+.claude/PROJECT.md
+  h_fed6a40af368f7 70
+hombres-lobo.html
+  h_fed6a40af368f7 956-987
+index.html
+  h_fed6a40af368f7 248-249,288,290,295,297,302,304,309,311,316,318,323,325,330,332,337,339,344,346,351,353,358,360,365,367,372,374,379,381,386,388,393,395
+patata-caliente.html
+  h_fed6a40af368f7 167
+shared.css
+  h_fed6a40af368f7 922-923,927-928,932-933
+werewolf-roles.json
+  h_fed6a40af368f7 3-6,8-27,29-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "e047c648d2204ee1a8f97c4e198f5613fb4d5ac3",
+  "prompts": {},
+  "humans": {
+    "h_fed6a40af368f7": {
+      "author": "Alberto Hernández Lado <albertohljob@gmail.com>"
+    }
+  }
+}
